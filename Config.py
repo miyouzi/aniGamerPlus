@@ -11,7 +11,7 @@ working_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookies.txt')
-latest_config_version = 0.1
+latest_config_version = 1.1
 
 
 def __init_settings():
@@ -26,20 +26,20 @@ def __init_settings():
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_video_filename_suffix': '',  # 用户自定后缀
                 'proxy': {  # 代理功能，咕咕咕……
-                    'proxy_server': '',
-                    'proxy_port': '',
-                    'proxy_protocol': '',
-                    'proxy_username': '',
-                    'proxy_password': ''
+                    'server': '',
+                    'port': '',
+                    'protocol': '',
+                    'user': '',
+                    'pwd': ''
                 },
                 'ftp': {  # 将文件上传至远程服务器，咕咕咕咕……
-                    'host': '',
+                    'server': '',
                     'port': '',
                     'user': '',
                     'pwd': '',
                     'cwd': '',  # 文件存放目录
                 },
-                'config_version': 1.0
+                'config_version': latest_config_version
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)
@@ -53,6 +53,7 @@ def read_settings():
         settings = json.load(f)
         if settings['config_version'] != latest_config_version:
             __init_settings()
+            settings = json.load(f)
         # 防呆
         settings['check_frequency'] = int(settings['check_frequency'])
         settings['download_resolution'] = str(settings['download_resolution'])

@@ -26,7 +26,7 @@ pip install requests beautifulsoup4
  
 ## 待完成
  - [ ] 下載使用代理
- - [ ] 使用frp上傳至遠程伺服器
+ - [ ] 使用ftp上傳至遠程伺服器
  
  ~~咕咕咕~~
  

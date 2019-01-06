@@ -5,7 +5,7 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, pprint, re
+import os, json, re
 
 working_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 config_path = os.path.join(working_dir, 'config.json')

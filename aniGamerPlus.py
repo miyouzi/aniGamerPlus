@@ -14,6 +14,7 @@ import threading
 import time
 import argparse
 import platform
+import subprocess
 
 import Config
 from Anime import Anime
@@ -62,7 +63,9 @@ def insert_db(anime):
                        anime_dict)
     except sqlite3.IntegrityError as e:
         err_msg = 'ERROR: sn='+anime_dict['ns']+' title='+anime_dict['title']+' 数据已存在！'+str(e)
-        if 'Windows' in platform.system():
+        check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
+        if 'Windows' in platform.system() and check_tty == '/dev/cons0':
             clr = Color()
             clr.print_red_text(err_msg)
         else:
@@ -203,15 +206,6 @@ if __name__ == '__main__':
         parser.add_argument('--thread_limit', '-t',type=int, help='最高并發下載數(數字)', default=settings['multi-thread'])
         arg = parser.parse_args()
         __cui(arg.sn, arg.resolution, arg.download_mode, arg.thread_limit)
-
-        # if len(sys.argv) == 2:
-        #     __cui(sys.argv[1])
-        # elif len(sys.argv) == 3:
-        #     __cui(sys.argv[1], sys.argv[2])
-        # elif len(sys.argv) == 4:
-        #     __cui(sys.argv[1], sys.argv[2], sys.argv[3])
-        # elif len(sys.argv) == 5:
-        #     __cui(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 
     if not os.path.exists(db_path):
         # 初始化 sqlite3 数据库

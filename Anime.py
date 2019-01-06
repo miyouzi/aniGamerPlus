@@ -128,7 +128,9 @@ class Anime():
                 if error_cnt >= 3:
                     raise TryTooManyTimeError('请求失败次数过多！请求链接：\n%s' % req)
                 err_msg = '请求失败！except：\n'+str(e)+'\n3s后重试(最多重试三次)'
-                if 'Windows' in platform.system():
+                check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
+                if 'Windows' in platform.system() and check_tty == '/dev/cons0':
                     clr = Color()
                     clr.print_red_text(err_msg)
                 else:
@@ -248,7 +250,9 @@ class Anime():
                 resolution_list.sort()
                 resolution = str(resolution_list[-1])
                 err_msg = 'ERROR: 指定清晰度不存在，選取最高的清晰度: ' + resolution + 'P'
-                if 'Windows' in platform.system():
+                check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
+                if 'Windows' in platform.system() and check_tty == '/dev/cons0':
                     clr = Color()
                     clr.print_red_text(err_msg)
                 else:

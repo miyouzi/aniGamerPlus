@@ -284,6 +284,3 @@ class Anime():
         get_playlist()
         parse_playlist()
         download_video(resolution)
-
-# a=Anime(10146)
-# a.download('360')

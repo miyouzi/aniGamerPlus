@@ -1,0 +1,25 @@
+{
+    "bangumi_dir": "",
+    "check_frequency": 5,
+    "download_resolution": "1080",
+    "default_download_mode": "latest",
+    "multi-thread": 3,
+    "add_resolution_to_video_filename": true,
+    "customized_video_filename_prefix": "【動畫瘋】",
+    "customized_video_filename_suffix": "",
+    "proxy": {
+        "proxy_server": "",
+        "proxy_port": "",
+        "proxy_protocol": "",
+        "proxy_username": "",
+        "proxy_password": ""
+    },
+    "ftp": {
+        "host": "",
+        "port": "",
+        "user": "",
+        "pwd": "",
+        "cwd": ""
+    },
+    "config_version": 0.1
+}

@@ -33,7 +33,7 @@ pip install requests beautifulsoup4
  
 ## 配置説明
 
-:warning: **以下所有配置都請使用UTF-8無BOM編碼** :warning:
+:warning: **以下所有配置請使用UTF-8無BOM編碼** :warning:
 
 ### config.json
 
@@ -94,13 +94,25 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 參數:
 ```
-python aniGamerPlus.py sn resolution download_mode thread_limit
+>python aniGamerPlus.py -h
+usage: sn [resolution] [download_mode] [thread_limit]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --sn SN, -s SN        視頻sn碼(數字)
+  --resolution {360,480,720,1080}, -r {360,480,720,1080}
+                        指定下載清晰度(數字)
+  --download_mode {single,latest,all}, -m {single,latest,all}
+                        下載模式
+  --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
+                        最高并發下載數(數字)
+python aniGamerPlus.py -s SN -r RESOLUTION -m DOWNLOAD_MODE -t THREAD_LIMIT
 ```
 
-**sn** 要下載視頻的sn碼,不可空
+**-s** 接要下載視頻的sn碼,不可空
 
-**resolution** 要下載的清晰度, 可空, 空則讀取**config.json**中的定義
+**-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義
 
-**download_mode** 下載模式, 可空, 空則下載傳入sn碼的視頻, 另有 **all** 下載此番劇所有劇集 和 **latest** 下載此番劇最新一集可選
+**-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻, 另有 **all** 下載此番劇所有劇集 和 **latest** 下載此番劇最新一集可選
 
-**thread_limit** 最大并發下載數, 可空, 空則讀取**config.json**中的定義
+**-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義

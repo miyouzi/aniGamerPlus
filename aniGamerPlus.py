@@ -12,9 +12,12 @@ import sqlite3
 import sys
 import threading
 import time
+import argparse
+import platform
 
 import Config
 from Anime import Anime
+from Color import Color
 
 
 def read_db(ns):
@@ -58,8 +61,12 @@ def insert_db(anime):
         cursor.execute("INSERT INTO anime (ns, title, anime_name, episode) VALUES (:ns, :title, :anime_name, :episode)",
                        anime_dict)
     except sqlite3.IntegrityError as e:
-        print('\033[31;0m' + 'ERROR: sn=' + anime_dict['ns'] + ' title=' + anime_dict['title'] + ' 数据已存在！' + str(
-            e) + '\033[0m')
+        err_msg = 'ERROR: sn='+anime_dict['ns']+' title='+anime_dict['title']+' 数据已存在！'+str(e)
+        if 'Windows' in platform.system():
+            clr = Color()
+            clr.print_red_text(err_msg)
+        else:
+            print('\033[31;0m'+err_msg+'\033[0m')
 
     cursor.close()
     conn.commit()
@@ -150,6 +157,8 @@ def __cui(sn, resolution=-1, download_mode='single', thread_limit=-1):
     if resolution == -1:
         resolution = settings['download_resolution']  # 若用户未指定，则使用配置文件设置
         print('未设定下载清晰度, 将使用配置文件指定的清晰度: '+resolution)
+    else:
+        resolution = str(resolution)
 
     if download_mode == 'single':
         print('當前下載模式: 僅下載本集')
@@ -165,7 +174,7 @@ def __cui(sn, resolution=-1, download_mode='single', thread_limit=-1):
         if thread_limit == -1:
             print('沒有指定執行緒數, 將使用配製文件設置')
         else:
-            thread_limiter = thread_limit
+            thread_limiter = threading.Semaphore(thread_limit)
         sn_dict.clear()
         sn_dict[sn] = 'all'
         check_tasks()
@@ -173,7 +182,7 @@ def __cui(sn, resolution=-1, download_mode='single', thread_limit=-1):
             a = threading.Thread(target=__download_only, args=(a,))
             a.start()
             print('启动任务: sn=' + str(a))
-        print('所有下載任務已添加至列隊, 執行緒數: '+str(thread_limiter))
+        print('所有下載任務已添加至列隊, 執行緒數: '+str(thread_limit))
     exit()
 
 
@@ -187,14 +196,22 @@ if __name__ == '__main__':
     thread_limiter = threading.Semaphore(settings['multi-thread'])
 
     if len(sys.argv) > 1:  # 支持命令行使用
-        if len(sys.argv) == 2:
-            __cui(sys.argv[1])
-        elif len(sys.argv) == 3:
-            __cui(sys.argv[1], sys.argv[2])
-        elif len(sys.argv) == 4:
-            __cui(sys.argv[1], sys.argv[2], sys.argv[3])
-        elif len(sys.argv) == 5:
-            __cui(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+        parser = argparse.ArgumentParser(usage="sn [resolution] [download_mode] [thread_limit]")
+        parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
+        parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', default=int(settings['download_resolution']), choices=[360, 480, 540, 720, 1080])
+        parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single', choices=['single', 'latest', 'all'])
+        parser.add_argument('--thread_limit', '-t',type=int, help='最高并發下載數(數字)', default=settings['multi-thread'])
+        arg = parser.parse_args()
+        __cui(arg.sn, arg.resolution, arg.download_mode, arg.thread_limit)
+
+        # if len(sys.argv) == 2:
+        #     __cui(sys.argv[1])
+        # elif len(sys.argv) == 3:
+        #     __cui(sys.argv[1], sys.argv[2])
+        # elif len(sys.argv) == 4:
+        #     __cui(sys.argv[1], sys.argv[2], sys.argv[3])
+        # elif len(sys.argv) == 5:
+        #     __cui(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 
     if not os.path.exists(db_path):
         # 初始化 sqlite3 数据库

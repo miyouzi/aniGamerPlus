@@ -63,6 +63,8 @@ def read_settings():
 
 def read_sn_list():
     settings = read_settings()
+    if not os.path.exists(sn_list_path):
+        return {}
     with open(sn_list_path, 'r', encoding='utf-8') as f:
         sn_dict = {}
         for i in f.readlines():
@@ -87,5 +89,4 @@ def read_cookies():
 
 
 if __name__=='__main__':
-    pprint.pprint(read_cookies())
-    pprint.pprint(read_settings())
+    pass

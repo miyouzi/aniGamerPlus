@@ -3,7 +3,7 @@
 
 ## 鳴謝
 
-本項目m3u8解析模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
+本項目m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
 
 ## 特性
 

@@ -94,7 +94,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 參數:
 ```
-python aniGamerPlus sn resolution download_mode thread_limit
+python aniGamerPlus.py sn resolution download_mode thread_limit
 ```
 
 **sn** 要下載視頻的sn碼,不可空

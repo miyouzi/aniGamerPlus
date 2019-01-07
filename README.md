@@ -97,7 +97,9 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-usage: sn [resolution] [download_mode] [thread_limit]
+usage: aniGamerPlus.py [-h] [--sn SN] [--resolution {360,480,540,720,1080}]
+                       [--download_mode {single,latest,all}]
+                       [--thread_limit THREAD_LIMIT]
 
 optional arguments:
   -h, --help            show this help message and exit

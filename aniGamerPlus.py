@@ -191,7 +191,7 @@ if __name__ == '__main__':
     thread_limiter = threading.Semaphore(settings['multi-thread'])
 
     if len(sys.argv) > 1:  # 支持命令行使用
-        parser = argparse.ArgumentParser(usage="sn [resolution] [download_mode] [thread_limit]")
+        parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', default=int(settings['download_resolution']), choices=[360, 480, 540, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single', choices=['single', 'latest', 'all'])

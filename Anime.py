@@ -244,13 +244,21 @@ class Anime():
             if not os.path.exists(bangumi_dir):
                 os.makedirs(bangumi_dir)  # 按番剧创建文件夹分类
 
-            # 如果不存在指定清晰度，则选取获得的最高清晰度
+            # 如果不存在指定清晰度，则选取最近可用清晰度
             if resolution not in self._m3u8_dict.keys():
                 resolution_list = map(lambda x: int(x), self._m3u8_dict.keys())
                 resolution_list = list(resolution_list)
-                resolution_list.sort()
-                resolution = str(resolution_list[-1])
-                err_msg = 'ERROR: 指定清晰度不存在，選取最高的清晰度: ' + resolution + 'P'
+                flag = 9999
+                closest_resolution = 0
+                for i in resolution_list:
+                    a = abs(int(resolution)-i)
+                    if a < flag:
+                        flag = a
+                        closest_resolution = i
+                # resolution_list.sort()
+                # resolution = str(resolution_list[-1])  # 选取最高可用清晰度
+                resolution = str(closest_resolution)
+                err_msg = 'ERROR: 指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
                 err_print(err_msg)
             self.video_resolution = int(resolution)
 

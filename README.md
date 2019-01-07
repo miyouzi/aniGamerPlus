@@ -47,7 +47,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 {
     "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分文件夾存放
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
-    "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最高清晰度, 可選 360 480 720 1080
+    "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all. latest 為僅下載最新, all 下載番劇全部劇集
     "multi-thread": 3,  # 最大并發下載數
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
@@ -113,7 +113,7 @@ optional arguments:
 
 **-s** 接要下載視頻的sn碼,不可空
 
-**-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義
+**-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義, 不存在則選取最近可用清晰度
 
 **-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻, 另有 **all** 下載此番劇所有劇集 和 **latest** 下載此番劇最新一集可選
 

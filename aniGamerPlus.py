@@ -13,12 +13,10 @@ import sys
 import threading
 import time
 import argparse
-import platform
-import subprocess
 
 import Config
 from Anime import Anime
-from Color import Color
+from Color import err_print
 
 
 def read_db(ns):
@@ -63,13 +61,7 @@ def insert_db(anime):
                        anime_dict)
     except sqlite3.IntegrityError as e:
         err_msg = 'ERROR: sn='+anime_dict['ns']+' title='+anime_dict['title']+' 数据已存在！'+str(e)
-        check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
-        if 'Windows' in platform.system() and check_tty == '/dev/cons0':
-            clr = Color()
-            clr.print_red_text(err_msg)
-        else:
-            print('\033[31;0m'+err_msg+'\033[0m')
+        err_print(err_msg)
 
     cursor.close()
     conn.commit()

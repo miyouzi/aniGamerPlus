@@ -17,11 +17,13 @@
  
 ## **注意**:warning:
 
+Python 版本 3 以上
+
 **本項目依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
 
 **使用前确认已安装好依赖**
 ```
-pip install requests beautifulsoup4
+pip3 install requests beautifulsoup4 lxml termcolor
 ```
  
 ## 待完成
@@ -94,19 +96,19 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 參數:
 ```
->python aniGamerPlus.py -h
+>python3 aniGamerPlus.py -h
 usage: sn [resolution] [download_mode] [thread_limit]
 
 optional arguments:
   -h, --help            show this help message and exit
   --sn SN, -s SN        視頻sn碼(數字)
-  --resolution {360,480,720,1080}, -r {360,480,720,1080}
+  --resolution {360,480,540,720,1080}, -r {360,480,540,720,1080}
                         指定下載清晰度(數字)
   --download_mode {single,latest,all}, -m {single,latest,all}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
-python aniGamerPlus.py -s SN -r RESOLUTION -m DOWNLOAD_MODE -t THREAD_LIMIT
+>python3 aniGamerPlus.py -s SN -r RESOLUTION -m DOWNLOAD_MODE -t THREAD_LIMIT
 ```
 
 **-s** 接要下載視頻的sn碼,不可空

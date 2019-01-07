@@ -6,7 +6,7 @@
 import Config
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random
-from Color import Color
+from Color import err_print
 
 
 class TryTooManyTimeError(BaseException):
@@ -74,7 +74,14 @@ class Anime():
 
     def __get_title(self):
         soup = self._src
-        self._title = soup.find('meta', property="og:title")['content']  # 提取标题（含有集数）
+        try:
+            self._title = soup.find('meta', property="og:title")['content']  # 提取标题（含有集数）
+        except TypeError:
+            # 该sn下没有动画
+            err_msg = 'ERROR: 該 sn='+str(self._sn)+' 下真的有動畫？'
+            err_print(err_msg)
+            self._episode_list = {}
+            exit(1)
 
     def __get_bangumi_name(self):
         self._bangumi_name = re.sub(r'\[.+\]$', '', self._title)  # 提取番剧名（去掉集数后缀）
@@ -127,14 +134,8 @@ class Anime():
             except requests.exceptions.RequestException as e:
                 if error_cnt >= 3:
                     raise TryTooManyTimeError('请求失败次数过多！请求链接：\n%s' % req)
-                err_msg = '请求失败！except：\n'+str(e)+'\n3s后重试(最多重试三次)'
-                check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
-                if 'Windows' in platform.system() and check_tty == '/dev/cons0':
-                    clr = Color()
-                    clr.print_red_text(err_msg)
-                else:
-                    print('\033[31;0m' + err_msg + '\033[0m')
+                err_msg = 'ERROR: 请求失败！except：\n'+str(e)+'\n3s后重试(最多重试三次)'
+                err_print(err_msg)
                 time.sleep(3)
                 error_cnt += 1
             else:
@@ -250,13 +251,7 @@ class Anime():
                 resolution_list.sort()
                 resolution = str(resolution_list[-1])
                 err_msg = 'ERROR: 指定清晰度不存在，選取最高的清晰度: ' + resolution + 'P'
-                check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE).stdout.read().decode("utf-8")[0:-1]
-                if 'Windows' in platform.system() and check_tty == '/dev/cons0':
-                    clr = Color()
-                    clr.print_red_text(err_msg)
-                else:
-                    print('\033[31;0m' + err_msg + '\033[0m')
+                err_print(err_msg)
             self.video_resolution = int(resolution)
 
             # 设定文件存放路径
@@ -280,9 +275,9 @@ class Anime():
                           '-c', 'copy', downloading_file,
                           '-y']
             print('正在下載: sn=' + str(self._sn) + ' ' + filename)
-            subprocess.call(ffmpeg_cmd, creationflags=0x08000000)
-            # run_ffmpeg = subprocess.Popen(ffmpeg_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # print(run_ffmpeg.stderr.readlines())
+            # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
+            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            run = run_ffmpeg.communicate()
             if os.path.exists(output_file):
                 os.remove(output_file)
             os.renames(downloading_file, output_file)  # 下载完成，更改文件名

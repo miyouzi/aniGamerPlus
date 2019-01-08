@@ -178,21 +178,21 @@ def __cui(sn, resolution=-1, download_mode='single', thread_limit=-1):
             a.start()
             print('启动任务: sn=' + str(a))
         print('所有下載任務已添加至列隊, 執行緒數: '+str(thread_limit))
-    exit()
+    sys.exit(0)
 
 
 if __name__ == '__main__':
-    working_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-    db_path = os.path.join(working_dir, 'aniGamer.db')
     settings = Config.read_settings()
     sn_dict = Config.read_sn_list()
+    working_dir = settings['working_dir']
+    db_path = os.path.join(working_dir, 'aniGamer.db')
     queue = []
     processing_queue = []
     thread_limiter = threading.Semaphore(settings['multi-thread'])
 
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
-        parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
+        parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', default=int(settings['download_resolution']), choices=[360, 480, 540, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single', choices=['single', 'latest', 'all'])
         parser.add_argument('--thread_limit', '-t',type=int, help='最高并發下載數(數字)', default=settings['multi-thread'])
@@ -214,7 +214,6 @@ if __name__ == '__main__':
                        'file_size INTEGER DEFAULT 0,'
                        "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
 
-    # print(read_db(8786))
     while True:
         check_tasks()  # 检查更新，生成任务列队
         if queue:

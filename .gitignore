@@ -118,3 +118,4 @@ requirements.txt
 .idea/modules.xml
 .idea/workspace.xml
 test.py
+releases/

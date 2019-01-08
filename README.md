@@ -1,6 +1,10 @@
 # aniGamerPlus
 巴哈姆特動畫瘋自動下載工具
 
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v3.1)下載exe文件使用.
+
+ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
+
 ## 鳴謝
 
 本項目m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
@@ -97,7 +101,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-usage: aniGamerPlus.py [-h] [--sn SN] [--resolution {360,480,540,720,1080}]
+usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,all}]
                        [--thread_limit THREAD_LIMIT]
 

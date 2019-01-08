@@ -15,27 +15,22 @@ class TryTooManyTimeError(BaseException):
 
 class Anime():
     def __init__(self, sn):
-        self._working_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+        self._settings = Config.read_settings()
+        self._cookies = Config.read_cookies()
+        self._working_dir = self._settings['working_dir']
+        self._bangumi_dir = self._settings['bangumi_dir']
+
         self._session = requests.session()
         self._title = ''
         self._sn = sn
         self._bangumi_name = ''
         self._episode = ''
         self._episode_list = {}
-        self._cookies = Config.read_cookies()
         self._device_id = ''
         self._playlist = {}
         self._m3u8_dict = {}
         self.video_resolution = 0
         self.video_size = 0
-        self._settings = Config.read_settings()
-
-        # 如果用户有自定确实存在的番剧目录
-        if self._settings['bangumi_dir'] and os.path.exists(self._settings['bangumi_dir']):
-            self._bangumi_dir = self._settings['bangumi_dir']
-        else:
-            # 否则本在程序所在目录下的 bangumi 文件夹中
-            self._bangumi_dir = os.path.join(self._working_dir, 'bangumi')
 
         self.__init_header()  # http header
         self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)

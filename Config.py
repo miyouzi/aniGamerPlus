@@ -5,9 +5,10 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, re
+import os, json, re, sys
 
-working_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+working_dir = os.path.dirname(os.path.realpath(__file__))
+# working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookies.txt')
@@ -58,6 +59,10 @@ def read_settings():
         settings['check_frequency'] = int(settings['check_frequency'])
         settings['download_resolution'] = str(settings['download_resolution'])
         settings['multi-thread'] = int(settings['multi-thread'])
+        # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
+        if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
+            settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
+        settings['working_dir'] = working_dir
         return settings
 
 
@@ -83,6 +88,7 @@ def read_cookies():
         with open(cookies_path, 'r', encoding='utf-8') as f:
             cookies = f.readline()
             cookies = dict([l.split("=", 1) for l in cookies.split("; ")])
+            cookies.pop('ckBH_lastBoard', 404)
             return cookies
     else:
         return {}

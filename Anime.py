@@ -5,7 +5,7 @@
 # @File    : Anime.py @Software: PyCharm
 import Config
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random
+import re, time, os, platform, subprocess, requests, random, sys
 from Color import err_print
 
 
@@ -76,7 +76,7 @@ class Anime():
             err_msg = 'ERROR: 該 sn='+str(self._sn)+' 下真的有動畫？'
             err_print(err_msg)
             self._episode_list = {}
-            exit(1)
+            sys.exit(1)
 
     def __get_bangumi_name(self):
         self._bangumi_name = re.sub(r'\[.+\]$', '', self._title)  # 提取番剧名（去掉集数后缀）

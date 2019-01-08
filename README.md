@@ -65,6 +65,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookies.txt**為文件名保存在程序目錄下即可
 
+:warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 否則cookie將可能被刷新**
 
 ### sn_list.txt
 

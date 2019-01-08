@@ -69,16 +69,19 @@ def insert_db(anime):
 
 
 def update_db(anime):
-    # 更新数据库 status, resolution, file_size 资料，
+    # 更新数据库 status, resolution, file_size 资料
     anime_dict = {}
+    if anime.video_size > 10:
+        anime_dict['status'] = 1
+    else:
+        # 下载失败
+        sys.exit(1)
     anime_dict['ns'] = anime.get_sn()
     anime_dict['title'] = anime.get_title()
     anime_dict['anime_name'] = anime.get_bangumi_name()
     anime_dict['episode'] = anime.get_episode()
     anime_dict['file_size'] = anime.video_size
     anime_dict['resolution'] = anime.video_resolution
-    if anime.video_size > 10:
-        anime_dict['status'] = 1
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -94,6 +97,15 @@ def worker(sn):
     thread_limiter.acquire()
     anime = Anime(sn)
     anime.download(settings['download_resolution'])
+
+    if anime.video_size < 10:
+        # 下载失败
+        queue.remove(sn)
+        processing_queue.remove(sn)
+        thread_limiter.release()
+        err_print('sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 下載失敗! 從任務列隊中移除, 等待下次更新重試.')
+        sys.exit(1)
+
     update_db(anime)
     queue.remove(sn)
     processing_queue.remove(sn)
@@ -191,6 +203,7 @@ if __name__ == '__main__':
     thread_limiter = threading.Semaphore(settings['multi-thread'])
 
     if len(sys.argv) > 1:  # 支持命令行使用
+        print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
         parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', default=int(settings['download_resolution']), choices=[360, 480, 540, 720, 1080])
@@ -222,6 +235,6 @@ if __name__ == '__main__':
                     task = threading.Thread(target=worker, args=(task_sn,))
                     task.start()
                     processing_queue.append(task_sn)
-                    print('启动任务: sn='+str(task_sn))
+                    print('加入任务列隊: sn='+str(task_sn))
         print(str(datetime.datetime.now())+' 更新终了\n')
         time.sleep(settings['check_frequency']*60)  # cool down

@@ -12,6 +12,7 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookies.txt')
+aniGamerPlus_version = 'v3.2'
 latest_config_version = 1.1
 
 
@@ -63,6 +64,7 @@ def read_settings():
         if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
             settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
         settings['working_dir'] = working_dir
+        settings['aniGamerPlus_version'] = aniGamerPlus_version
         return settings
 
 

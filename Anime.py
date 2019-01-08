@@ -279,13 +279,19 @@ class Anime():
                           '-y']
             print('正在下載: sn=' + str(self._sn) + ' ' + filename)
             # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
-            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=5, stderr=subprocess.PIPE)
             run = run_ffmpeg.communicate()
-            if os.path.exists(output_file):
-                os.remove(output_file)
-            os.renames(downloading_file, output_file)  # 下载完成，更改文件名
-            self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
-            print('下載完成: sn=' + str(self._sn) + ' ' + filename)
+            return_str = str(run[-1])
+            if run_ffmpeg.returncode == 0 and (return_str.find('Failed to open segment') < 0):
+                # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
+                if os.path.exists(output_file):
+                    os.remove(output_file)
+                os.renames(downloading_file, output_file)  # 下载完成，更改文件名
+                self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
+                print('下載完成: sn=' + str(self._sn) + ' ' + filename)
+            else:
+                self.video_size = 0
+                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(run_ffmpeg.returncode) + 'Bad segment=' + str(return_str.find('Failed to open segment')))
 
         get_device_id()
         gain_access()

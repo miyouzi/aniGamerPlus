@@ -1,7 +1,7 @@
 # aniGamerPlus
 巴哈姆特動畫瘋自動下載工具
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v3.2)下載exe文件使用.
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v4.0)下載exe文件使用.
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
 
@@ -17,6 +17,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - 自定義檢查更新間隔時間
  - 自定義番劇下載目錄
  - 自定義下載文件名前綴後綴及是否添加清晰度
+ - 下載失敗, 下載過慢自動重啓任務
  
  
 ## **注意**:warning:
@@ -98,6 +99,8 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 ## 命令行使用
 
 支持命令行使用, 文件將保存在**config.json**中指定的目錄下
+
+**命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 
 參數:
 ```

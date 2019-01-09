@@ -7,6 +7,7 @@ import Config
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys
 from Color import err_print
+import threading
 
 
 class TryTooManyTimeError(BaseException):
@@ -144,9 +145,12 @@ class Anime():
                 self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
         return f
 
-    def download(self, resolution=''):
+    def download(self, resolution='', save_dir=''):
         if not resolution:
             resolution = self._settings['download_resolution']
+
+        if save_dir:
+            self._bangumi_dir = save_dir
 
         # m3u8获取模块参考自 https://github.com/c0re100/BahamutAnimeDownloader
         def get_device_id():
@@ -277,11 +281,36 @@ class Anime():
                           '-i', self._m3u8_dict[resolution],
                           '-c', 'copy', downloading_file,
                           '-y']
+
+            if os.path.exists(downloading_file):
+                os.remove(downloading_file)  # 清理任务失败的尸体
+
             print('正在下載: sn=' + str(self._sn) + ' ' + filename)
             # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
-            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=5, stderr=subprocess.PIPE)
+            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=204800, stderr=subprocess.PIPE)
+
+            def check_ffmpeg_alive():
+                # 应对ffmpeg卡死, 资源限速等，若 1min 中内文件大小没有增加超过 3M, 则判定卡死
+                time.sleep(2)
+                time_counter = 1
+                pre_temp_file_size = 0
+                while run_ffmpeg.poll() is None:
+                    if time_counter % 60 == 0 and os.path.exists(downloading_file):
+                        temp_file_size = os.path.getsize(downloading_file)
+                        a = temp_file_size - pre_temp_file_size
+                        if a < (3 * 1024 * 1024):
+                            err_print('sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
+                                int(a / float(1024))) + 'KB 判定为卡死, 任务失败!')
+                            run_ffmpeg.kill()
+                            return
+                        pre_temp_file_size = temp_file_size
+                    time.sleep(1)
+                    time_counter = time_counter + 1
+
+            ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 检查线程
+            ffmpeg_checker.start()
             run = run_ffmpeg.communicate()
-            return_str = str(run[-1])
+            return_str = str(run[1])
             if run_ffmpeg.returncode == 0 and (return_str.find('Failed to open segment') < 0):
                 # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
                 if os.path.exists(output_file):
@@ -291,7 +320,7 @@ class Anime():
                 print('下載完成: sn=' + str(self._sn) + ' ' + filename)
             else:
                 self.video_size = 0
-                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(run_ffmpeg.returncode) + 'Bad segment=' + str(return_str.find('Failed to open segment')))
+                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
 
         get_device_id()
         gain_access()

@@ -12,7 +12,7 @@ from termcolor import cprint
 def err_print(err_msg):
     check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     check_tty_return_str = check_tty.stdout.read().decode("utf-8")[0:-1]
-    if 'Windows' in platform.system() and (check_tty_return_str == '/dev/cons0' or check_tty.returncode == 9009):
+    if 'Windows' in platform.system() and (check_tty_return_str == '/dev/cons0' or check_tty.stderr.read()):
         clr = Color()
         clr.print_red_text(err_msg)
     else:

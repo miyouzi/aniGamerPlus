@@ -288,8 +288,8 @@ if __name__ == '__main__':
         if arg.episodes:
             for i in arg.episodes.split(','):
                 if re.match(r'^\d+-\d+$', i):
-                    episodes_range_start = int(re.findall(r'\d+-', i)[0][:-1])
-                    episodes_range_end = int(re.findall(r'-\d+', i)[0][1:])
+                    episodes_range_start = int(i.split('-')[0])
+                    episodes_range_end = int(i.split('-')[1])
                     if episodes_range_start > episodes_range_end:  # 如果有zz从大到小写
                         episodes_range_start, episodes_range_end = episodes_range_end, episodes_range_start
                     download_episodes.extend(list(range(episodes_range_start, episodes_range_end + 1)))

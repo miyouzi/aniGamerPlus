@@ -1,7 +1,7 @@
 # aniGamerPlus
 巴哈姆特動畫瘋自動下載工具
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v4.0)下載exe文件使用.
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v5.0)下載exe文件使用.
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
 
@@ -66,7 +66,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookies.txt**為文件名保存在程序目錄下即可
 
-:warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 否則cookie將可能被刷新**
+:warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 不異地登陸, 否則cookie將可能被刷新**
 
 ### sn_list.txt
 
@@ -105,26 +105,69 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
+當前aniGamerPlus版本: v5.0
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
-                       [--download_mode {single,latest,all}]
-                       [--thread_limit THREAD_LIMIT]
+                       [--download_mode {single,latest,all,range}]
+                       [--thread_limit THREAD_LIMIT] [--current_path]
+                       [--episodes EPISODES]
 
 optional arguments:
   -h, --help            show this help message and exit
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,720,1080}, -r {360,480,540,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,all}, -m {single,latest,all}
+  --download_mode {single,latest,all,range}, -m {single,latest,all,range}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
->python3 aniGamerPlus.py -s SN -r RESOLUTION -m DOWNLOAD_MODE -t THREAD_LIMIT
+  --current_path, -c    下載到當前工作目錄
+  --episodes EPISODES, -e EPISODES
+                        僅下載指定劇集
 ```
 
-**-s** 接要下載視頻的sn碼,不可空
+ - **-s** 接要下載視頻的sn碼,不可空
 
-**-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義, 不存在則選取最近可用清晰度
+ - **-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義, 不存在則選取最近可用清晰度
 
-**-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻, 另有 **all** 下載此番劇所有劇集 和 **latest** 下載此番劇最新一集可選
+ - **-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻
+ 
+    - **single** 下載此 sn 單集(默認)
+ 
+    - **all** 下載此番劇所有劇集
+    
+    - **latest** 下載此番劇最新一集
+    
+    - **range** 下載此番指定的劇集
 
-**-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
+ - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
+
+ - **-e** 下載此番劇指定劇集, 支持範圍輸入, 支持多個不連續聚集下載, 僅支持數字命名的劇集
+    
+    - -e 參數優先于 -m 參數, 使用 -e 參數時, 强制為 range 模式
+    
+    - 若使用 -m range 則必須使用 -e 指定需要下載的劇集
+    
+    - 若指定了不存在的劇集會警告並跳過, 僅下載存在的劇集
+    
+    - 指定不連續劇集請用英文逗號","分隔, 中間無空格
+    
+    - 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
+    
+    - 將會按劇集順序下載
+
+    - 舉例:
+    
+        - 想下載第1,2,3集
+        ```python3 aniGamerPlus.py -s 10218 -e 1,2,3```
+        
+        - 想下載第5到8集
+        ```python3 aniGamerPlus.py -s 10218 -e 5-8```
+        
+        - 想下載第2集, 第5到8集, 第12集
+        ```python3 aniGamerPlus.py -s 10218 -e 2,5-8,12```
+    
+    - 截圖:
+    
+        ![](screenshot/cui_range_mode.png)
+        
+        ![](screenshot/cui_range_mode_err.png)

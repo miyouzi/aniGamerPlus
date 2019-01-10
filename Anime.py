@@ -6,7 +6,7 @@
 import Config
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys
-from Color import err_print
+from ColorPrint import err_print
 import threading
 
 
@@ -32,13 +32,15 @@ class Anime():
         self._m3u8_dict = {}
         self.video_resolution = 0
         self.video_size = 0
+        self.realtime_show_file_size = False
 
         self.__init_header()  # http header
         self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)
         self.__get_title()  # 提取页面标题
         self.__get_bangumi_name()  # 提取本番名字
         self.__get_episode()  # 提取剧集码，str
-        self.__get_episode_list()  # 提取剧集列表，结构 {'episode': sn}，储存到 self._episode_list, sn 为 int
+        # 提取剧集列表，结构 {'episode': sn}，储存到 self._episode_list, sn 为 int, 考慮到 劇場版 sp 等存在, key 為 str
+        self.__get_episode_list()
 
     def renew(self):
         self.__get_src()
@@ -145,7 +147,8 @@ class Anime():
                 self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
         return f
 
-    def download(self, resolution='', save_dir=''):
+    def download(self, resolution='', save_dir='', realtime_show_file_size=False):
+        self.realtime_show_file_size = realtime_show_file_size
         if not resolution:
             resolution = self._settings['download_resolution']
 
@@ -285,16 +288,36 @@ class Anime():
             if os.path.exists(downloading_file):
                 os.remove(downloading_file)  # 清理任务失败的尸体
 
-            print('正在下載: sn=' + str(self._sn) + ' ' + filename)
             # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
             run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=204800, stderr=subprocess.PIPE)
 
             def check_ffmpeg_alive():
                 # 应对ffmpeg卡死, 资源限速等，若 1min 中内文件大小没有增加超过 3M, 则判定卡死
+                if self.realtime_show_file_size:  # 是否实时显示文件大小, 设计仅 cui 下载单个文件或线程数=1时适用
+                    sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
+                    sys.stdout.flush()
+                else:
+                    print('正在下載: sn=' + str(self._sn) + ' ' + filename)
+
                 time.sleep(2)
                 time_counter = 1
                 pre_temp_file_size = 0
                 while run_ffmpeg.poll() is None:
+
+                    if self.realtime_show_file_size:
+                        # 实时显示文件大小
+                        if os.path.exists(downloading_file):
+                            size = os.path.getsize(downloading_file)
+                            size = size / float(1024*1024)
+                            size = round(size, 2)
+                            sys.stdout.write('\r')
+                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB  ')
+                            sys.stdout.flush()
+                        else:
+                            sys.stdout.write('\r')
+                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    文件尚未生成  ')
+                            sys.stdout.flush()
+
                     if time_counter % 60 == 0 and os.path.exists(downloading_file):
                         temp_file_size = os.path.getsize(downloading_file)
                         a = temp_file_size - pre_temp_file_size
@@ -308,9 +331,15 @@ class Anime():
                     time_counter = time_counter + 1
 
             ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 检查线程
+            ffmpeg_checker.setDaemon(True)  # 如果 Anime 线程被 kill, 检查进程也应该结束
             ffmpeg_checker.start()
             run = run_ffmpeg.communicate()
             return_str = str(run[1])
+
+            if self.realtime_show_file_size:
+                sys.stdout.write('\n')
+                sys.stdout.flush()
+
             if run_ffmpeg.returncode == 0 and (return_str.find('Failed to open segment') < 0):
                 # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
                 if os.path.exists(output_file):
@@ -319,8 +348,8 @@ class Anime():
                 self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
                 print('下載完成: sn=' + str(self._sn) + ' ' + filename)
             else:
-                self.video_size = 0
-                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
+                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(
+                    run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
 
         get_device_id()
         gain_access()

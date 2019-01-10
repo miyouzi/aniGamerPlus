@@ -8,15 +8,17 @@
 import datetime
 import os
 import queue
+import signal
 import sqlite3
 import sys
 import threading
 import time
 import argparse
+import re
 
 import Config
 from Anime import Anime
-from Color import err_print
+from ColorPrint import err_print
 
 
 def read_db(ns):
@@ -153,14 +155,15 @@ def check_tasks():
                 queue.append(latest_sn)
 
 
-def __download_only(sn, resolution='', save_dir=''):
+def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False):
+    # 仅下载,不操作数据库
     thread_limiter.acquire()
     err_counter = 0
     anime = Anime(sn)
-    if resolution:
-        anime.download(resolution, save_dir)
+    if dl_resolution:
+        anime.download(dl_resolution, dl_save_dir, realtime_show_file_size)
     else:
-        anime.download(settings['download_resolution'], save_dir)
+        anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size)
     while anime.video_size < 10:
         if err_counter >= 3:
             err_print('任務失敗達三次! 終止任務! sn=' + str(anime.get_sn()) + ' title=' + anime.get_title())
@@ -171,42 +174,83 @@ def __download_only(sn, resolution='', save_dir=''):
             err_counter = err_counter + 1
             time.sleep(10)
             anime.renew()
-            if resolution:
-                anime.download(resolution, save_dir)
+            if dl_resolution:
+                anime.download(dl_resolution, dl_save_dir, realtime_show_file_size)
             else:
-                anime.download(settings['download_resolution'], save_dir)
+                anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size)
     thread_limiter.release()
 
 
-def __cui(sn, resolution, download_mode, thread_limit, save_dir=''):
-    if download_mode == 'single':
-        print('當前下載模式: 僅下載本集')
-        Anime(sn).download(resolution, save_dir)
+def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir=''):
+    if cui_thread_limit == 1:
+        realtime_show_file_size = True
+    else:
+        realtime_show_file_size = False
 
-    elif download_mode == 'latest':
-        print('當前下載模式: 下載本番劇最新一集')
+    if cui_download_mode == 'single':
+        print('當前下載模式: 僅下載本集\n')
+        Anime(sn).download(cui_resolution, cui_save_dir, True)  # True 是实时显示文件大小, 仅一个下载任务时适用
+
+    elif cui_download_mode == 'latest':
+        print('當前下載模式: 下載本番劇最新一集\n')
         anime = Anime(sn)
         bangumi_list = list(anime.get_episode_list().values())
         bangumi_list.sort()
         if bangumi_list[-1] == sn:
-            anime.download(resolution, save_dir)
+            anime.download(cui_resolution, cui_save_dir, True)
         else:
-            Anime(bangumi_list[-1]).download(resolution, save_dir)
+            Anime(bangumi_list[-1]).download(cui_resolution, cui_save_dir, True)
 
-    elif download_mode == 'all':
-        print('當前下載模式: 下載本番劇所有劇集')
+    elif cui_download_mode == 'all':
+        print('當前下載模式: 下載本番劇所有劇集\n')
         anime = Anime(sn)
         bangumi_list = list(anime.get_episode_list().values())
         bangumi_list.sort()
-        for a in bangumi_list:
-            b = threading.Thread(target=__download_only, args=(a, resolution, save_dir,))
-            b.start()
-            print('添加任务列隊: sn=' + str(a))
-        print('所有下載任務已添加至列隊, 執行緒數: ' + str(thread_limit))
+        for anime_sn in bangumi_list:
+            task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size))
+            task.setDaemon(True)
+            thread_tasks.append(task)
+            task.start()
+            print('添加任务列隊: sn=' + str(anime_sn))
+        print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
+
+    elif cui_download_mode == 'range':
+        print('當前下載模式: 下載本番劇指定劇集\n')
+        anime = Anime(sn)
+        episode_dict = anime.get_episode_list()
+        bangumi_ep_list = list(episode_dict.keys())  # 本番剧集列表
+        for ep in ep_range:
+            if ep in bangumi_ep_list:
+                a = threading.Thread(target=__download_only, args=(episode_dict[ep], cui_resolution, cui_save_dir, realtime_show_file_size))
+                a.setDaemon(True)
+                thread_tasks.append(a)
+                a.start()
+                print('添加任务列隊: sn='+str(episode_dict[ep])+' 《'+anime.get_bangumi_name()+'》 第 '+ep+' 集')
+            else:
+                err_print('《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!')
+        print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
+
+    __kill_thread_when_ctrl_c()
     sys.exit(0)
 
 
+def __kill_thread_when_ctrl_c():
+    for t in thread_tasks:  # 当用户 Ctrl+C 可以 kill 线程
+        while True:
+            if t.isAlive():
+                time.sleep(1)
+            else:
+                break
+
+
+def user_exit(signum, frame):
+    err_print('\n\n你終止了程序!')
+    sys.exit(255)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, user_exit)
+    signal.signal(signal.SIGTERM, user_exit)
     settings = Config.read_settings()
     sn_dict = Config.read_sn_list()
     working_dir = settings['working_dir']
@@ -214,6 +258,7 @@ if __name__ == '__main__':
     queue = []
     processing_queue = []
     thread_limiter = threading.Semaphore(settings['multi-thread'])
+    thread_tasks = []
 
     if len(sys.argv) > 1:  # 支持命令行使用
         print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
@@ -221,17 +266,40 @@ if __name__ == '__main__':
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'all'])
+                            choices=['single', 'latest', 'all', 'range'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
+        parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
         arg = parser.parse_args()
 
         save_dir = ''
+        download_mode = arg.download_mode
         if arg.current_path:
             save_dir = os.getcwd()
             print('使用命令行模式, 指定下載到當前目錄:\n    ' + save_dir)
         else:
             print('使用命令行模式, 文件將保存在配置文件中指定的目錄下:\n    ' + settings['bangumi_dir'])
+
+        if not arg.episodes and arg.download_mode == 'range':
+            err_print('ERROR: 當前指定範圍下載模式, 但下載範圍未指定!')
+            sys.exit(1)
+
+        download_episodes = []
+        if arg.episodes:
+            for i in arg.episodes.split(','):
+                if re.match(r'^\d+-\d+$', i):
+                    episodes_range_start = int(re.findall(r'\d+-', i)[0][:-1])
+                    episodes_range_end = int(re.findall(r'-\d+', i)[0][1:])
+                    if episodes_range_start > episodes_range_end:  # 如果有zz从大到小写
+                        episodes_range_start, episodes_range_end = episodes_range_end, episodes_range_start
+                    download_episodes.extend(list(range(episodes_range_start, episodes_range_end + 1)))
+                if re.match(r'^\d+$', i):
+                    download_episodes.append(int(i))
+            download_episodes = list(set(download_episodes))  # 去重复
+            download_episodes.sort()  # 排序, 任务将会按集数顺序下载
+            download_episodes = list(map(lambda x: str(x), download_episodes))
+            # 转为 str, 方便作为 Anime.get_episode_list() 的 key
+            download_mode = 'range'
 
         if not arg.resolution:
             resolution = settings['download_resolution']
@@ -246,22 +314,23 @@ if __name__ == '__main__':
             thread_limiter = threading.Semaphore(arg.thread_limit)
         else:
             thread_limit = settings['multi-thread']
-        __cui(arg.sn, resolution, arg.download_mode, thread_limit, save_dir)
+        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir)
 
-    if not os.path.exists(db_path):
-        # 初始化 sqlite3 数据库
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute('create table anime ('
-                       'ns INTEGER primary key  NOT NULL,'
-                       'title VARCHAR(100) NOT NULL,'
-                       'anime_name VARCHAR(100) NOT NULL, '
-                       'episode VARCHAR(10) NOT NULL,'
-                       'status TINYINT DEFAULT 0,'
-                       'remote_statu INTEGER DEFAULT 0,'
-                       'resolution INTEGER DEFAULT 0,'
-                       'file_size INTEGER DEFAULT 0,'
-                       "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
+    # 初始化 sqlite3 数据库
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
+                   'ns INTEGER PRIMARY KEY NOT NULL,'
+                   'title VARCHAR(100) NOT NULL,'
+                   'anime_name VARCHAR(100) NOT NULL, '
+                   'episode VARCHAR(10) NOT NULL,'
+                   'status TINYINT DEFAULT 0,'
+                   'remote_statu INTEGER DEFAULT 0,'
+                   'resolution INTEGER DEFAULT 0,'
+                   'file_size INTEGER DEFAULT 0,'
+                   "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
+    conn.commit()
+    conn.close()
 
     while True:
         check_tasks()  # 检查更新，生成任务列队
@@ -269,8 +338,10 @@ if __name__ == '__main__':
             for task_sn in queue:
                 if task_sn not in processing_queue:  # 如果该任务没有在进行中，则启动
                     task = threading.Thread(target=worker, args=(task_sn,))
+                    task.setDaemon(True)
                     task.start()
                     processing_queue.append(task_sn)
                     print('加入任务列隊: sn=' + str(task_sn))
         print(str(datetime.datetime.now()) + ' 更新终了\n')
-        time.sleep(settings['check_frequency'] * 60)  # cool down
+        for i in range(settings['check_frequency'] * 60):
+            time.sleep(1)  # cool down, 這麽寫是爲了可以 Ctrl+C 馬上退出

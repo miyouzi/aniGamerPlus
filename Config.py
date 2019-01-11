@@ -12,7 +12,7 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookies.txt')
-aniGamerPlus_version = 'v5.0'
+aniGamerPlus_version = 'v5.1'
 latest_config_version = 1.1
 
 
@@ -60,6 +60,8 @@ def read_settings():
         settings['check_frequency'] = int(settings['check_frequency'])
         settings['download_resolution'] = str(settings['download_resolution'])
         settings['multi-thread'] = int(settings['multi-thread'])
+        if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
+            settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
         # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
         if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
             settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
@@ -76,11 +78,18 @@ def read_sn_list():
         sn_dict = {}
         for i in f.readlines():
             i = re.sub(r'#.+\n', '', i).strip()
-            a = [l for l in i.split(" ")]
-            try:
-                sn_dict[int(a[0])] = a[1]
-            except IndexError:
-                sn_dict[int(a[0])] = settings['default_download_mode']
+            i = re.sub(r' +', ' ', i)  # 去除多余空格
+            a = i.split(" ")
+            if not a[0]:  # 跳过纯注释行
+                continue
+            if re.match(r'^\d+$',a[0]):
+                if len(a) > 1:  # 如果有特別指定下载模式
+                    if re.match(r'^(all|latest|largest-sn)$', a[1]):  # 仅认可合法的模式
+                        sn_dict[int(a[0])] = a[1]
+                    else:
+                        sn_dict[int(a[0])] = settings['default_download_mode']  # 非法模式一律替换成默认模式
+                else:  # 没有指定下载模式则使用默认设定
+                    sn_dict[int(a[0])] = settings['default_download_mode']
         return sn_dict
 
 
@@ -96,5 +105,5 @@ def read_cookies():
         return {}
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass

@@ -121,7 +121,7 @@ def check_tasks():
         anime = Anime(sn)
         if sn_dict[sn] == 'all':
             # 如果用户选择全部下载 download_mode = 'all'
-            for ep in anime.get_episode_list().values():
+            for ep in anime.get_episode_list().values():  # 遍历剧集列表
                 try:
                     db = read_db(ep)
                     if db['status'] == 0 and ep not in queue:
@@ -136,10 +136,12 @@ def check_tasks():
                     insert_db(new_anime)
                     queue.append(ep)
         else:
-            # 如果用户选择仅下载最新 download_mode = 'latest'
             latest_sn = list(anime.get_episode_list().values())  # 本番剧剧集列表
-            latest_sn.sort()
-            latest_sn = latest_sn[-1]  # 选出 sn 值最高的，即最新的
+            if sn_dict[sn] == 'largest-sn':
+                # 如果用户选择仅下载最新上传, download_mode = 'largest_sn', 则对 sn 进行排序
+                latest_sn.sort()
+                # 否则用户选择仅下载最后剧集, download_mode = 'latest', 即下载网页上显示在最右的剧集
+            latest_sn = latest_sn[-1]
             try:
                 db = read_db(latest_sn)
                 if db['status'] == 0 and latest_sn not in queue:
@@ -191,11 +193,18 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         print('當前下載模式: 僅下載本集\n')
         Anime(sn).download(cui_resolution, cui_save_dir, True)  # True 是实时显示文件大小, 仅一个下载任务时适用
 
-    elif cui_download_mode == 'latest':
-        print('當前下載模式: 下載本番劇最新一集\n')
+    elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
+        if cui_download_mode == 'latest':
+            print('當前下載模式: 下載本番劇最後一集\n')
+        else:
+            print('當前下載模式: 下載本番劇最近上傳的一集\n')
+
         anime = Anime(sn)
         bangumi_list = list(anime.get_episode_list().values())
-        bangumi_list.sort()
+
+        if cui_download_mode == 'largest-sn':
+            bangumi_list.sort()
+
         if bangumi_list[-1] == sn:
             anime.download(cui_resolution, cui_save_dir, True)
         else:
@@ -266,7 +275,7 @@ if __name__ == '__main__':
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'all', 'range'])
+                            choices=['single', 'latest', 'largest-sn', 'all', 'range'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')

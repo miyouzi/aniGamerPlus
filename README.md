@@ -1,7 +1,7 @@
 # aniGamerPlus
 巴哈姆特動畫瘋自動下載工具
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v5.0)下載exe文件使用.
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v5.1)下載exe文件使用.
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
 
@@ -42,6 +42,8 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 :warning: **以下所有配置請使用UTF-8無BOM編碼** :warning:
 
+**推薦使用 [notepad++](https://notepad-plus-plus.org/) 進行編輯**
+
 ### config.json
 
 **config-sample.json**为范例配置文件, 可以将其修改后改名为**config.json**.
@@ -62,11 +64,21 @@ pip3 install requests beautifulsoup4 lxml termcolor
 }
 ```
 
+模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
+
 ### cookies.txt
 
 用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookies.txt**為文件名保存在程序目錄下即可
 
 :warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 不異地登陸, 否則cookie將可能被刷新**
+
+#### 使用Chrome舉例如何獲取 Cookie:
+
+ - 按 F12 調出開發者工具, 前往動畫瘋, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
+    ![](screenshot/WhereIsCookie.png)
+    
+ - 在程序所在目錄新建一個名爲**cookies.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
+    ![](screenshot/CookiesFormat.png)
 
 ### sn_list.txt
 
@@ -75,6 +87,8 @@ pip3 install requests beautifulsoup4 lxml termcolor
 可以對個別番劇配置下載模式, 未配置下載模式將會使用**config.json**定義的默認下載模式
 
 支持注釋 **#** 後面的所有字符程序均不會讀取, 可以標記番劇名
+
+模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**定義的默認下載模式
 
 格式:
 ```
@@ -105,9 +119,9 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v5.0
+當前aniGamerPlus版本: v5.1
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
-                       [--download_mode {single,latest,all,range}]
+                       [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES]
 
@@ -116,7 +130,7 @@ optional arguments:
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,720,1080}, -r {360,480,540,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,all,range}, -m {single,latest,all,range}
+  --download_mode {single,latest,largest-sn,all,range}, -m {single,latest,largest-sn,all,range}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
@@ -135,13 +149,15 @@ optional arguments:
  
     - **all** 下載此番劇所有劇集
     
-    - **latest** 下載此番劇最新一集
+    - **latest** 下載此番劇最後一集(即網頁上顯示排最後的一集)
+    
+    - **largest-sn** 下載此番劇最近上傳的一集(即sn最大的一集)
     
     - **range** 下載此番指定的劇集
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
 
- - **-e** 下載此番劇指定劇集, 支持範圍輸入, 支持多個不連續聚集下載, 僅支持數字命名的劇集
+ - **-e** 下載此番劇指定劇集, 支持範圍輸入, 支持多個不連續聚集下載, 僅支持整數命名的劇集
     
     - -e 參數優先于 -m 參數, 使用 -e 參數時, 强制為 range 模式
     

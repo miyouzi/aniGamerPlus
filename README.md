@@ -55,7 +55,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分文件夾存放
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
-    "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all. latest 為僅下載最新, all 下載番劇全部劇集
+    "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 3,  # 最大并發下載數
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
@@ -88,7 +88,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 支持注釋 **#** 後面的所有字符程序均不會讀取, 可以標記番劇名
 
-模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**定義的默認下載模式
+模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**中定義的默認下載模式
 
 格式:
 ```
@@ -156,6 +156,8 @@ optional arguments:
     - **range** 下載此番指定的劇集
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
+ 
+ - **-c** 開關, 指定時將會下載到當前工作路徑下
 
  - **-e** 下載此番劇指定劇集, 支持範圍輸入, 支持多個不連續聚集下載, 僅支持整數命名的劇集
     

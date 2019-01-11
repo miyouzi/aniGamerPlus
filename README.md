@@ -112,7 +112,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 ## 命令行使用
 
-支持命令行使用, 文件將保存在**config.json**中指定的目錄下
+支持命令行使用, 文件默認將保存在**config.json**中指定的目錄下
 
 **命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 

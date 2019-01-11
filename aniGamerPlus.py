@@ -257,6 +257,13 @@ def user_exit(signum, frame):
     sys.exit(255)
 
 
+def check_new_version():
+    # 检查GitHub上是否有新版
+    remote_version = Config.read_latest_version_on_github()
+    if settings['aniGamerPlus_version'] != remote_version:
+        err_print('發現GitHub上有新版本: '+remote_version)
+
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, user_exit)
     signal.signal(signal.SIGTERM, user_exit)
@@ -268,6 +275,9 @@ if __name__ == '__main__':
     processing_queue = []
     thread_limiter = threading.Semaphore(settings['multi-thread'])
     thread_tasks = []
+
+    if settings['check_latest_version']:
+        check_new_version()  # 检查新版
 
     if len(sys.argv) > 1:  # 支持命令行使用
         print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])

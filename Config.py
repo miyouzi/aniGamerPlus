@@ -5,7 +5,8 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, re, sys
+import os, json, re, sys, requests
+from ColorPrint import err_print
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
 # working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
@@ -13,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookies.txt')
 aniGamerPlus_version = 'v5.1'
-latest_config_version = 1.1
+latest_config_version = 1.2
 
 
 def __init_settings():
@@ -41,33 +42,52 @@ def __init_settings():
                     'pwd': '',
                     'cwd': '',  # 文件存放目录
                 },
+                'check_latest_version': True,  # 是否检查新版本
                 'config_version': latest_config_version
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)
 
 
+def __update_settings(old_settings):  # 升级配置文件
+    new_settings = old_settings.copy()
+    if 'check_latest_version' not in new_settings.keys():
+        new_settings['check_latest_version'] = True
+    # if 'proxy' in new_settings.keys():
+    #     new_settings.pop('proxy')
+    new_settings['config_version'] = latest_config_version
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(new_settings, f, ensure_ascii=False, indent=4)
+    err_print('配置文件從 v'+str(old_settings['config_version'])+' 升級到 v'+str(latest_config_version)+' 你的有效配置不會丟失!')
+
+
+def __read_settings_file():
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
 def read_settings():
     if not os.path.exists(config_path):
         __init_settings()
 
-    with open(config_path, 'r', encoding='utf-8') as f:
-        settings = json.load(f)
-        if settings['config_version'] != latest_config_version:
-            __init_settings()
-            settings = json.load(f)
-        # 防呆
-        settings['check_frequency'] = int(settings['check_frequency'])
-        settings['download_resolution'] = str(settings['download_resolution'])
-        settings['multi-thread'] = int(settings['multi-thread'])
-        if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
-            settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
-        # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
-        if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
-            settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
-        settings['working_dir'] = working_dir
-        settings['aniGamerPlus_version'] = aniGamerPlus_version
-        return settings
+    settings = __read_settings_file()
+
+    if settings['config_version'] < latest_config_version:
+        __update_settings(settings)  # 升级旧版配置
+        settings = __read_settings_file()  # 重新载入
+
+    # 防呆
+    settings['check_frequency'] = int(settings['check_frequency'])
+    settings['download_resolution'] = str(settings['download_resolution'])
+    settings['multi-thread'] = int(settings['multi-thread'])
+    if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
+        settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
+    # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
+    if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
+        settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
+    settings['working_dir'] = working_dir
+    settings['aniGamerPlus_version'] = aniGamerPlus_version
+    return settings
 
 
 def read_sn_list():
@@ -82,7 +102,7 @@ def read_sn_list():
             a = i.split(" ")
             if not a[0]:  # 跳过纯注释行
                 continue
-            if re.match(r'^\d+$',a[0]):
+            if re.match(r'^\d+$', a[0]):
                 if len(a) > 1:  # 如果有特別指定下载模式
                     if re.match(r'^(all|latest|largest-sn)$', a[1]):  # 仅认可合法的模式
                         sn_dict[int(a[0])] = a[1]
@@ -103,6 +123,17 @@ def read_cookies():
             return cookies
     else:
         return {}
+
+
+def read_latest_version_on_github():
+    req = 'https://api.github.com/repos/miyouzi/aniGamerPlus/releases/latest'
+    session = requests.session()
+    try:
+        latest_releases_info = session.get(req, timeout=3).json()
+        remote_version = latest_releases_info['tag_name']
+    except:
+        remote_version = aniGamerPlus_version  # 拉取github版本号失败
+    return remote_version
 
 
 if __name__ == '__main__':

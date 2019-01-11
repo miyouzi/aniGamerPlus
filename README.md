@@ -60,7 +60,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
-    "config_version": 0.1
+    "config_version": 1.1
 }
 ```
 

@@ -9,14 +9,20 @@ import ctypes, subprocess, platform
 from termcolor import cprint
 
 
-def err_print(err_msg):
+def err_print(err_msg, green=False):
     check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     check_tty_return_str = check_tty.stdout.read().decode("utf-8")[0:-1]
     if 'Windows' in platform.system() and (check_tty_return_str == '/dev/cons0' or check_tty.stderr.read()):
         clr = Color()
-        clr.print_red_text(err_msg)
+        if green:
+            clr.print_green_text(err_msg)
+        else:
+            clr.print_red_text(err_msg)
     else:
-        cprint(err_msg, 'red', attrs=['bold'])
+        if green:
+            cprint(err_msg, 'green', attrs=['bold'])
+        else:
+            cprint(err_msg, 'red', attrs=['bold'])
 
 
 # 用於Win下染色輸出，代碼來自 https://blog.csdn.net/five3/article/details/7630295
@@ -44,5 +50,10 @@ class Color:
 
     def print_red_text(self, print_text):
         self.set_cmd_color(self.FOREGROUND_RED | self.FOREGROUND_INTENSITY)
+        print(print_text)
+        self.reset_color()
+
+    def print_green_text(self, print_text):
+        self.set_cmd_color(self.FOREGROUND_GREEN | self.FOREGROUND_INTENSITY)
         print(print_text)
         self.reset_color()

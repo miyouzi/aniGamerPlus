@@ -7,7 +7,6 @@
 
 import datetime
 import os
-import queue
 import signal
 import sqlite3
 import sys
@@ -32,15 +31,15 @@ def read_db(ns):
         values = cursor.fetchall()[0]
     except IndexError as e:
         raise e
-    anime_db = {}
-    anime_db['sn'] = values[0]
-    anime_db['title'] = values[1]
-    anime_db['anime_name'] = values[2]
-    anime_db['episode'] = values[3]
-    anime_db['status'] = values[4]
-    anime_db['remote_statu'] = values[5]
-    anime_db['resolution'] = values[6]
-    anime_db['file_size'] = values[7]
+    anime_db = {'sn': values[0],
+                'title': values[1],
+                'anime_name': values[2],
+                'episode': values[3],
+                'status': values[4],
+                'remote_status': values[5],
+                'resolution': values[6],
+                'file_size': values[7],
+                'local_file_path': values[8]}
 
     cursor.close()
     conn.close()
@@ -78,55 +77,98 @@ def update_db(anime):
     else:
         # 下载失败
         sys.exit(1)
+    if anime.upload_succeed_flag:
+        anime_dict['remote_status'] = 1
+    else:
+        anime_dict['remote_status'] = 0
     anime_dict['ns'] = anime.get_sn()
     anime_dict['title'] = anime.get_title()
     anime_dict['anime_name'] = anime.get_bangumi_name()
     anime_dict['episode'] = anime.get_episode()
     anime_dict['file_size'] = anime.video_size
     anime_dict['resolution'] = anime.video_resolution
+    anime_dict['local_file_path'] = anime.local_video_path
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute("UPDATE anime SET status=:status, resolution=:resolution, file_size=:file_size WHERE ns=:ns",
-                   anime_dict)
+    cursor.execute(
+        "UPDATE anime SET status=:status,"
+        "remote_status=:remote_status,"
+        "resolution=:resolution,"
+        "file_size=:file_size,"
+        "local_file_path=:local_file_path WHERE ns=:ns",
+        anime_dict)
 
     cursor.close()
     conn.commit()
     conn.close()
 
 
-def worker(sn):
-    thread_limiter.acquire()
-    anime = Anime(sn)
-    anime.download(settings['download_resolution'])
+def worker(sn, bangumi_tag=''):
+    anime_in_db = read_db(sn)
+    # 如果用户设定要上传且已经下载好了但还没有上传成功, 那么仅上传
+    if settings['upload_to_server'] and anime_in_db['status'] == 1 and anime_in_db['remote_status'] == 0:
+        upload_limiter.acquire()  # 并发上传限制器
+        anime = Anime(sn)
+        anime.local_video_path = anime_in_db['local_file_path']  # 告知文件位置
+        anime.video_size = anime_in_db['file_size']  # 通過 update_db() 下载状态检查
+        anime.video_resolution = anime_in_db['resolution']  # 避免更新时把分辨率变成0
+        if not anime.upload(bangumi_tag):  # 如果上传失败
+            err_print('sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 上传失敗! 從任務列隊中移除, 等待下次更新重試.')
+        else:
+            update_db(anime)
+            err_print('任务完成: sn=' + str(sn), True)
+        queue.pop(sn)
+        processing_queue.remove(sn)
+        upload_limiter.release()  # 并发上传限制器
+        # thread_limiter.release()
+        sys.exit(0)
 
+    # =====下载模块 =====
+    thread_limiter.acquire()  # 并发下载限制器
+    anime = Anime(sn)
+    anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag)
     if anime.video_size < 10:
         # 下载失败
-        queue.remove(sn)
+        queue.pop(sn)
         processing_queue.remove(sn)
         thread_limiter.release()
-        err_print('sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 下載失敗! 從任務列隊中移除, 等待下次更新重試.')
+        err_print('任务失敗: sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.')
         sys.exit(1)
+    update_db(anime)  # 下载完成后, 更新数据库
+    thread_limiter.release()  # 并发下载限制器
+    # =====下载模块结束 =====
 
-    update_db(anime)
-    queue.remove(sn)
-    processing_queue.remove(sn)
-    thread_limiter.release()
-    print('sn=' + str(sn) + ' 任务完成')
+    # =====上传模块=====
+    if settings['upload_to_server']:
+        upload_limiter.acquire()  # 并发上传限制器
+        anime.upload(bangumi_tag)  # 上传至服务器
+        update_db(anime)  # 上传完成后, 更新数据库
+        upload_limiter.release()  # 并发上传限制器
+    # =====上传模块结束=====
+
+    queue.pop(sn)  # 从任务列队中移除
+    processing_queue.remove(sn)  # 从当前任务列队中移除
+    # thread_limiter.release()
+    err_print('任务完成: sn=' + str(sn), True)
+
+
+def upload_worker(sn, bangumi_tag=''):
+    pass
 
 
 def check_tasks():
     for sn in sn_dict.keys():
         anime = Anime(sn)
-        if sn_dict[sn] == 'all':
+        if sn_dict[sn]['mode'] == 'all':
             # 如果用户选择全部下载 download_mode = 'all'
             for ep in anime.get_episode_list().values():  # 遍历剧集列表
                 try:
                     db = read_db(ep)
-                    if db['status'] == 0 and ep not in queue:
-                        # 如果该视频在库中但未完成且不在下载列队
-                        queue.append(ep)  # 添加至下载列队
+                    #           未下载的   或                设定要上传但是没上传的                         并且  还没在列队中
+                    if (db['status'] == 0 or (db['remote_status'] == 0 and settings['upload_to_server'])) and ep not in queue:
+                        queue[ep] = sn_dict[sn]['tag']  # 添加至下载列队
                 except IndexError:
                     # 如果数据库中尚不存在此条记录
                     if anime.get_sn() == ep:
@@ -134,19 +176,19 @@ def check_tasks():
                     else:
                         new_anime = Anime(ep)
                     insert_db(new_anime)
-                    queue.append(ep)
+                    queue[ep] = sn_dict[sn]['tag']
         else:
             latest_sn = list(anime.get_episode_list().values())  # 本番剧剧集列表
-            if sn_dict[sn] == 'largest-sn':
+            if sn_dict[sn]['mode'] == 'largest-sn':
                 # 如果用户选择仅下载最新上传, download_mode = 'largest_sn', 则对 sn 进行排序
                 latest_sn.sort()
                 # 否则用户选择仅下载最后剧集, download_mode = 'latest', 即下载网页上显示在最右的剧集
             latest_sn = latest_sn[-1]
             try:
                 db = read_db(latest_sn)
-                if db['status'] == 0 and latest_sn not in queue:
-                    # 如果该视频在库中但未完成且不在下载列队
-                    queue.append(latest_sn)  # 添加至下载列队
+                #           未下载的   或                设定要上传但是没上传的                         并且  还没在列队中
+                if (db['status'] == 0 or (db['remote_status'] == 0 and settings['upload_to_server'])) and latest_sn not in queue:
+                    queue[latest_sn] = sn_dict[sn]['tag']  # 添加至下载列队
             except IndexError:
                 # 如果数据库中尚不存在此条记录
                 if anime.get_sn() == latest_sn:
@@ -154,7 +196,7 @@ def check_tasks():
                 else:
                     new_anime = Anime(latest_sn)
                 insert_db(new_anime)
-                queue.append(latest_sn)
+                queue[latest_sn] = sn_dict[sn]['tag']
 
 
 def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False):
@@ -271,9 +313,10 @@ if __name__ == '__main__':
     sn_dict = Config.read_sn_list()
     working_dir = settings['working_dir']
     db_path = os.path.join(working_dir, 'aniGamer.db')
-    queue = []
+    queue = {}
     processing_queue = []
-    thread_limiter = threading.Semaphore(settings['multi-thread'])
+    thread_limiter = threading.Semaphore(settings['multi-thread'])  # 下载并发限制器
+    upload_limiter = threading.Semaphore(settings['multi_upload'])  # 并发上传限制器
     thread_tasks = []
 
     if settings['check_latest_version']:
@@ -344,19 +387,23 @@ if __name__ == '__main__':
                    'anime_name VARCHAR(100) NOT NULL, '
                    'episode VARCHAR(10) NOT NULL,'
                    'status TINYINT DEFAULT 0,'
-                   'remote_statu INTEGER DEFAULT 0,'
+                   'remote_status INTEGER DEFAULT 0,'
                    'resolution INTEGER DEFAULT 0,'
                    'file_size INTEGER DEFAULT 0,'
+                   'local_file_path VARCHAR(500),'
                    "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
     conn.commit()
     conn.close()
 
     while True:
+        if settings['read_sn_list_when_checking_update']:
+            sn_dict = Config.read_sn_list()
         check_tasks()  # 检查更新，生成任务列队
         if queue:
-            for task_sn in queue:
+            print()
+            for task_sn in queue.keys():
                 if task_sn not in processing_queue:  # 如果该任务没有在进行中，则启动
-                    task = threading.Thread(target=worker, args=(task_sn,))
+                    task = threading.Thread(target=worker, args=(task_sn, queue[task_sn]))
                     task.setDaemon(True)
                     task.start()
                     processing_queue.append(task_sn)

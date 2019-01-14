@@ -3,10 +3,14 @@
 # @Time    : 2019/1/5 16:22
 # @Author  : Miyouzi
 # @File    : Anime.py @Software: PyCharm
+import ftplib
+
 import Config
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random, sys
+import re, time, os, platform, subprocess, requests, random, sys, datetime
 from ColorPrint import err_print
+from ftplib import FTP, FTP_TLS
+import socket
 import threading
 
 
@@ -17,7 +21,7 @@ class TryTooManyTimeError(BaseException):
 class Anime():
     def __init__(self, sn):
         self._settings = Config.read_settings()
-        self._cookies = Config.read_cookies()
+        self._cookies = Config.read_cookie()
         self._working_dir = self._settings['working_dir']
         self._bangumi_dir = self._settings['bangumi_dir']
 
@@ -30,9 +34,12 @@ class Anime():
         self._device_id = ''
         self._playlist = {}
         self._m3u8_dict = {}
+        self.local_video_path = ''
+        self._video_filename = ''
         self.video_resolution = 0
         self.video_size = 0
         self.realtime_show_file_size = False
+        self.upload_succeed_flag = False
 
         self.__init_header()  # http header
         self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)
@@ -76,7 +83,7 @@ class Anime():
             self._title = soup.find('meta', property="og:title")['content']  # 提取标题（含有集数）
         except TypeError:
             # 该sn下没有动画
-            err_msg = 'ERROR: 該 sn='+str(self._sn)+' 下真的有動畫？'
+            err_msg = 'ERROR: 該 sn=' + str(self._sn) + ' 下真的有動畫？'
             err_print(err_msg)
             self._episode_list = {}
             sys.exit(1)
@@ -132,29 +139,56 @@ class Anime():
             except requests.exceptions.RequestException as e:
                 if error_cnt >= 3:
                     raise TryTooManyTimeError('请求失败次数过多！请求链接：\n%s' % req)
-                err_msg = 'ERROR: 请求失败！except：\n'+str(e)+'\n3s后重试(最多重试三次)'
+                err_msg = 'ERROR: 请求失败！except：\n' + str(e) + '\n3s后重试(最多重试三次)'
                 err_print(err_msg)
                 time.sleep(3)
                 error_cnt += 1
             else:
                 break
         # 处理 cookie
-        if not self._cookies:
+        if not self._cookies:  # 当用户没有提供 cookie
             self._cookies = f.cookies.get_dict()
         # 如果用户有提供 cookie，则跳过
-        elif ('nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys()):
+        elif 'nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys():
             if 'nologinuser' in f.cookies.get_dict().keys():
                 self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
+        else:  # 如果用户提供了 cookie, 则处理cookie刷新
+            if 'set-cookie' in f.headers.keys():  # 发现server响应了set-cookie
+                if 'deleted' in f.headers.get('set-cookie'):
+                    # set-cookie刷新cookie只有一次机会, 如果其他线程先收到, 则此处会返回 deleted
+                    # 等待其他线程刷新了cookie, 重新读入cookie
+                    time.sleep(2)
+                    try_counter = 0
+                    succeed_flag = False
+                    while try_counter < 3:  # 尝试读三次, 不行就算了
+                        old_BAHARUNE = self._cookies['BAHARUNE']
+                        self._cookies = Config.read_cookie()
+                        if old_BAHARUNE != self._cookies['BAHARUNE']:
+                            # 新cookie读取成功
+                            succeed_flag = True
+                            break
+                        else:
+                            time.sleep(3)
+                            try_counter = try_counter + 1
+                    if not succeed_flag:
+                        self._cookies = {}
+                        err_print(str(datetime.datetime.now()) + ' 用戶cookie更新失敗! 使用游客身份訪問')
+
+                elif '__cfduid' in f.headers.get('set-cookie'):  # cookie 刷新两步走, 这是第二步, 追加在第一步后面
+                    # 此时self._cookies已是完整新cookie,不需要再从文件载入
+                    self._cookies['__cfduid'] = f.cookies.get_dict()['__cfduid']
+                    Config.renew_cookies(self._cookies)  # 保存全新cookie
+                    err_print(str(datetime.datetime.now()) + ' 用戶cookie已更新!', True)
+
+                else:  # 这是第一步
+                    # 本线程收到了新cookie
+                    Config.renew_cookies(f.cookies.get_dict())  # 保存一半新cookie
+                    self._cookies = Config.read_cookie()  # 载入一半新cookie
+                    self.__request('https://ani.gamer.com.tw/')  # 马上完成cookie刷新第二步, 以免正好在刚要解析m3u8时掉链子
+
         return f
 
-    def download(self, resolution='', save_dir='', realtime_show_file_size=False):
-        self.realtime_show_file_size = realtime_show_file_size
-        if not resolution:
-            resolution = self._settings['download_resolution']
-
-        if save_dir:
-            self._bangumi_dir = save_dir
-
+    def __get_m3u8_dict(self):
         # m3u8获取模块参考自 https://github.com/c0re100/BahamutAnimeDownloader
         def get_device_id():
             req = 'https://ani.gamer.com.tw/ajax/getdeviceid.php'
@@ -228,6 +262,33 @@ class Anime():
                 m3u8_dict[key] = value
             self._m3u8_dict = m3u8_dict
 
+        get_device_id()
+        gain_access()
+        unlock()
+        check_lock()
+        unlock()
+        unlock()
+        start_ad()
+        time.sleep(3)
+        skip_ad()
+        video_start()
+        check_no_ad()
+        get_playlist()
+        parse_playlist()
+
+    def get_m3u8_dict(self):
+        if not self._m3u8_dict:
+            self.__get_m3u8_dict()
+        return self._m3u8_dict
+
+    def download(self, resolution='', save_dir='', bangumi_tag='',realtime_show_file_size=False):
+        self.realtime_show_file_size = realtime_show_file_size
+        if not resolution:
+            resolution = self._settings['download_resolution']
+
+        if save_dir:
+            self._bangumi_dir = save_dir
+
         def download_video(resolution):
             check_ffmpeg = subprocess.Popen('ffmpeg -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if check_ffmpeg.stdout.readlines():  # 查找 ffmpeg 是否已放入系统 path
@@ -242,7 +303,11 @@ class Anime():
                     raise FileNotFoundError  # 如果本地目录下也没有找到 ffmpeg 则丢出异常
 
             # 创建存放番剧的目录，去除非法字符
-            bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
+            if bangumi_tag:  # 如果指定了番剧分类
+                bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', bangumi_tag))
+            else:
+                bangumi_dir = self._bangumi_dir
+            bangumi_dir = os.path.join(bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
             if not os.path.exists(bangumi_dir):
                 os.makedirs(bangumi_dir)  # 按番剧创建文件夹分类
 
@@ -253,7 +318,7 @@ class Anime():
                 flag = 9999
                 closest_resolution = 0
                 for i in resolution_list:
-                    a = abs(int(resolution)-i)
+                    a = abs(int(resolution) - i)
                     if a < flag:
                         flag = a
                         closest_resolution = i
@@ -308,7 +373,7 @@ class Anime():
                         # 实时显示文件大小
                         if os.path.exists(downloading_file):
                             size = os.path.getsize(downloading_file)
-                            size = size / float(1024*1024)
+                            size = size / float(1024 * 1024)
                             size = round(size, 2)
                             sys.stdout.write('\r')
                             sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB  ')
@@ -346,22 +411,281 @@ class Anime():
                     os.remove(output_file)
                 os.renames(downloading_file, output_file)  # 下载完成，更改文件名
                 self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
-                print('下載完成: sn=' + str(self._sn) + ' ' + filename)
+                self.local_video_path = output_file  # 记录保存路径, FTP上传用
+                self._video_filename = legal_filename  # 记录文件名, FTP上传用
+                err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
             else:
                 err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(
                     run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
 
-        get_device_id()
-        gain_access()
-        unlock()
-        check_lock()
-        unlock()
-        unlock()
-        start_ad()
-        time.sleep(3)
-        skip_ad()
-        video_start()
-        check_no_ad()
-        get_playlist()
-        parse_playlist()
+        self.__get_m3u8_dict()
         download_video(resolution)
+
+    def upload(self, bangumi_tag=''):
+        first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
+
+        if not os.path.exists(self.local_video_path):  # 如果文件不存在,直接返回失败
+            return self.upload_succeed_flag
+
+        if not self._video_filename:  # 用于仅上传, 将文件名提取出来
+            self._video_filename = os.path.split(self.local_video_path)[-1]
+
+        socket.setdefaulttimeout(20)  # 超时时间20s
+
+        if self._settings['ftp']['tls']:
+            ftp = FTP_TLS()  # FTP over TLS
+        else:
+            ftp = FTP()
+
+        def connect_ftp(show_err=True):
+            ftp.encoding = 'utf-8'  # 解决中文乱码
+            err_counter = 0
+            connect_flag = False
+            while err_counter <= 3:
+                try:
+                    ftp.connect(self._settings['ftp']['server'], self._settings['ftp']['port'])  # 连接 FTP
+                    ftp.login(self._settings['ftp']['user'], self._settings['ftp']['pwd'])  # 登陆
+                    connect_flag = True
+                    break
+                except ftplib.error_temp as e:
+                    if show_err:
+                        if 'Too many connections' in str(e):
+                            err_print('FTP狀態: sn='+str(self._sn)+' '+self._video_filename + ' 当前FTP連接數過多, 5分鐘后重試, 最多重試三次: ' + str(e))
+                        else:
+                            err_print('FTP狀態: sn='+str(self._sn)+' '+self._video_filename + ' 連接FTP時發生錯誤, 5分鐘后重試, 最多重試三次: ' + str(e))
+                    err_counter = err_counter + 1
+                    for i in range(5 * 60):
+                        time.sleep(1)
+                except BaseException as e:
+                    if show_err:
+                        err_print(self._video_filename + ' 在連接FTP時發生無法處理的異常:' + str(e))
+                    break
+
+            if not connect_flag:
+                err_print('上傳失败: sn='+str(self._sn)+' '+self._video_filename)
+                return connect_flag  # 如果连接失败, 直接放弃
+
+            ftp.voidcmd('TYPE I')  # 二进制模式
+
+            if self._settings['ftp']['cwd']:
+                try:
+                    ftp.cwd(self._settings['ftp']['cwd'])  # 进入用户指定目录
+                except ftplib.error_perm as e:
+                    if show_err:
+                        err_print('FTP狀態: sn='+str(self._sn)+' '+'ERROR: 進入指定FTP目錄時出錯: ' + str(e))
+
+            if bangumi_tag:  # 番剧分类
+                try:
+                    ftp.cwd(bangumi_tag)
+                except ftplib.error_perm:
+                    try:
+                        ftp.mkd(bangumi_tag)
+                        ftp.cwd(bangumi_tag)
+                    except ftplib.error_perm as e:
+                        if show_err:
+                            err_print('FTP狀態: sn='+str(self._sn)+' '+'創建目錄番劇目錄時發生異常, 你可能沒有權限創建目錄: ' + str(e))
+
+            # 归类番剧
+            ftp_bangumi_dir = re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name)  # 保证合法
+            try:
+                ftp.cwd(ftp_bangumi_dir)
+            except ftplib.error_perm:
+                try:
+                    ftp.mkd(ftp_bangumi_dir)
+                    ftp.cwd(ftp_bangumi_dir)
+                except ftplib.error_perm as e:
+                    if show_err:
+                        err_print('FTP狀態: sn='+str(self._sn)+' '+'你可能沒有權限創建目錄(用於分類番劇), 視頻文件將會直接上傳, 收到異常: ' + str(e))
+
+            # 删除旧的临时文件夹
+            nonlocal first_connect
+            if first_connect:  # 首次连接
+                remove_dir(str(self._sn))
+                first_connect = False  # 标记第一次连接已完成
+
+            # 创建新的临时文件夹
+            # 创建临时文件夹是因为 pure-ftpd 在续传时会将文件名更改成不可预测的名字
+            # 正常终端传输会把名字改回来, 但是意外短线不会, 为了处理这种情况
+            # 需要获取 pure-ftpd 未知文件名的续传缓存文件, 为了不和其他视频的缓存文件混淆, 故建立一个临时文件夹
+            try:
+                ftp.cwd(str(self._sn))
+            except ftplib.error_perm:
+                ftp.mkd(str(self._sn))
+                ftp.cwd(str(self._sn))
+
+            return connect_flag
+
+        def exit_ftp(show_err=True):
+            try:
+                ftp.quit()
+            except BaseException as e:
+                if show_err and self._settings['ftp']['show_error_detail']:
+                    print('FTP狀態: sn='+str(self._sn)+' '+'將强制關閉FTP連接, 因爲在退出時收到異常: ' + str(e))
+                ftp.close()
+
+        def remove_dir(dir_name):
+            try:
+                ftp.rmd(str(self._sn))
+            except ftplib.error_perm as e:
+                if 'Directory not empty' in str(e):
+                    # 如果目录非空, 则删除内部文件
+                    ftp.cwd(dir_name)
+                    del_all_files()
+                    ftp.cwd('..')
+                    ftp.rmd(dir_name)  # 删完内部文件, 删除文件夹
+                elif 'No such file or directory' in str(e):
+                    pass
+                else:
+                    # 其他非空目录报错
+                    raise e
+
+        def del_all_files():
+            try:
+                for file_need_del in ftp.nlst():
+                    if not re.match(r'^(\.|\.\.)$', file_need_del):
+                        ftp.delete(file_need_del)
+                        # print('删除了文件: ' + file_need_del)
+            except ftplib.error_perm as resp:
+                if not str(resp) == "550 No files found":
+                    raise
+
+        if not connect_ftp():  # 连接 FTP
+            return self.upload_succeed_flag  # 如果连接失败
+
+        print('正在上傳: sn='+str(self._sn)+' '+self._video_filename + '……')
+        try_counter = 0
+        video_filename = self._video_filename  # video_filename 将可能会储存 pure-ftpd 缓存文件名
+        max_try_num = self._settings['ftp']['max_retry_num']
+        local_size = os.path.getsize(self.local_video_path)  # 本地文件大小
+        while try_counter <= max_try_num:
+            try:
+                if try_counter > 0:
+                    # 传输遭中断后处理
+                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 发生异常, 重連FTP, 續傳文件, 將重試最多'+str(max_try_num)+'次……')
+                    if not connect_ftp():  # 重连
+                        return self.upload_succeed_flag
+
+                    # 解决操蛋的 Pure-Ftpd 续传一次就改名导致不能再续传问题.
+                    # 一般正常关闭文件传输 Pure-Ftpd 会把名字改回来, 但是遇到网络意外中断, 那么就不会改回文件名, 留着临时文件名
+                    # 本段就是处理这种情况
+                    try:
+                        for i in ftp.nlst():
+                            if 'pureftpd-upload' in i:
+                                # 找到 pure-ftpd 缓存, 直接抓缓存来续传
+                                video_filename = i
+                    except ftplib.error_perm as resp:
+                        if not str(resp) == "550 No files found":  # 非文件不存在错误, 抛出异常
+                            raise
+                # 断点续传, 代码参考自 http://www.rjyxz.com/da?news_id=410
+                try:
+                    # 需要 FTP Server 支持续传
+                    ftp_binary_size = ftp.size(video_filename)  # 远程文件字节数
+                    send_size = ftp_binary_size  # 重设已发送的字节数
+                except ftplib.error_perm:
+                    # 如果不存在文件
+                    ftp_binary_size = 0
+                    send_size = 0
+                except OSError:
+                    try_counter = try_counter + 1
+                    continue
+
+                ftp.voidcmd('TYPE I')  # 二进制模式
+                conn = ftp.transfercmd('STOR ' + video_filename, ftp_binary_size)  # ftp服务器文件名和offset偏移地址
+                with open(self.local_video_path, 'rb') as f:
+                    f.seek(ftp_binary_size)  # 从断点处开始读取
+                    while True:
+                        diff_size = local_size - send_size
+                        if diff_size < 1048576:  # 当到达文件尾部剩余不足1M时
+                            block = f.read(10240)
+                            conn.sendall(block)
+                            # print('不足1M diff_size=' + str(diff_size) + ' block_size=' + str(sys.getsizeof(block)-33))
+                            send_size = send_size + sys.getsizeof(block) - 33  # 33是block的容器大小
+                        else:
+                            block = f.read(1048576)  # 读取1M
+                            conn.sendall(block)  # 送出 block
+                            # 记录发送的字节数, 大概的. 用于触发当不足1M时的处理.
+                            send_size = send_size + 1048576
+
+                        if diff_size <= 0 and not block:
+                            # break前, 确保传干净了
+                            for i in range(1000):
+                                block = f.read(1024)
+                                conn.sendall(block)
+                            break
+
+                conn.close()
+
+                print('上傳狀態: sn='+str(self._sn)+' '+'檢查遠端文件大小是否與本地一致……')
+                exit_ftp(False)
+                connect_ftp(False)  # 不重连的话, 下面查询远程文件大小会返回 None, 很迷...
+
+                err_counter = 0
+                remote_size = 0
+                while err_counter < 3:
+                    try:
+                        remote_size = ftp.size(video_filename)  # 远程文件大小
+                        break
+                    except ftplib.error_perm:
+                        remote_size = 0
+                        break
+                    except OSError:
+                        remote_size = 0
+                        connect_ftp(False)  # 掉线重连
+                        err_counter = err_counter + 1
+
+                if remote_size is None:
+                    remote_size = 0
+                # 远程文件大小获取失败, 可能文件不存在或者抽风
+                # 那上面获取远程字节数将会是0, 导致重新下载, 那么此时应该清空缓存目录下的文件
+                # 避免后续找错文件续传
+                if remote_size == 0:
+                    del_all_files()
+
+                if remote_size != local_size:
+                    # 如果远程文件大小与本地不一致
+                    # print('remote_size='+str(remote_size))
+                    # print('local_size ='+str(local_size))
+                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在遠端為' + str(round(remote_size / float(1024 * 1024), 2)) + 'MB' +
+                              ' 與本地' + str(round(local_size / float(1024 * 1024), 2)) + 'MB 不一致! 將重試最多' + str(
+                        max_try_num) + '次')
+                    try_counter = try_counter + 1
+                    continue  # 续传
+
+                # 顺利上传完后
+                ftp.cwd('..')  # 返回上级目录, 即退出临时目录
+                ftp.rename(str(self._sn) + '/' + video_filename, self._video_filename)  # 将视频从临时文件移出, 顺便重命名
+                remove_dir(str(self._sn))  # 删除临时目录
+                self.upload_succeed_flag = True  # 标记上传成功
+                break
+
+            except ConnectionResetError as e:
+                if self._settings['ftp']['show_error_detail']:
+                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程中網絡被重置, 將重試最多'+str(max_try_num)+'次'+', 收到異常: ' + str(e))
+                try_counter = try_counter + 1
+            except TimeoutError as e:
+                if self._settings['ftp']['show_error_detail']:
+                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程中超時, 將重試最多'+str(max_try_num)+'次, 收到異常: ' + str(e))
+                try_counter = try_counter + 1
+            except socket.timeout as e:
+                if self._settings['ftp']['show_error_detail']:
+                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程socket超時, 將重試最多'+str(max_try_num)+'次, 收到異常: ' + str(e))
+                try_counter = try_counter + 1
+
+        if not self.upload_succeed_flag:
+            err_print('上傳失敗: sn='+str(self._sn)+' '+self._video_filename + ' 放棄上傳!')
+            exit_ftp()
+            return self.upload_succeed_flag
+
+        err_print('上傳完成: sn='+str(self._sn)+' '+self._video_filename, True)
+        exit_ftp()  # 登出 FTP
+        return self.upload_succeed_flag
+
+
+# a = Anime(11433)
+# from pprint import pprint
+# pprint(a.get_m3u8_dict())
+# print(a.get_title())
+# a.download('360', realtime_show_file_size=True)
+# a.local_video_path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\ENDRO！\\【動畫瘋】ENDRO！[1][1080P].mp4'
+# print(a.upload())
+# a.download('1080')

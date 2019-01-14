@@ -60,15 +60,16 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
-    "config_version": 1.1
+    "check_latest_version": true,  # 檢查更新開關, 默認為 true
+    "config_version": 1.2
 }
 ```
 
 模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
 
-### cookies.txt
+### cookie.txt
 
-用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookies.txt**為文件名保存在程序目錄下即可
+用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookie.txt**為文件名保存在程序目錄下即可
 
 :warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 不異地登陸, 否則cookie將可能被刷新**
 
@@ -77,7 +78,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
  - 按 F12 調出開發者工具, 前往動畫瘋, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)
     
- - 在程序所在目錄新建一個名爲**cookies.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
+ - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
     ![](screenshot/CookiesFormat.png)
 
 ### sn_list.txt

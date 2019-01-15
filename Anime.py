@@ -19,7 +19,7 @@ class TryTooManyTimeError(BaseException):
 
 
 class Anime():
-    def __init__(self, sn):
+    def __init__(self, sn, debug_mode=False):
         self._settings = Config.read_settings()
         self._cookies = Config.read_cookie()
         self._working_dir = self._settings['working_dir']
@@ -41,13 +41,16 @@ class Anime():
         self.realtime_show_file_size = False
         self.upload_succeed_flag = False
 
-        self.__init_header()  # http header
-        self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)
-        self.__get_title()  # 提取页面标题
-        self.__get_bangumi_name()  # 提取本番名字
-        self.__get_episode()  # 提取剧集码，str
-        # 提取剧集列表，结构 {'episode': sn}，储存到 self._episode_list, sn 为 int, 考慮到 劇場版 sp 等存在, key 為 str
-        self.__get_episode_list()
+        if debug_mode:
+            print('當前為debug模式')
+        else:
+            self.__init_header()  # http header
+            self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)
+            self.__get_title()  # 提取页面标题
+            self.__get_bangumi_name()  # 提取本番名字
+            self.__get_episode()  # 提取剧集码，str
+            # 提取剧集列表，结构 {'episode': sn}，储存到 self._episode_list, sn 为 int, 考慮到 劇場版 sp 等存在, key 為 str
+            self.__get_episode_list()
 
     def renew(self):
         self.__get_src()
@@ -421,8 +424,11 @@ class Anime():
         self.__get_m3u8_dict()
         download_video(resolution)
 
-    def upload(self, bangumi_tag=''):
+    def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
+
+        if debug_file:
+            self.local_video_path = debug_file
 
         if not os.path.exists(self.local_video_path):  # 如果文件不存在,直接返回失败
             return self.upload_succeed_flag
@@ -576,15 +582,13 @@ class Anime():
                     except ftplib.error_perm as resp:
                         if not str(resp) == "550 No files found":  # 非文件不存在错误, 抛出异常
                             raise
-                # 断点续传, 代码参考自 http://www.rjyxz.com/da?news_id=410
+                # 断点续传
                 try:
                     # 需要 FTP Server 支持续传
                     ftp_binary_size = ftp.size(video_filename)  # 远程文件字节数
-                    send_size = ftp_binary_size  # 重设已发送的字节数
                 except ftplib.error_perm:
                     # 如果不存在文件
                     ftp_binary_size = 0
-                    send_size = 0
                 except OSError:
                     try_counter = try_counter + 1
                     continue
@@ -594,46 +598,37 @@ class Anime():
                 with open(self.local_video_path, 'rb') as f:
                     f.seek(ftp_binary_size)  # 从断点处开始读取
                     while True:
-                        diff_size = local_size - send_size
-                        if diff_size < 1048576:  # 当到达文件尾部剩余不足1M时
-                            block = f.read(10240)
-                            conn.sendall(block)
-                            # print('不足1M diff_size=' + str(diff_size) + ' block_size=' + str(sys.getsizeof(block)-33))
-                            send_size = send_size + sys.getsizeof(block) - 33  # 33是block的容器大小
-                        else:
-                            block = f.read(1048576)  # 读取1M
-                            conn.sendall(block)  # 送出 block
-                            # 记录发送的字节数, 大概的. 用于触发当不足1M时的处理.
-                            send_size = send_size + 1048576
-
-                        if diff_size <= 0 and not block:
-                            # break前, 确保传干净了
-                            for i in range(1000):
-                                block = f.read(1024)
-                                conn.sendall(block)
+                        block = f.read(1048576)  # 读取1M
+                        conn.sendall(block)  # 送出 block
+                        if not block:
+                            time.sleep(3)  # 等待一下, 让sendall()完成
                             break
 
                 conn.close()
 
                 print('上傳狀態: sn='+str(self._sn)+' '+'檢查遠端文件大小是否與本地一致……')
                 exit_ftp(False)
-                connect_ftp(False)  # 不重连的话, 下面查询远程文件大小会返回 None, 很迷...
-
+                connect_ftp(False)
+                # 不重连的话, 下面查询远程文件大小会返回 None, 懵逼...
+                # sendall()没有完成将会 500 Unknown command
                 err_counter = 0
                 remote_size = 0
                 while err_counter < 3:
                     try:
                         remote_size = ftp.size(video_filename)  # 远程文件大小
                         break
-                    except ftplib.error_perm:
+                    except ftplib.error_perm as e1:
+                        print('ftplib.error_perm: '+str(e1))
                         remote_size = 0
                         break
-                    except OSError:
+                    except OSError as e2:
+                        print('OSError: '+str(e2))
                         remote_size = 0
                         connect_ftp(False)  # 掉线重连
                         err_counter = err_counter + 1
 
                 if remote_size is None:
+                    print('remote_size is None')
                     remote_size = 0
                 # 远程文件大小获取失败, 可能文件不存在或者抽风
                 # 那上面获取远程字节数将会是0, 导致重新下载, 那么此时应该清空缓存目录下的文件
@@ -653,6 +648,12 @@ class Anime():
 
                 # 顺利上传完后
                 ftp.cwd('..')  # 返回上级目录, 即退出临时目录
+                try:
+                    # 如果同名文件存在, 则删除
+                    ftp.size(self._video_filename)
+                    ftp.delete(self._video_filename)
+                except ftplib.error_perm:
+                    pass
                 ftp.rename(str(self._sn) + '/' + video_filename, self._video_filename)  # 将视频从临时文件移出, 顺便重命名
                 remove_dir(str(self._sn))  # 删除临时目录
                 self.upload_succeed_flag = True  # 标记上传成功
@@ -681,11 +682,10 @@ class Anime():
         return self.upload_succeed_flag
 
 
-# a = Anime(11433)
-# from pprint import pprint
-# pprint(a.get_m3u8_dict())
-# print(a.get_title())
-# a.download('360', realtime_show_file_size=True)
-# a.local_video_path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\ENDRO！\\【動畫瘋】ENDRO！[1][1080P].mp4'
-# print(a.upload())
-# a.download('1080')
+if __name__ == '__main__':
+    # a = Anime(11468, debug_mode=True)
+    # path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
+    # a.upload(debug_file=path)
+    # print(a.upload_succeed_flag)
+    # a.download('1080')
+    pass

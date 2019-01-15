@@ -18,6 +18,9 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - 自定義番劇下載目錄
  - 自定義下載文件名前綴後綴及是否添加清晰度
  - 下載失敗, 下載過慢自動重啓任務
+ - v6.0 開始支持cookie自動刷新
+ - 支持使用FTP上傳至伺服器, 支持斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支持 FTP over TLS
+ - 檢查程序更新功能
  
  
 ## **注意**:warning:
@@ -31,9 +34,9 @@ Python 版本 3 以上
 pip3 install requests beautifulsoup4 lxml termcolor
 ```
  
-## 待完成
+## 任務列表
  - [ ] 下載使用代理
- - [ ] 使用ftp上傳至遠程伺服器
+ - [x] 使用ftp上傳至遠程伺服器
  
  ~~咕咕咕~~
  
@@ -57,11 +60,26 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 3,  # 最大并發下載數
+    "multi_upload": 3,  # 最大并發上傳數
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
     "check_latest_version": true,  # 檢查更新開關, 默認為 true
-    "config_version": 1.2
+    "upload_to_server": true,  # 上傳功能開關
+    "ftp": {  # FTP配置
+        "server": "",  # FTP Server IP
+        "port": "",  # 端口
+        "user": "",  # 用戶名
+        "pwd": "",  # 密碼
+        "cwd": "",  # 登陸後首先進入的目錄
+        "tls": true,  # 是否是 FTP over TLS
+        "show_error_detail": false,  # 是否顯示細節錯誤信息
+        "max_retry_num": 10  # 最大重傳數, 支持續傳
+    },
+    "config_version": 2.0,  # 配置文件版本
+    "check_latest_version": true,  # 是否檢查更新
+    "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
+    "read_config_when_checking_update": true  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
 }
 ```
 
@@ -71,9 +89,13 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookie.txt**為文件名保存在程序目錄下即可
 
-:warning: **登陸時請勾選"保持登入狀態", 并且不更換瀏覽器登陸, 不異地登陸, 否則cookie將可能被刷新**
+**v6.0版本開始支持自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
+
+:warning: **登陸時請勾選"保持登入狀態"**
 
 #### 使用Chrome舉例如何獲取 Cookie:
+
+ - 開啓Chrome的無痕模式, 登陸動畫瘋, 記得勾選**保持登入狀態**
 
  - 按 F12 調出開發者工具, 前往動畫瘋, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)
@@ -105,7 +127,25 @@ sn碼 下載模式(可空) #注釋(可空)
 11317 lastest # SSSS.GRIDMAN
 ```
 
+自v6.0開始, 新增對番劇進行分類功能, 在一排番劇列表的上方 **@** 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的文件夾下
+
+若單獨 **@** 表示不分類
+
+範例:
+```
+@2019一月番
+11433 # ENDRO！
+11392 # 笨拙之極的上野
+@2019十月番
+11354 latest # 刀劍神域 Alicization
+@
+11468 # 動物朋友
+```
+上面表示將會把**ENDRO**和**上野**放在**2019一月番**文件夾裏, 將**刀劍**放在**2019十月番**文件夾裏, **動物朋友** 不分類, 直接放在番劇目錄下
+
 ### aniGamer.db
+
+:warning: v6.0版本與之前版本不兼容, 需要刪除舊版**aniGamer.db**
 
 sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等工具打開
 
@@ -120,7 +160,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v5.1
+當前aniGamerPlus版本: v6.0
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]

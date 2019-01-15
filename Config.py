@@ -13,7 +13,7 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v5.1'
+aniGamerPlus_version = 'v6.0'
 latest_config_version = 2.0
 
 
@@ -50,6 +50,7 @@ def __init_settings():
                 },
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
+                'read_config_when_checking_update': True,
                 'config_version': latest_config_version
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -81,6 +82,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'multi_upload' not in new_settings.keys():  # v2.0 新增最大并行上传任务数
         new_settings['multi_upload'] = 3
+
+    if 'read_config_when_checking_update' not in new_settings.keys():  # v2.0 新增开关: 每次检查更新时读取config.json
+        new_settings['read_config_when_checking_update'] = True
 
     # if 'proxy' in new_settings.keys():
     #     new_settings.pop('proxy')
@@ -214,13 +218,4 @@ def test():
 
 
 if __name__ == '__main__':
-    from pprint import pprint
-    # a = read_cookie()
-    # pprint(a)
-    # renew_cookies(a)
-    pprint(read_settings())
-    # a = read_sn_list()
-    # pprint(a)
-    # pprint(dict(test()))
-    # test()
     pass

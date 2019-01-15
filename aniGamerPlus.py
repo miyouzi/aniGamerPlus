@@ -122,7 +122,6 @@ def worker(sn, bangumi_tag=''):
         queue.pop(sn)
         processing_queue.remove(sn)
         upload_limiter.release()  # 并发上传限制器
-        # thread_limiter.release()
         sys.exit(0)
 
     # =====下载模块 =====
@@ -150,12 +149,7 @@ def worker(sn, bangumi_tag=''):
 
     queue.pop(sn)  # 从任务列队中移除
     processing_queue.remove(sn)  # 从当前任务列队中移除
-    # thread_limiter.release()
     err_print('任务完成: sn=' + str(sn), True)
-
-
-def upload_worker(sn, bangumi_tag=''):
-    pass
 
 
 def check_tasks():
@@ -396,11 +390,13 @@ if __name__ == '__main__':
     conn.close()
 
     while True:
+        print('\n'+str(datetime.datetime.now()) + ' 開始更新')
         if settings['read_sn_list_when_checking_update']:
             sn_dict = Config.read_sn_list()
+        if settings['read_config_when_checking_update']:
+            settings = Config.read_settings()
         check_tasks()  # 检查更新，生成任务列队
         if queue:
-            print()
             for task_sn in queue.keys():
                 if task_sn not in processing_queue:  # 如果该任务没有在进行中，则启动
                     task = threading.Thread(target=worker, args=(task_sn, queue[task_sn]))

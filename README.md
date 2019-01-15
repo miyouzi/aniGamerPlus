@@ -146,7 +146,7 @@ sn碼 下載模式(可空) #注釋(可空)
 
 ### aniGamer.db
 
-:warning: v6.0版本與之前版本不兼容, 需要刪除舊版**aniGamer.db**
+:warning: **v6.0版本與之前版本不兼容, 需要刪除舊版aniGamer.db**
 
 sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等工具打開
 

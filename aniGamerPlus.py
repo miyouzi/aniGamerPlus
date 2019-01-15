@@ -298,6 +298,8 @@ def check_new_version():
     remote_version = Config.read_latest_version_on_github()
     if float(settings['aniGamerPlus_version'][1:]) < float(remote_version[1:]):
         err_print('發現GitHub上有新版本: '+remote_version)
+    else:
+        print('當前為最新版')
 
 
 if __name__ == '__main__':

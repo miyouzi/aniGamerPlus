@@ -1,7 +1,7 @@
 # aniGamerPlus
 巴哈姆特動畫瘋自動下載工具
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/tag/v5.1)下載exe文件使用.
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
 

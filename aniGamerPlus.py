@@ -296,7 +296,7 @@ def user_exit(signum, frame):
 def check_new_version():
     # 检查GitHub上是否有新版
     remote_version = Config.read_latest_version_on_github()
-    if settings['aniGamerPlus_version'] != remote_version:
+    if float(settings['aniGamerPlus_version'][1:]) < float(remote_version[1:]):
         err_print('發現GitHub上有新版本: '+remote_version)
 
 

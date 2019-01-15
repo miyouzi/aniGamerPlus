@@ -109,7 +109,8 @@ def read_settings():
         __update_settings(settings)  # 升级旧版配置
         settings = __read_settings_file()  # 重新载入
 
-    settings['ftp']['port'] = int(settings['ftp']['port'])
+    if settings['ftp']['port']:
+        settings['ftp']['port'] = int(settings['ftp']['port'])
     # 防呆
     settings['check_frequency'] = int(settings['check_frequency'])
     settings['download_resolution'] = str(settings['download_resolution'])
@@ -218,4 +219,7 @@ def test():
 
 
 if __name__ == '__main__':
+    # read_settings()
+    # from pprint import pprint
+    # pprint(read_sn_list())
     pass

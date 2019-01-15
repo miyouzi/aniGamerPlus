@@ -199,9 +199,9 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
     err_counter = 0
     anime = Anime(sn)
     if dl_resolution:
-        anime.download(dl_resolution, dl_save_dir, realtime_show_file_size)
+        anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size)
     else:
-        anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size)
+        anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size)
     while anime.video_size < 10:
         if err_counter >= 3:
             err_print('任務失敗達三次! 終止任務! sn=' + str(anime.get_sn()) + ' title=' + anime.get_title())
@@ -213,9 +213,9 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
             time.sleep(10)
             anime.renew()
             if dl_resolution:
-                anime.download(dl_resolution, dl_save_dir, realtime_show_file_size)
+                anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size)
             else:
-                anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size)
+                anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size)
     thread_limiter.release()
 
 
@@ -227,7 +227,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
     if cui_download_mode == 'single':
         print('當前下載模式: 僅下載本集\n')
-        Anime(sn).download(cui_resolution, cui_save_dir, True)  # True 是实时显示文件大小, 仅一个下载任务时适用
+        Anime(sn).download(cui_resolution, cui_save_dir, realtime_show_file_size=True)  # True 是实时显示文件大小, 仅一个下载任务时适用
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
@@ -242,9 +242,9 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             bangumi_list.sort()
 
         if bangumi_list[-1] == sn:
-            anime.download(cui_resolution, cui_save_dir, True)
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
         else:
-            Anime(bangumi_list[-1]).download(cui_resolution, cui_save_dir, True)
+            Anime(bangumi_list[-1]).download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
 
     elif cui_download_mode == 'all':
         print('當前下載模式: 下載本番劇所有劇集\n')

@@ -4,7 +4,6 @@
 # @Author  : Miyouzi
 # @File    : Anime.py @Software: PyCharm
 import ftplib
-
 import Config
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys, datetime
@@ -284,7 +283,7 @@ class Anime():
             self.__get_m3u8_dict()
         return self._m3u8_dict
 
-    def download(self, resolution='', save_dir='', bangumi_tag='',realtime_show_file_size=False):
+    def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False):
         self.realtime_show_file_size = realtime_show_file_size
         if not resolution:
             resolution = self._settings['download_resolution']
@@ -684,9 +683,9 @@ class Anime():
 
 
 if __name__ == '__main__':
-    a = Anime(11468, debug_mode=True)
-    path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
-    a.upload(debug_file=path)
+    # a = Anime(11468, debug_mode=True)
+    # path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
+    # a.upload(debug_file=path)
     # print(a.upload_succeed_flag)
     # a.download('1080')
     pass

@@ -38,15 +38,15 @@ def __init_settings():
                     'pwd': ''
                 },
                 'upload_to_server': False,
-                'ftp': {  # 将文件上传至远程服务器，咕咕咕咕……
+                'ftp': {  # 将文件上传至远程服务器
                     'server': '',
                     'port': '',
                     'user': '',
                     'pwd': '',
                     'tls': True,
-                    'cwd': '',  # 文件存放目录
+                    'cwd': '',  # 文件存放目录, 登陆后首先进入的目录
                     'show_error_detail': False,
-                    'max_retry_num': 10
+                    'max_retry_num': 15
                 },
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
@@ -203,7 +203,4 @@ def read_latest_version_on_github():
 
 
 if __name__ == '__main__':
-    # read_settings()
-    # from pprint import pprint
-    # pprint(read_sn_list())
     pass

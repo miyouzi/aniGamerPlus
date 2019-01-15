@@ -96,7 +96,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 #### 使用Chrome舉例如何獲取 Cookie:
 
- - 開啓Chrome的無痕模式, 登陸動畫瘋, 記得勾選**保持登入狀態**
+ - 開啓Chrome的**無痕模式**, 登陸動畫瘋, 記得勾選**保持登入狀態**
 
  - 按 F12 調出開發者工具, 前往動畫瘋, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)

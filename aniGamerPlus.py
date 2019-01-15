@@ -298,8 +298,6 @@ def check_new_version():
     remote_version = Config.read_latest_version_on_github()
     if float(settings['aniGamerPlus_version'][1:]) < float(remote_version[1:]):
         err_print('發現GitHub上有新版本: '+remote_version)
-    else:
-        print('當前為最新版')
 
 
 if __name__ == '__main__':
@@ -318,8 +316,8 @@ if __name__ == '__main__':
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
 
+    print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
     if len(sys.argv) > 1:  # 支持命令行使用
-        print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
         parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 720, 1080])

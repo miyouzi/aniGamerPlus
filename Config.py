@@ -13,7 +13,7 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v6.0'
+aniGamerPlus_version = 'v6.1'
 latest_config_version = 2.0
 
 

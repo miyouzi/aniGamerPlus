@@ -161,7 +161,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v6.0
+當前aniGamerPlus版本: v6.1
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]

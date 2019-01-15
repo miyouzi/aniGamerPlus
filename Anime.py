@@ -426,6 +426,7 @@ class Anime():
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
+        tmp_dir = str(self._sn)+'-uploading-by-aniGamerPlus'
 
         if debug_file:
             self.local_video_path = debug_file
@@ -506,7 +507,7 @@ class Anime():
             # 删除旧的临时文件夹
             nonlocal first_connect
             if first_connect:  # 首次连接
-                remove_dir(str(self._sn))
+                remove_dir(tmp_dir)
                 first_connect = False  # 标记第一次连接已完成
 
             # 创建新的临时文件夹
@@ -514,10 +515,10 @@ class Anime():
             # 正常中斷传输会把名字改回来, 但是意外掉线不会, 为了处理这种情况
             # 需要获取 pure-ftpd 未知文件名的续传缓存文件, 为了不和其他视频的缓存文件混淆, 故建立一个临时文件夹
             try:
-                ftp.cwd(str(self._sn))
+                ftp.cwd(tmp_dir)
             except ftplib.error_perm:
-                ftp.mkd(str(self._sn))
-                ftp.cwd(str(self._sn))
+                ftp.mkd(tmp_dir)
+                ftp.cwd(tmp_dir)
 
             return connect_flag
 
@@ -531,7 +532,7 @@ class Anime():
 
         def remove_dir(dir_name):
             try:
-                ftp.rmd(str(self._sn))
+                ftp.rmd(dir_name)
             except ftplib.error_perm as e:
                 if 'Directory not empty' in str(e):
                     # 如果目录非空, 则删除内部文件
@@ -654,8 +655,8 @@ class Anime():
                     ftp.delete(self._video_filename)
                 except ftplib.error_perm:
                     pass
-                ftp.rename(str(self._sn) + '/' + video_filename, self._video_filename)  # 将视频从临时文件移出, 顺便重命名
-                remove_dir(str(self._sn))  # 删除临时目录
+                ftp.rename(tmp_dir + '/' + video_filename, self._video_filename)  # 将视频从临时文件移出, 顺便重命名
+                remove_dir(tmp_dir)  # 删除临时目录
                 self.upload_succeed_flag = True  # 标记上传成功
                 break
 
@@ -683,9 +684,9 @@ class Anime():
 
 
 if __name__ == '__main__':
-    # a = Anime(11468, debug_mode=True)
-    # path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
-    # a.upload(debug_file=path)
+    a = Anime(11468, debug_mode=True)
+    path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
+    a.upload(debug_file=path)
     # print(a.upload_succeed_flag)
     # a.download('1080')
     pass

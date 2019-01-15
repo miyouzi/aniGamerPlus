@@ -202,22 +202,6 @@ def read_latest_version_on_github():
     return remote_version
 
 
-def test():
-    req = 'https://miyouzi.top/'
-    session = requests.session()
-    headers = session.get(req).headers
-    if 'Link' in headers.keys():
-        print('aaaaaaa')
-        if 'includes' in headers.get('link'):
-            print('bbbb')
-
-    a = {}
-    if a:
-        print(True)
-    else:
-        print(False)
-
-
 if __name__ == '__main__':
     # read_settings()
     # from pprint import pprint

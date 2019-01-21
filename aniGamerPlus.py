@@ -14,6 +14,8 @@ import threading
 import time
 import argparse
 import re
+import subprocess
+import platform
 
 import Config
 from Anime import Anime
@@ -300,6 +302,43 @@ def check_new_version():
         err_print('發現GitHub上有新版本: '+remote_version)
 
 
+def __init_proxy():
+    if settings['use_gost']:
+        print('使用代理連接動畫瘋, 使用擴展的代理協議')
+        # 需要使用 gost 的情况
+        # 寻找 gost
+        check_gost = subprocess.Popen('gost -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if check_gost.stderr.readlines():  # 查找 ffmpeg 是否已放入系统 path
+            gost_path = 'gost'
+        else:
+            # print('没有在系统PATH中发现gost，尝试在所在目录寻找')
+            if 'Windows' in platform.system():
+                gost_path = os.path.join(working_dir, 'gost.exe')
+            else:
+                gost_path = os.path.join(working_dir, 'gost')
+            if not os.path.exists(gost_path):
+                err_print('當前代理使用擴展協議, 需要使用gost, 但是gost未找到')
+                raise FileNotFoundError  # 如果本地目录下也没有找到 gost 则丢出异常
+        # 构造 gost 命令
+        gost_cmd = [gost_path, '-L=:34173']  # 本地监听端口 34173
+        proxies_keys = list(settings['proxies'].keys())
+        proxies_keys.sort()  # 排序, 确保链式结构正确
+        for key in proxies_keys:
+            gost_cmd.append('-F=' + settings['proxies'][key])  # 构建(链式)代理
+
+        def run_gost():
+            # gost 线程
+            gost_subprocess = subprocess.Popen(gost_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            gost_subprocess.communicate()
+
+        run_gost_threader = threading.Thread(target=run_gost)
+        run_gost_threader.setDaemon(True)
+        run_gost_threader.start()  # 启动 gost
+
+    else:
+        print('使用代理連接動畫瘋, 使用http/https協議')
+
+
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, user_exit)
     signal.signal(signal.SIGTERM, user_exit)
@@ -315,8 +354,11 @@ if __name__ == '__main__':
 
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
-
     print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
+
+    if settings['use_proxy']:
+        __init_proxy()
+
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)

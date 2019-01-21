@@ -22,6 +22,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - 支持使用FTP上傳至伺服器, 支持斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支持 FTP over TLS
  - 檢查程序更新功能
  - 支持新番分類
+ - v7.0 開始支持使用(鏈式)代理
  
  
 ## **注意**:warning:
@@ -36,11 +37,8 @@ pip3 install requests beautifulsoup4 lxml termcolor
 ```
  
 ## 任務列表
- - [ ] 下載使用代理
+ - [x] 下載使用代理
  - [x] 使用ftp上傳至遠程伺服器
- 
- ~~咕咕咕~~
- 
  
 ## 配置説明
 
@@ -62,11 +60,12 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 3,  # 最大并發下載數
     "multi_upload": 3,  # 最大并發上傳數
+    "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
     "check_latest_version": true,  # 檢查更新開關, 默認為 true
-    "upload_to_server": true,  # 上傳功能開關
+    "upload_to_server": false,  # 上傳功能開關
     "ftp": {  # FTP配置
         "server": "",  # FTP Server IP
         "port": "",  # 端口
@@ -77,7 +76,13 @@ pip3 install requests beautifulsoup4 lxml termcolor
         "show_error_detail": false,  # 是否顯示細節錯誤信息
         "max_retry_num": 10  # 最大重傳數, 支持續傳
     },
-    "config_version": 2.0,  # 配置文件版本
+    "use_proxy": true,  # 代理開關
+    "proxies": {
+        "1": "socks5://127.0.0.1:1080",  # 代理配置
+        "2": "http://user:passwd@example.com:1000"  # 支持鏈式代理
+    }
+    
+    "config_version": 3.0,  # 配置文件版本
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
@@ -85,6 +90,31 @@ pip3 install requests beautifulsoup4 lxml termcolor
 ```
 
 模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
+
+### 使用代理
+aniGamerPlus本身支持使用單個```http```或```https```代理.
+
+無密碼驗證的代理使用以下格式:
+```
+http://example.com:1000
+```
+
+有密碼驗證的代理使用以下格式:
+```
+http://user:passwd@example.com:1000
+```
+
+如果想使用其他的代理協議或使用鏈式代理, 需要下載 [**Gost**](https://github.com/ginuerzh/gost) 放置在系統PATH, 或本程序目錄下, 並命名爲 ```gost```, windows平臺為```gost.exe```
+
+若想使用鏈式代理, 請使用整數作爲 key, 代理出口將會是 key 最大的代理服務器.
+
+Gost 支持 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://github.com/shadowsocks/shadowsocks-go), 目前僅支持這幾種加密方式: ```aes-128-cfb``` ```aes-192-cfb``` ```aes-256-cfb``` ```bf-cfb``` ```cast5-cfb``` ```des-cfb``` ```rc4-md5``` ```rc4-md5-6``` ```chacha20``` ```salsa20``` ```rc4``` ```table```
+
+通過 Gost 擴展, aniGamerPlus 可以使用 ```sock4``` ```sock5``` ```ss``` 等協議
+
+**注意: ```read_config_when_checking_update``` 配置對代理配置無效**
+
+**PS: 使用通過 Gost 擴展的協議將占用本機```34173```端口**
 
 ### cookie.txt
 
@@ -110,7 +140,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 可以對個別番劇配置下載模式, 未配置下載模式將會使用**config.json**定義的默認下載模式
 
-支持注釋 **#** 後面的所有字符程序均不會讀取, 可以標記番劇名
+支援注釋 **#** 後面的所有字符程序均不會讀取, 可以標記番劇名
 
 模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**中定義的默認下載模式
 
@@ -146,7 +176,7 @@ sn碼 下載模式(可空) #注釋(可空)
 
 ### aniGamer.db
 
-:warning: **v6.0版本與之前版本不兼容, 需要刪除舊版aniGamer.db**
+:warning: **v6.0及之後版本與之前版本不兼容, 需要刪除舊版aniGamer.db**
 
 sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等工具打開
 
@@ -154,14 +184,16 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 ## 命令行使用
 
-支持命令行使用, 文件默認將保存在**config.json**中指定的目錄下
+支援命令行使用, 文件默認將保存在**config.json**中指定的目錄下
+
+**配置文件中的代理配置同樣適用於命令行模式!** 
 
 **命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v6.1
+當前aniGamerPlus版本: v7.0
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]

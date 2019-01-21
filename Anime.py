@@ -43,6 +43,8 @@ class Anime():
         if debug_mode:
             print('當前為debug模式')
         else:
+            if self._settings['use_proxy']:  # 使用代理
+                self.__init_proxy()
             self.__init_header()  # http header
             self.__get_src()  # 获取网页, 产生 self._src (BeautifulSoup)
             self.__get_title()  # 提取页面标题
@@ -50,6 +52,17 @@ class Anime():
             self.__get_episode()  # 提取剧集码，str
             # 提取剧集列表，结构 {'episode': sn}，储存到 self._episode_list, sn 为 int, 考慮到 劇場版 sp 等存在, key 為 str
             self.__get_episode_list()
+
+    def __init_proxy(self):
+        if self._settings['use_gost']:
+            # 需要使用 gost 的情况, 代理到 gost
+            os.environ['HTTP_PROXY'] = 'http://127.0.0.1:34173'
+            os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:34173'
+        else:
+            # 无需 gost 的情况
+            key = list(self._settings['proxies'].keys())[0]
+            os.environ['HTTP_PROXY'] = self._settings['proxies'][key]
+            os.environ['HTTPS_PROXY'] = self._settings['proxies'][key]
 
     def renew(self):
         self.__get_src()
@@ -248,7 +261,9 @@ class Anime():
                 else:
                     print('check_no_ad: Ads not away?')
             else:
-                print('check_no_ad: Not in right area.')
+                # print('check_no_ad: Not in right area.')
+                err_print(str(datetime.datetime.now()) + ' 遭到動畫瘋地區限制, 你的IP可能不被動畫瘋認可!')
+                sys.exit(1)
 
         def parse_playlist():
             req = 'https:' + self._playlist['src']
@@ -302,6 +317,7 @@ class Anime():
                 else:
                     ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg')
                 if not os.path.exists(ffmpeg_path):
+                    err_print('本項目依賴於ffmpeg, 但ffmpeg未找到')
                     raise FileNotFoundError  # 如果本地目录下也没有找到 ffmpeg 则丢出异常
 
             # 创建存放番剧的目录，去除非法字符
@@ -332,7 +348,14 @@ class Anime():
             self.video_resolution = int(resolution)
 
             # 设定文件存放路径
-            filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+            if self._settings['add_bangumi_name_to_video_filename']:
+                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+            else:
+                # 如果用户不要将番剧名添加到文件名
+                episode = self._episode
+                if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
+                    episode = '0'+self._episode
+                filename = self._settings['customized_video_filename_prefix'] + episode
             if self._settings['add_resolution_to_video_filename']:
                 filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
             # downloading_filename 为下载时文件名，下载完成后更名为 output_file
@@ -378,7 +401,7 @@ class Anime():
                             size = size / float(1024 * 1024)
                             size = round(size, 2)
                             sys.stdout.write('\r')
-                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB  ')
+                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB      ')
                             sys.stdout.flush()
                         else:
                             sys.stdout.write('\r')
@@ -389,7 +412,7 @@ class Anime():
                         temp_file_size = os.path.getsize(downloading_file)
                         a = temp_file_size - pre_temp_file_size
                         if a < (3 * 1024 * 1024):
-                            err_print('sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
+                            err_print('下載失败! sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
                                 int(a / float(1024))) + 'KB 判定为卡死, 任务失败!')
                             run_ffmpeg.kill()
                             return

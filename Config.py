@@ -13,8 +13,8 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v6.1'
-latest_config_version = 2.0
+aniGamerPlus_version = 'v7.0'
+latest_config_version = 3.0
 
 
 def __init_settings():
@@ -26,16 +26,14 @@ def __init_settings():
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
                 'multi-thread': 3,  # 最大并发下载数
                 'multi_upload': 3,
+                'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_video_filename_suffix': '',  # 用户自定后缀
                 'use_proxy': False,
-                'proxy': {  # 代理功能，咕咕咕……
-                    'server': '',
-                    'port': '',
-                    'protocol': '',
-                    'user': '',
-                    'pwd': ''
+                'proxies': {  # 代理功能
+                    1: 'socks5://127.0.0.1:1080',
+                    2: 'http://user:passwd@example.com:1000'
                 },
                 'upload_to_server': False,
                 'ftp': {  # 将文件上传至远程服务器
@@ -86,8 +84,15 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'read_config_when_checking_update' not in new_settings.keys():  # v2.0 新增开关: 每次检查更新时读取config.json
         new_settings['read_config_when_checking_update'] = True
 
-    # if 'proxy' in new_settings.keys():
-    #     new_settings.pop('proxy')
+    if 'add_bangumi_name_to_video_filename' not in new_settings.keys():  # v2.1 新增开关, 文件名可以单纯用剧集命名
+        new_settings['add_bangumi_name_to_video_filename'] = True
+
+    if 'proxies' not in new_settings.keys():  # v2.1 新增代理功能
+        new_settings['proxies'] = {1: '', 2: ''}
+
+    if 'proxy' in new_settings.keys():  # 去掉旧的代理配置
+        new_settings.pop('proxy')
+
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
@@ -122,6 +127,22 @@ def read_settings():
         settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version
+    # 修正 proxies 字典, 使 key 为 int, 方便用于链式代理
+    new_proxies = {}
+    use_gost = False
+    for key, value in settings['proxies'].items():
+        if value:
+            if not (re.match(r'^http://', value.lower()) or re.match(r'^https://', value.lower())):
+                #  如果出现非 http 也非 https 的协议
+                use_gost = True
+            new_proxies[int(key)]=value
+    if len(new_proxies.keys()) > 1:  # 如果代理配置大于 1 , 即使用链式代理, 则同样需要 gost
+        use_gost = True
+    settings['proxies'] = new_proxies
+    settings['use_gost'] = use_gost
+    if not new_proxies:
+        settings['use_proxy'] = False
+
     return settings
 
 

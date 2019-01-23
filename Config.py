@@ -13,8 +13,8 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v7.0'
-latest_config_version = 3.0
+aniGamerPlus_version = 'v8.0'
+latest_config_version = 3.1
 
 
 def __init_settings():
@@ -26,6 +26,8 @@ def __init_settings():
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
                 'multi-thread': 3,  # 最大并发下载数
                 'multi_upload': 3,
+                'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
+                'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数
                 'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
@@ -84,14 +86,20 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'read_config_when_checking_update' not in new_settings.keys():  # v2.0 新增开关: 每次检查更新时读取config.json
         new_settings['read_config_when_checking_update'] = True
 
-    if 'add_bangumi_name_to_video_filename' not in new_settings.keys():  # v2.1 新增开关, 文件名可以单纯用剧集命名
+    if 'add_bangumi_name_to_video_filename' not in new_settings.keys():  # v3.0 新增开关, 文件名可以单纯用剧集命名
         new_settings['add_bangumi_name_to_video_filename'] = True
 
-    if 'proxies' not in new_settings.keys():  # v2.1 新增代理功能
+    if 'proxies' not in new_settings.keys():  # v3.0 新增代理功能
         new_settings['proxies'] = {1: '', 2: ''}
 
-    if 'proxy' in new_settings.keys():  # 去掉旧的代理配置
+    if 'proxy' in new_settings.keys():  # v3.0 去掉旧的代理配置
         new_settings.pop('proxy')
+
+    if 'segment_download_mode' not in new_settings.keys():  # v3.1 新增分段下载模式开关
+        new_settings['segment_download_mode'] = True
+
+    if 'multi_downloading_segment' not in new_settings.keys():  # v3.1 新增分段下载模式下每个视频并发下载分段数
+        new_settings['multi_downloading_segment'] = 2
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -101,7 +109,8 @@ def __update_settings(old_settings):  # 升级配置文件
 
 def __read_settings_file():
     with open(config_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        # 转义win路径
+        return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
 
 
 def read_settings():
@@ -122,8 +131,12 @@ def read_settings():
     settings['multi-thread'] = int(settings['multi-thread'])
     if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
         settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
-    # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
-    if not (settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir'])):
+    # 如果用户自定了番剧目录且存在
+    if settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir']):
+        # 番剧路径规范化
+        settings['bangumi_dir'] = os.path.abspath(settings['bangumi_dir'])
+    else:
+        # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
         settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version

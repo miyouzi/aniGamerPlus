@@ -18,7 +18,7 @@ import subprocess
 import platform
 
 import Config
-from Anime import Anime
+from Anime import Anime, TryTooManyTimeError
 from ColorPrint import err_print
 
 
@@ -156,10 +156,16 @@ def worker(sn, bangumi_tag=''):
 
 def check_tasks():
     for sn in sn_dict.keys():
-        anime = Anime(sn)
+        try:
+            anime = Anime(sn)
+            episode_list = list(anime.get_episode_list().values())
+        except TryTooManyTimeError:
+            err_print('更新狀態: sn='+str(sn)+' 檢查更新失敗, 跳過更待下次檢查')
+            continue
+
         if sn_dict[sn]['mode'] == 'all':
             # 如果用户选择全部下载 download_mode = 'all'
-            for ep in anime.get_episode_list().values():  # 遍历剧集列表
+            for ep in episode_list:  # 遍历剧集列表
                 try:
                     db = read_db(ep)
                     #           未下载的   或                设定要上传但是没上传的                         并且  还没在列队中
@@ -174,12 +180,12 @@ def check_tasks():
                     insert_db(new_anime)
                     queue[ep] = sn_dict[sn]['tag']
         else:
-            latest_sn = list(anime.get_episode_list().values())  # 本番剧剧集列表
+
             if sn_dict[sn]['mode'] == 'largest-sn':
                 # 如果用户选择仅下载最新上传, download_mode = 'largest_sn', 则对 sn 进行排序
-                latest_sn.sort()
+                episode_list.sort()
                 # 否则用户选择仅下载最后剧集, download_mode = 'latest', 即下载网页上显示在最右的剧集
-            latest_sn = latest_sn[-1]
+            latest_sn = episode_list[-1]
             try:
                 db = read_db(latest_sn)
                 #           未下载的   或                设定要上传但是没上传的                         并且  还没在列队中
@@ -334,6 +340,7 @@ def __init_proxy():
         run_gost_threader = threading.Thread(target=run_gost)
         run_gost_threader.setDaemon(True)
         run_gost_threader.start()  # 启动 gost
+        time.sleep(3)  # 给时间让 gost 启动
 
     else:
         print('使用代理連接動畫瘋, 使用http/https協議')

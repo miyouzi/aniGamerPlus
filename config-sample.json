@@ -5,6 +5,8 @@
     "default_download_mode": "latest",
     "multi-thread": 3,
     "multi_upload": 3,
+    "segment_download_mode": true,
+    "multi_downloading_segment": 2,
     "add_bangumi_name_to_video_filename": true,
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",
@@ -28,5 +30,5 @@
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,
-    "config_version": 3.0
+    "config_version": 3.1
 }

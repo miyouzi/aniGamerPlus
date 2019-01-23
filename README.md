@@ -60,6 +60,8 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 3,  # 最大并發下載數
     "multi_upload": 3,  # 最大并發上傳數
+    "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
+    "multi_downloading_segment": 2  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
@@ -115,6 +117,37 @@ Gost 支持 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://githu
 **注意: ```read_config_when_checking_update``` 配置對代理配置無效**
 
 **PS: 使用通過 Gost 擴展的協議將占用本機```34173```端口**
+
+**使用代理建議使用分段下載模式**
+
+**如果代理網路不穩定, 建議```multi-thread```配置為```1```**
+
+### 下載模式説明
+
+v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀取 m3u8 文件, 下載 key 及所有影片分段至臨時文件夾, 再使用 ffmpeg 解密合并.
+
+**分段下載模式特點:**
+
+- 分段下載模式速度更快
+- 個別分段下載失敗會自動重試, 最多重試8次
+- aniGamerPlus本身消耗的記憶體將略高於舊下載模式
+- aniGamerPlus本身性能消耗將會略高
+- 短時間内(解密合并階段)將會占用2倍影片大小的磁盤空間
+- 命令行模式下下載單個視頻時, 實時顯示已下載分段數占總分段數百分比
+
+舊下載模式, 即 ffmpeg 下載模式的工作流程: 直接將 m3u8 文件交給 ffmpeg, 下載解密合并全由 ffmpeg 完成.
+
+**ffmpeg下載模式特點:**
+
+- 一個分段下載失敗即判斷爲下載失敗
+- 在下載過程中可能出現 ffmpeg 卡死的情況
+- 不會生成臨時文件夾
+- 命令行模式下下載單個視頻時, 實時顯示已下載的大小
+
+
+除非你通往動畫瘋的網路足夠穩, 否則建議使用分段下載模式, 配置 ```segment_download_mode``` 為 ```true``` 開啓分段下載模式
+
+儅開啓分段下載模式時, 配置 ```multi_downloading_segment``` 將有效, 這個值指定一個影片同時最多下載幾個分段, 一般設定在```3```左右速度就足夠快了
 
 ### cookie.txt
 

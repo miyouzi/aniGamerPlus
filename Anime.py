@@ -4,6 +4,7 @@
 # @Author  : Miyouzi
 # @File    : Anime.py @Software: PyCharm
 import ftplib
+import shutil
 import Config
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys, datetime
@@ -35,6 +36,7 @@ class Anime():
         self._m3u8_dict = {}
         self.local_video_path = ''
         self._video_filename = ''
+        self._ffmpeg_path = ''
         self.video_resolution = 0
         self.video_size = 0
         self.realtime_show_file_size = False
@@ -132,30 +134,31 @@ class Anime():
         accept__encoding = 'gzip, deflate, br'
         cache_control = 'no-cache'
         header = {
-            "User-Agent": ua,
-            "Referer": ref,
-            "Accept-Language": lang,
-            "Accept": accept,
-            "Accept_Encoding": accept__encoding,
+            "user-agent": ua,
+            "referer": ref,
+            "accept-language": lang,
+            "accept": accept,
+            "accept-encoding": accept__encoding,
             "cache-control": cache_control,
             "origin": origin
         }
         self._req_header = header
 
-    def __request(self, req, no_cookies=False):
+    def __request(self, req, no_cookies=False, show_fail=True, max_retry=3):
         # 获取页面
         error_cnt = 0
         while True:
             try:
                 if self._cookies and not no_cookies:
-                    f = self._session.get(req, headers=self._req_header, cookies=self._cookies, timeout=5)
+                    f = self._session.get(req, headers=self._req_header, cookies=self._cookies, timeout=10)
                 else:
-                    f = self._session.get(req, headers=self._req_header, cookies={}, timeout=5)
+                    f = self._session.get(req, headers=self._req_header, cookies={}, timeout=10)
             except requests.exceptions.RequestException as e:
-                if error_cnt >= 3:
-                    raise TryTooManyTimeError('请求失败次数过多！请求链接：\n%s' % req)
-                err_msg = 'ERROR: 请求失败！except：\n' + str(e) + '\n3s后重试(最多重试三次)'
-                err_print(err_msg)
+                if error_cnt >= max_retry:
+                    raise TryTooManyTimeError('任務狀態: sn='+str(self._sn)+' 请求失败次数过多！请求链接：\n%s' % req)
+                err_msg = '任務狀態: sn='+str(self._sn)+' ERROR: 请求失败！except：\n'+str(e)+'\n3s后重试(最多重试'+str(max_retry)+'次)'
+                if show_fail:
+                    print(err_msg)
                 time.sleep(3)
                 error_cnt += 1
             else:
@@ -298,153 +301,290 @@ class Anime():
             self.__get_m3u8_dict()
         return self._m3u8_dict
 
+    def __segment_download_mode(self, resolution='', bangumi_tag=''):
+        # 设定文件存放路径
+        if self._settings['add_bangumi_name_to_video_filename']:
+            filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+        else:
+            # 如果用户不要将番剧名添加到文件名
+            episode = self._episode
+            if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
+                episode = '0' + self._episode
+            filename = self._settings['customized_video_filename_prefix'] + episode
+        if self._settings['add_resolution_to_video_filename']:
+            filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
+        # downloading_filename 为下载时文件名，下载完成后更名为 output_file
+        merging_filename = filename + self._settings['customized_video_filename_suffix'] + '.MERGING.mp4'
+        filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
+        legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
+        merging_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', merging_filename)
+        output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
+        merging_file = os.path.join(self._bangumi_dir, merging_filename)
+
+        url_path = os.path.split(self._m3u8_dict[resolution])[0]   # 用于构造完整 chunk 链接
+        temp_dir = os.path.join(self._bangumi_dir, str(self._sn)+'-downloading-by-aniGamerPlus')  # 临时目录以 sn 命令
+        if not os.path.exists(temp_dir):  # 创建临时目录
+            os.makedirs(temp_dir)
+        m3u8_path = os.path.join(temp_dir, str(self._sn)+'.m3u8')  # m3u8 存放位置
+        m3u8_text = self.__request(self._m3u8_dict[resolution], no_cookies=True).text  # 请求 m3u8 文件
+        with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存 m3u8 文件在本地
+            f.write(m3u8_text)
+            pass
+        key_uri = re.search(r'.+URI=.+m3u8key.+', m3u8_text).group()  # 找到包含 key 的行
+        key_uri = re.sub(r'.+URI="', '', key_uri)[0:-1]  # 把 key 的链接提取出来
+
+        m3u8_key_path = os.path.join(temp_dir, 'key.m3u8key')  # key 的存放位置
+        with open(m3u8_key_path, 'wb') as f:  # 保存 key
+            f.write(self.__request(key_uri, no_cookies=True).content)
+
+        chunk_list = re.findall(r'media_b.+ts.+', m3u8_text)  # chunk
+
+        limiter = threading.Semaphore(self._settings['multi_downloading_segment'])  # chunk 并发下载限制器
+        total_chunk_num = len(chunk_list)
+        finished_chunk_counter = 0
+        failed_flag = False
+
+        def download_chunk(uri):
+            limiter.acquire()
+            chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名
+            chunk_local_path = os.path.join(temp_dir, chunk_name)  # chunk 路径
+
+            try:
+                with open(chunk_local_path, 'wb') as f:
+                    f.write(self.__request(uri, no_cookies=True, show_fail=False, max_retry=8).content)
+            except TryTooManyTimeError:
+                nonlocal failed_flag
+                failed_flag = True
+                err_print('下載狀態: sn=' + str(self._sn) + ' Bad segment='+chunk_name)
+                sys.exit(1)
+
+            if self.realtime_show_file_size:
+                # 显示完成百分比
+                nonlocal finished_chunk_counter
+                finished_chunk_counter = finished_chunk_counter + 1
+                progress_rate = float(finished_chunk_counter / total_chunk_num * 100)
+                progress_rate = round(progress_rate, 2)
+                sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + ' ' + str(progress_rate) + '%  ')
+                sys.stdout.flush()
+            limiter.release()
+
+        if self.realtime_show_file_size:
+            # 是否实时显示文件大小, 设计仅 cui 下载单个文件或线程数=1时适用
+            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
+            sys.stdout.flush()
+        else:
+            print('正在下載: sn=' + str(self._sn) + ' ' + filename)
+
+        chunk_tasks_list = []
+        for chunk in chunk_list:
+            chunk_uri = url_path + '/' + chunk
+            task = threading.Thread(target=download_chunk, args=(chunk_uri, ))
+            chunk_tasks_list.append(task)
+            task.setDaemon(True)
+            task.start()
+
+        for task in chunk_tasks_list:  # 等待所有任务完成
+            while True:
+                if failed_flag:
+                    err_print('下載失败! sn=' + str(self._sn) + ' ' + filename)
+                    self.video_size = 0
+                    return
+                if task.isAlive():
+                    time.sleep(1)
+                else:
+                    break
+
+        # m3u8 本地化
+        # replace('\\', '\\\\') 为转义win路径
+        m3u8_text_local_version = m3u8_text.replace(key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\', '\\\\')
+        for chunk in chunk_list:
+            chunk_filename = re.findall(r'media_b.+ts', chunk)[0]  # chunk 文件名
+            chunk_path = os.path.join(temp_dir, chunk_filename).replace('\\','\\\\')  # chunk 本地路径
+            m3u8_text_local_version = m3u8_text_local_version.replace(chunk, chunk_path)
+        with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存本地化的 m3u8
+            f.write(m3u8_text_local_version)
+
+        if self.realtime_show_file_size:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+        print('下載狀態: sn=' + str(self._sn) + ' ' + filename + ' 下載完成, 正在解密合并……')
+
+        # 构造 ffmpeg 命令
+        ffmpeg_cmd = [self._ffmpeg_path,
+                      '-allowed_extensions', 'ALL',
+                      '-i', m3u8_path,
+                      '-c', 'copy', merging_file,
+                      '-y']
+
+        # 执行 ffmpeg
+        run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        run_ffmpeg.communicate()
+        # 重命名
+        if os.path.exists(output_file):
+            os.remove(output_file)
+        os.renames(merging_file, output_file)
+        # 删除临时目录
+        shutil.rmtree(temp_dir)
+
+        self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
+        self.local_video_path = output_file  # 记录保存路径, FTP上传用
+        self._video_filename = legal_filename  # 记录文件名, FTP上传用
+
+        err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
+
+    def __ffmpeg_download_mode(self, resolution=''):
+        # 设定文件存放路径
+        if self._settings['add_bangumi_name_to_video_filename']:
+            filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+        else:
+            # 如果用户不要将番剧名添加到文件名
+            episode = self._episode
+            if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
+                episode = '0' + self._episode
+            filename = self._settings['customized_video_filename_prefix'] + episode
+        if self._settings['add_resolution_to_video_filename']:
+            filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
+        # downloading_filename 为下载时文件名，下载完成后更名为 output_file
+        downloading_filename = filename + self._settings['customized_video_filename_suffix'] + '.DOWNLOADING.mp4'
+        filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
+        legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
+        downloading_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', downloading_filename)
+        output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
+        downloading_file = os.path.join(self._bangumi_dir, downloading_filename)
+
+        # 构造 ffmpeg 命令
+        ffmpeg_cmd = [self._ffmpeg_path,
+                      '-user_agent',
+                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+                      '-headers', "Origin: https://ani.gamer.com.tw",
+                      '-i', self._m3u8_dict[resolution],
+                      '-c', 'copy', downloading_file,
+                      '-y']
+
+        if os.path.exists(downloading_file):
+            os.remove(downloading_file)  # 清理任务失败的尸体
+
+        # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
+        run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=204800, stderr=subprocess.PIPE)
+
+        def check_ffmpeg_alive():
+            # 应对ffmpeg卡死, 资源限速等，若 1min 中内文件大小没有增加超过 3M, 则判定卡死
+            if self.realtime_show_file_size:  # 是否实时显示文件大小, 设计仅 cui 下载单个文件或线程数=1时适用
+                sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
+                sys.stdout.flush()
+            else:
+                print('正在下載: sn=' + str(self._sn) + ' ' + filename)
+
+            time.sleep(2)
+            time_counter = 1
+            pre_temp_file_size = 0
+            while run_ffmpeg.poll() is None:
+
+                if self.realtime_show_file_size:
+                    # 实时显示文件大小
+                    if os.path.exists(downloading_file):
+                        size = os.path.getsize(downloading_file)
+                        size = size / float(1024 * 1024)
+                        size = round(size, 2)
+                        sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB      ')
+                        sys.stdout.flush()
+                    else:
+                        sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + '    文件尚未生成  ')
+                        sys.stdout.flush()
+
+                if time_counter % 60 == 0 and os.path.exists(downloading_file):
+                    temp_file_size = os.path.getsize(downloading_file)
+                    a = temp_file_size - pre_temp_file_size
+                    if a < (3 * 1024 * 1024):
+                        err_print('下載失败! sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
+                            int(a / float(1024))) + 'KB 判定为卡死, 任务失败!')
+                        run_ffmpeg.kill()
+                        return
+                    pre_temp_file_size = temp_file_size
+                time.sleep(1)
+                time_counter = time_counter + 1
+
+        ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 检查线程
+        ffmpeg_checker.setDaemon(True)  # 如果 Anime 线程被 kill, 检查进程也应该结束
+        ffmpeg_checker.start()
+        run = run_ffmpeg.communicate()
+        return_str = str(run[1])
+
+        if self.realtime_show_file_size:
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+
+        if run_ffmpeg.returncode == 0 and (return_str.find('Failed to open segment') < 0):
+            # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            os.renames(downloading_file, output_file)  # 下载完成，更改文件名
+            self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
+            self.local_video_path = output_file  # 记录保存路径, FTP上传用
+            self._video_filename = legal_filename  # 记录文件名, FTP上传用
+            err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
+        else:
+            err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(
+                run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
+
     def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False):
         self.realtime_show_file_size = realtime_show_file_size
         if not resolution:
             resolution = self._settings['download_resolution']
 
         if save_dir:
-            self._bangumi_dir = save_dir
+            self._bangumi_dir = save_dir  # 用于 cui 用户指定下载在当前目录
 
-        def download_video(resolution):
-            check_ffmpeg = subprocess.Popen('ffmpeg -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if check_ffmpeg.stdout.readlines():  # 查找 ffmpeg 是否已放入系统 path
-                ffmpeg_path = 'ffmpeg'
+        try:
+            self.__get_m3u8_dict()  # 获取 m3u8 列表
+        except TryTooManyTimeError:
+            # 如果在获取 m3u8 过程中发生意外, 则取消此次下载
+            print('下載狀態: sn=' + str(self._sn) + ' 獲取 m3u8 失敗!')
+            self.video_size = 0
+            return
+
+        check_ffmpeg = subprocess.Popen('ffmpeg -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if check_ffmpeg.stdout.readlines():  # 查找 ffmpeg 是否已放入系统 path
+            self._ffmpeg_path = 'ffmpeg'
+        else:
+            # print('没有在系统PATH中发现ffmpeg，尝试在所在目录寻找')
+            if 'Windows' in platform.system():
+                self._ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg.exe')
             else:
-                # print('没有在系统PATH中发现ffmpeg，尝试在所在目录寻找')
-                if 'Windows' in platform.system():
-                    ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg.exe')
-                else:
-                    ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg')
-                if not os.path.exists(ffmpeg_path):
-                    err_print('本項目依賴於ffmpeg, 但ffmpeg未找到')
-                    raise FileNotFoundError  # 如果本地目录下也没有找到 ffmpeg 则丢出异常
+                self._ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg')
+            if not os.path.exists(self._ffmpeg_path):
+                err_print('本項目依賴於ffmpeg, 但ffmpeg未找到')
+                raise FileNotFoundError  # 如果本地目录下也没有找到 ffmpeg 则丢出异常
 
-            # 创建存放番剧的目录，去除非法字符
-            if bangumi_tag:  # 如果指定了番剧分类
-                bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', bangumi_tag))
-            else:
-                bangumi_dir = self._bangumi_dir
-            bangumi_dir = os.path.join(bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
-            if not os.path.exists(bangumi_dir):
-                os.makedirs(bangumi_dir)  # 按番剧创建文件夹分类
+        # 创建存放番剧的目录，去除非法字符
+        if bangumi_tag:  # 如果指定了番剧分类
+            self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', bangumi_tag))
+        self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
+        if not os.path.exists(self._bangumi_dir):
+            os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
 
-            # 如果不存在指定清晰度，则选取最近可用清晰度
-            if resolution not in self._m3u8_dict.keys():
-                resolution_list = map(lambda x: int(x), self._m3u8_dict.keys())
-                resolution_list = list(resolution_list)
-                flag = 9999
-                closest_resolution = 0
-                for i in resolution_list:
-                    a = abs(int(resolution) - i)
-                    if a < flag:
-                        flag = a
-                        closest_resolution = i
-                # resolution_list.sort()
-                # resolution = str(resolution_list[-1])  # 选取最高可用清晰度
-                resolution = str(closest_resolution)
-                err_msg = 'ERROR: 指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
-                err_print(err_msg)
-            self.video_resolution = int(resolution)
+        # 如果不存在指定清晰度，则选取最近可用清晰度
+        if resolution not in self._m3u8_dict.keys():
+            resolution_list = map(lambda x: int(x), self._m3u8_dict.keys())
+            resolution_list = list(resolution_list)
+            flag = 9999
+            closest_resolution = 0
+            for i in resolution_list:
+                a = abs(int(resolution) - i)
+                if a < flag:
+                    flag = a
+                    closest_resolution = i
+            # resolution_list.sort()
+            # resolution = str(resolution_list[-1])  # 选取最高可用清晰度
+            resolution = str(closest_resolution)
+            err_msg = 'ERROR: 指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
+            err_print(err_msg)
+        self.video_resolution = int(resolution)
 
-            # 设定文件存放路径
-            if self._settings['add_bangumi_name_to_video_filename']:
-                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
-            else:
-                # 如果用户不要将番剧名添加到文件名
-                episode = self._episode
-                if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
-                    episode = '0'+self._episode
-                filename = self._settings['customized_video_filename_prefix'] + episode
-            if self._settings['add_resolution_to_video_filename']:
-                filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
-            # downloading_filename 为下载时文件名，下载完成后更名为 output_file
-            downloading_filename = filename + self._settings['customized_video_filename_suffix'] + '.DOWNLOADING.mp4'
-            filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
-            legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
-            downloading_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', downloading_filename)
-            output_file = os.path.join(bangumi_dir, legal_filename)  # 完整输出路径
-            downloading_file = os.path.join(bangumi_dir, downloading_filename)
-
-            # 构造 ffmpeg 命令
-            ffmpeg_cmd = [ffmpeg_path,
-                          '-user_agent',
-                          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
-                          '-headers', "Origin: https://ani.gamer.com.tw",
-                          '-i', self._m3u8_dict[resolution],
-                          '-c', 'copy', downloading_file,
-                          '-y']
-
-            if os.path.exists(downloading_file):
-                os.remove(downloading_file)  # 清理任务失败的尸体
-
-            # subprocess.call(ffmpeg_cmd, creationflags=0x08000000)  # 仅windows
-            run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, bufsize=204800, stderr=subprocess.PIPE)
-
-            def check_ffmpeg_alive():
-                # 应对ffmpeg卡死, 资源限速等，若 1min 中内文件大小没有增加超过 3M, 则判定卡死
-                if self.realtime_show_file_size:  # 是否实时显示文件大小, 设计仅 cui 下载单个文件或线程数=1时适用
-                    sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
-                    sys.stdout.flush()
-                else:
-                    print('正在下載: sn=' + str(self._sn) + ' ' + filename)
-
-                time.sleep(2)
-                time_counter = 1
-                pre_temp_file_size = 0
-                while run_ffmpeg.poll() is None:
-
-                    if self.realtime_show_file_size:
-                        # 实时显示文件大小
-                        if os.path.exists(downloading_file):
-                            size = os.path.getsize(downloading_file)
-                            size = size / float(1024 * 1024)
-                            size = round(size, 2)
-                            sys.stdout.write('\r')
-                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB      ')
-                            sys.stdout.flush()
-                        else:
-                            sys.stdout.write('\r')
-                            sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename + '    文件尚未生成  ')
-                            sys.stdout.flush()
-
-                    if time_counter % 60 == 0 and os.path.exists(downloading_file):
-                        temp_file_size = os.path.getsize(downloading_file)
-                        a = temp_file_size - pre_temp_file_size
-                        if a < (3 * 1024 * 1024):
-                            err_print('下載失败! sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
-                                int(a / float(1024))) + 'KB 判定为卡死, 任务失败!')
-                            run_ffmpeg.kill()
-                            return
-                        pre_temp_file_size = temp_file_size
-                    time.sleep(1)
-                    time_counter = time_counter + 1
-
-            ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 检查线程
-            ffmpeg_checker.setDaemon(True)  # 如果 Anime 线程被 kill, 检查进程也应该结束
-            ffmpeg_checker.start()
-            run = run_ffmpeg.communicate()
-            return_str = str(run[1])
-
-            if self.realtime_show_file_size:
-                sys.stdout.write('\n')
-                sys.stdout.flush()
-
-            if run_ffmpeg.returncode == 0 and (return_str.find('Failed to open segment') < 0):
-                # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
-                if os.path.exists(output_file):
-                    os.remove(output_file)
-                os.renames(downloading_file, output_file)  # 下载完成，更改文件名
-                self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
-                self.local_video_path = output_file  # 记录保存路径, FTP上传用
-                self._video_filename = legal_filename  # 记录文件名, FTP上传用
-                err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
-            else:
-                err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(
-                    run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
-
-        self.__get_m3u8_dict()
-        download_video(resolution)
+        if self._settings['segment_download_mode']:
+            self.__segment_download_mode(resolution)
+        else:
+            self.__ffmpeg_download_mode(resolution)
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
@@ -706,9 +846,4 @@ class Anime():
 
 
 if __name__ == '__main__':
-    # a = Anime(11468, debug_mode=True)
-    # path = 'F:\\Project\\PythonProjects\\aniGamerPlus-Git\\bangumi\\2019一月番\\動物朋友 2\\【動畫瘋】動物朋友 2[1][1080P].mp4'
-    # a.upload(debug_file=path)
-    # print(a.upload_succeed_flag)
-    # a.download('1080')
     pass

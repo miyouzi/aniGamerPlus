@@ -13,7 +13,7 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v8.0'
+aniGamerPlus_version = 'v8.1'
 latest_config_version = 3.1
 
 
@@ -228,11 +228,14 @@ def renew_cookies(new_cookie):
 def read_latest_version_on_github():
     req = 'https://api.github.com/repos/miyouzi/aniGamerPlus/releases/latest'
     session = requests.session()
+    remote_version = {}
     try:
         latest_releases_info = session.get(req, timeout=3).json()
-        remote_version = latest_releases_info['tag_name']
+        remote_version['tag_name'] = latest_releases_info['tag_name']
+        remote_version['body'] = latest_releases_info['body']  # 更新内容
     except:
-        remote_version = aniGamerPlus_version  # 拉取github版本号失败
+        remote_version['tag_name'] = aniGamerPlus_version  # 拉取github版本号失败
+        remote_version['body'] = ''
     return remote_version
 
 

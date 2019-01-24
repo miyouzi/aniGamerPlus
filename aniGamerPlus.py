@@ -284,6 +284,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
 
     __kill_thread_when_ctrl_c()
+    gost_subprocess.kill()  # 结束 gost
     sys.exit(0)
 
 
@@ -298,17 +299,18 @@ def __kill_thread_when_ctrl_c():
 
 def user_exit(signum, frame):
     err_print('\n\n你終止了程序!')
+    gost_subprocess.kill()  # 结束 gost
     sys.exit(255)
 
 
 def check_new_version():
     # 检查GitHub上是否有新版
     remote_version = Config.read_latest_version_on_github()
-    if float(settings['aniGamerPlus_version'][1:]) < float(remote_version[1:]):
-        err_print('發現GitHub上有新版本: '+remote_version)
+    if float(settings['aniGamerPlus_version'][1:]) < float(remote_version['tag_name'][1:]):
+        err_print('發現GitHub上有新版本: '+remote_version['tag_name']+'\n更新内容:\n'+remote_version['body']+'\n')
 
 
-def __init_proxy():
+def __init_proxy(kill=False):
     if settings['use_gost']:
         print('使用代理連接動畫瘋, 使用擴展的代理協議')
         # 需要使用 gost 的情况
@@ -334,6 +336,7 @@ def __init_proxy():
 
         def run_gost():
             # gost 线程
+            global gost_subprocess
             gost_subprocess = subprocess.Popen(gost_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             gost_subprocess.communicate()
 
@@ -358,13 +361,11 @@ if __name__ == '__main__':
     thread_limiter = threading.Semaphore(settings['multi-thread'])  # 下载并发限制器
     upload_limiter = threading.Semaphore(settings['multi_upload'])  # 并发上传限制器
     thread_tasks = []
+    gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
 
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
     print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
-
-    if settings['use_proxy']:
-        __init_proxy()
 
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
@@ -419,6 +420,9 @@ if __name__ == '__main__':
             thread_limiter = threading.Semaphore(arg.thread_limit)
         else:
             thread_limit = settings['multi-thread']
+
+        if settings['use_proxy']:
+            __init_proxy()
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir)
 
     # 初始化 sqlite3 数据库
@@ -437,6 +441,9 @@ if __name__ == '__main__':
                    "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
     conn.commit()
     conn.close()
+
+    if settings['use_proxy']:
+        __init_proxy()
 
     while True:
         print('\n'+str(datetime.datetime.now()) + ' 開始更新')

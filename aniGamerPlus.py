@@ -22,12 +22,22 @@ from Anime import Anime, TryTooManyTimeError
 from ColorPrint import err_print
 
 
-def read_db(ns):
+def build_anime(sn):
+    anime = {'anime': None, 'failed': True}
+    try:
+        anime['anime'] = Anime(sn)
+        anime['failed'] = False
+    except TryTooManyTimeError:
+        err_print('抓取失敗! sn='+str(sn)+' 影片信息抓取失敗!')
+    return anime
+
+
+def read_db(sn):
     # 传入sn(int)，读取该 sn 资料，返回 dict
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute("select * FROM anime WHERE ns=:ns", {'ns': ns})
+    cursor.execute("select * FROM anime WHERE sn=:sn", {'sn': sn})
 
     try:
         values = cursor.fetchall()[0]
@@ -50,20 +60,19 @@ def read_db(ns):
 
 def insert_db(anime):
     # 向数据库插入新资料
-    anime_dict = {}
-    anime_dict['ns'] = str(anime.get_sn())
-    anime_dict['title'] = anime.get_title()
-    anime_dict['anime_name'] = anime.get_bangumi_name()
-    anime_dict['episode'] = anime.get_episode()
+    anime_dict = {'sn': str(anime.get_sn()),
+                  'title': anime.get_title(),
+                  'anime_name': anime.get_bangumi_name(),
+                  'episode': anime.get_episode()}
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
-        cursor.execute("INSERT INTO anime (ns, title, anime_name, episode) VALUES (:ns, :title, :anime_name, :episode)",
+        cursor.execute("INSERT INTO anime (sn, title, anime_name, episode) VALUES (:sn, :title, :anime_name, :episode)",
                        anime_dict)
     except sqlite3.IntegrityError as e:
-        err_msg = 'ERROR: sn=' + anime_dict['ns'] + ' title=' + anime_dict['title'] + ' 数据已存在！' + str(e)
+        err_msg = 'ERROR: sn=' + anime_dict['sn'] + ' title=' + anime_dict['title'] + ' 数据已存在！' + str(e)
         err_print(err_msg)
 
     cursor.close()
@@ -78,12 +87,14 @@ def update_db(anime):
         anime_dict['status'] = 1
     else:
         # 下载失败
-        sys.exit(1)
+        anime_dict['status'] = 0
+
     if anime.upload_succeed_flag:
         anime_dict['remote_status'] = 1
     else:
         anime_dict['remote_status'] = 0
-    anime_dict['ns'] = anime.get_sn()
+
+    anime_dict['sn'] = anime.get_sn()
     anime_dict['title'] = anime.get_title()
     anime_dict['anime_name'] = anime.get_bangumi_name()
     anime_dict['episode'] = anime.get_episode()
@@ -99,7 +110,7 @@ def update_db(anime):
         "remote_status=:remote_status,"
         "resolution=:resolution,"
         "file_size=:file_size,"
-        "local_file_path=:local_file_path WHERE ns=:ns",
+        "local_file_path=:local_file_path WHERE sn=:sn",
         anime_dict)
 
     cursor.close()
@@ -108,27 +119,51 @@ def update_db(anime):
 
 
 def worker(sn, bangumi_tag=''):
-    anime_in_db = read_db(sn)
-    # 如果用户设定要上传且已经下载好了但还没有上传成功, 那么仅上传
-    if settings['upload_to_server'] and anime_in_db['status'] == 1 and anime_in_db['remote_status'] == 0:
-        upload_limiter.acquire()  # 并发上传限制器
-        anime = Anime(sn)
-        anime.local_video_path = anime_in_db['local_file_path']  # 告知文件位置
-        anime.video_size = anime_in_db['file_size']  # 通過 update_db() 下载状态检查
-        anime.video_resolution = anime_in_db['resolution']  # 避免更新时把分辨率变成0
-        if not anime.upload(bangumi_tag):  # 如果上传失败
-            err_print('sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 上传失敗! 從任務列隊中移除, 等待下次更新重試.')
-        else:
-            update_db(anime)
-            err_print('任务完成: sn=' + str(sn), True)
+    def upload_quit():
         queue.pop(sn)
         processing_queue.remove(sn)
         upload_limiter.release()  # 并发上传限制器
         sys.exit(0)
 
+    anime_in_db = read_db(sn)
+    # 如果用户设定要上传且已经下载好了但还没有上传成功, 那么仅上传
+    if settings['upload_to_server'] and anime_in_db['status'] == 1 and anime_in_db['remote_status'] == 0:
+        upload_limiter.acquire()  # 并发上传限制器
+        anime = build_anime(sn)
+        if anime['failed']:
+            err_print('任务失敗: sn=' + str(sn) + ' 從任務列隊中移除, 等待下次更新重試.')
+            upload_quit()
+
+        # 视频信息抓取成功
+        anime = anime['anime']
+        if not os.path.exists(anime_in_db['local_file_path']):
+            # 如果数据库中记录的文件路径已失效
+            update_db(anime)
+            err_print('上传失敗! sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 本地文件丢失, 從任務列隊中移除, 等待下次更新重試.')
+            upload_quit()
+
+        anime.local_video_path = anime_in_db['local_file_path']  # 告知文件位置
+        anime.video_size = anime_in_db['file_size']  # 通過 update_db() 下载状态检查
+        anime.video_resolution = anime_in_db['resolution']  # 避免更新时把分辨率变成0
+        if not anime.upload(bangumi_tag):  # 如果上传失败
+            err_print('上传失敗! sn=' + str(anime.get_sn()) + ' title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.')
+        else:
+            update_db(anime)
+            err_print('任务完成: sn=' + str(sn), True)
+        upload_quit()
+
     # =====下载模块 =====
     thread_limiter.acquire()  # 并发下载限制器
-    anime = Anime(sn)
+    anime = build_anime(sn)
+
+    if anime['failed']:
+        queue.pop(sn)
+        processing_queue.remove(sn)
+        thread_limiter.release()
+        err_print('任务失敗: sn=' + str(sn) + ' 從任務列隊中移除, 等待下次更新重試.')
+        sys.exit(1)
+
+    anime = anime['anime']
     anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag)
     if anime.video_size < 10:
         # 下载失败
@@ -205,7 +240,12 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
     # 仅下载,不操作数据库
     thread_limiter.acquire()
     err_counter = 0
-    anime = Anime(sn)
+
+    anime = build_anime(sn)
+    if anime['failed']:
+        sys.exit(1)
+    anime = anime['anime']
+
     if dl_resolution:
         anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size)
     else:
@@ -235,7 +275,13 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
     if cui_download_mode == 'single':
         print('當前下載模式: 僅下載本集\n')
-        Anime(sn).download(cui_resolution, cui_save_dir, realtime_show_file_size=True)  # True 是实时显示文件大小, 仅一个下载任务时适用
+
+        anime = build_anime(sn)
+        if anime['failed']:
+            sys.exit(1)
+        anime = anime['anime']
+
+        anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)  # True 是实时显示文件大小, 仅一个下载任务时适用
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
@@ -243,7 +289,11 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         else:
             print('當前下載模式: 下載本番劇最近上傳的一集\n')
 
-        anime = Anime(sn)
+        anime = build_anime(sn)
+        if anime['failed']:
+            sys.exit(1)
+        anime = anime['anime']
+
         bangumi_list = list(anime.get_episode_list().values())
 
         if cui_download_mode == 'largest-sn':
@@ -252,11 +302,22 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         if bangumi_list[-1] == sn:
             anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
         else:
-            Anime(bangumi_list[-1]).download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
+
+            anime = build_anime(bangumi_list[-1])
+            if anime['failed']:
+                sys.exit(1)
+            anime = anime['anime']
+
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
 
     elif cui_download_mode == 'all':
         print('當前下載模式: 下載本番劇所有劇集\n')
-        anime = Anime(sn)
+
+        anime = build_anime(sn)
+        if anime['failed']:
+            sys.exit(1)
+        anime = anime['anime']
+
         bangumi_list = list(anime.get_episode_list().values())
         bangumi_list.sort()
         for anime_sn in bangumi_list:
@@ -269,7 +330,12 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
     elif cui_download_mode == 'range':
         print('當前下載模式: 下載本番劇指定劇集\n')
-        anime = Anime(sn)
+
+        anime = build_anime(sn)
+        if anime['failed']:
+            sys.exit(1)
+        anime = anime['anime']
+
         episode_dict = anime.get_episode_list()
         bangumi_ep_list = list(episode_dict.keys())  # 本番剧集列表
         for ep in ep_range:
@@ -429,7 +495,7 @@ if __name__ == '__main__':
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
-                   'ns INTEGER PRIMARY KEY NOT NULL,'
+                   'sn INTEGER PRIMARY KEY NOT NULL,'
                    'title VARCHAR(100) NOT NULL,'
                    'anime_name VARCHAR(100) NOT NULL, '
                    'episode VARCHAR(10) NOT NULL,'

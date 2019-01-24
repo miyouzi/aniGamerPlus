@@ -30,5 +30,6 @@
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,
-    "config_version": 3.1
+    "config_version": 3.2,
+    "database_version": 2.0
 }

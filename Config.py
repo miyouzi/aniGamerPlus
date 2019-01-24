@@ -6,6 +6,7 @@
 # @Software: PyCharm
 
 import os, json, re, sys, requests, time
+import sqlite3
 from ColorPrint import err_print
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +15,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
 aniGamerPlus_version = 'v8.1'
-latest_config_version = 3.1
+latest_config_version = 3.2
+latest_database_version = 2.0
 
 
 def __init_settings():
@@ -51,7 +53,8 @@ def __init_settings():
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
-                'config_version': latest_config_version
+                'config_version': latest_config_version,
+                'database_version': latest_database_version
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)
@@ -101,10 +104,63 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'multi_downloading_segment' not in new_settings.keys():  # v3.1 新增分段下载模式下每个视频并发下载分段数
         new_settings['multi_downloading_segment'] = 2
 
+    new_settings['database_version'] = latest_database_version  # v3.2 新增数据库版本号
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
     err_print('配置文件從 v'+str(old_settings['config_version'])+' 升級到 v'+str(latest_config_version)+' 你的有效配置不會丟失!', True)
+
+
+def __update_database(old_version):
+    db_path = os.path.join(working_dir, 'aniGamer.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    def creat_table():
+        cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
+                       'sn INTEGER PRIMARY KEY NOT NULL,'
+                       'title VARCHAR(100) NOT NULL,'
+                       'anime_name VARCHAR(100) NOT NULL, '
+                       'episode VARCHAR(10) NOT NULL,'
+                       'status TINYINT DEFAULT 0,'
+                       'remote_status INTEGER DEFAULT 0,'
+                       'resolution INTEGER DEFAULT 0,'
+                       'file_size INTEGER DEFAULT 0,'
+                       'local_file_path VARCHAR(500),'
+                       "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
+
+    try:
+        cursor.execute('SELECT COUNT(*) FROM anime')
+    except sqlite3.OperationalError as e:
+        if 'no such table' in str(e):
+            # 如果不存在表, 则新建
+            creat_table()
+
+    try:
+        cursor.execute('SELECT COUNT(local_file_path) FROM anime')
+    except sqlite3.OperationalError as e:
+        if 'no such column' in str(e):
+            # 更早期的数据库没有 local_file_path , 做兼容
+            cursor.execute('ALTER TABLE anime ADD local_file_path VARCHAR(500)')
+
+    try:
+        cursor.execute('SELECT COUNT(sn) FROM anime')
+    except sqlite3.OperationalError as e:
+        if 'no such column' in str(e):
+            # 数据库 v2.0  将 ns 列改名为 sn
+            cursor.execute('ALTER TABLE anime RENAME TO animeOld')
+            creat_table()
+            cursor.execute("INSERT INTO "
+                           "anime (sn,title,anime_name,episode,status,remote_status,resolution,file_size,local_file_path,[CreatedTime]) "
+                           "SELECT "
+                           "ns,title,anime_name,episode,status,remote_status,resolution,file_size,local_file_path,[CreatedTime] "
+                           "FROM animeOld")
+            cursor.execute('DROP TABLE animeOld')
+
+    cursor.close()
+    conn.commit()
+    conn.close()
+    err_print('資料庫從 v'+str(old_version)+' 升級到 v'+str(latest_database_version)+' 内部資料不會丟失', True)
 
 
 def __read_settings_file():
@@ -119,8 +175,16 @@ def read_settings():
 
     settings = __read_settings_file()
 
+    if 'database_version' in settings.keys():
+        if settings['database_version'] < latest_database_version:
+            __update_database(settings['database_version'])
+    else:
+        # 如果该版本配置下没有 database_version 项, 则数据库版本应该是1.0
+        settings['database_version'] = 1.0
+        __update_database(1.0)
+
     if settings['config_version'] < latest_config_version:
-        __update_settings(settings)  # 升级旧版配置
+        __update_settings(settings)  # 升级配置
         settings = __read_settings_file()  # 重新载入
 
     if settings['ftp']['port']:

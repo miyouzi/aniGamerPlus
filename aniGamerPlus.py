@@ -5,7 +5,6 @@
 # @File    : aniGamerPlus.py
 # @Software: PyCharm
 
-import datetime
 import os
 import signal
 import sqlite3

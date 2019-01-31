@@ -23,6 +23,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - 檢查程序更新功能
  - 支持新番分類
  - v7.0 開始支持使用(鏈式)代理
+ - v9.0 開始支持記錄日志
  
  
 ## **注意**:warning:
@@ -55,6 +56,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 ```
 {
     "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分文件夾存放
+    "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 文件夾下
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
@@ -84,10 +86,12 @@ pip3 install requests beautifulsoup4 lxml termcolor
         "2": "http://user:passwd@example.com:1000"  # 支持鏈式代理
     }
     
-    "config_version": 3.0,  # 配置文件版本
+    "config_version": 4.0,  # 配置文件版本
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
-    "read_config_when_checking_update": true  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
+    "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
+    "save_logs": true,  # 是否記錄日志, 一天一個日志
+    "quantity_of_logs": 7  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
 }
 ```
 
@@ -207,6 +211,18 @@ sn碼 下載模式(可空) #注釋(可空)
 ```
 上面表示將會把**ENDRO**和**上野**放在**2019一月番**文件夾裏, 將**刀劍**放在**2019十月番**文件夾裏, **動物朋友** 不分類, 直接放在番劇目錄下
 
+自 v9.0 開始, 支持重命名番劇, 在注釋之前, 模式之後, 用 ```<``` 與 ```>``` 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名
+
+PS: 連續多個空格將會被替換爲單個空格
+
+範例:
+```
+11415 <魔法少女特殊战明日香> # 魔法少女特殊戰明日香
+11433 <えんどろ～！> # ENDRO！
+11354 latest <刀剑神域3> # 刀劍神域 Alicization
+11398 # 粉彩回憶
+```
+
 ### aniGamer.db
 
 :warning: **v6.0及之後版本與之前版本不兼容, 需要刪除舊版aniGamer.db**
@@ -226,7 +242,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v7.0
+當前aniGamerPlus版本: v9.0
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]

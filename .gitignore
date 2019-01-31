@@ -122,3 +122,5 @@ test.py
 releases/
 .idea/dataSources.local.xml
 aniGamerPlus.exe
+logs/
+temp/

@@ -7,22 +7,41 @@
 
 import os, json, re, sys, requests, time
 import sqlite3
-from ColorPrint import err_print
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
 # working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
-aniGamerPlus_version = 'v8.1'
-latest_config_version = 3.2
+logs_dir = os.path.join(working_dir, 'logs')
+err_print_not_import_flag = True
+aniGamerPlus_version = 'v9.0'
+latest_config_version = 4.0
 latest_database_version = 2.0
+
+
+def __color_print(sn, err_msg, detail='', status=0, no_sn=False):
+    # 避免与 ColorPrint.py 相互调用产生问题
+    global err_print_not_import_flag
+    if err_print_not_import_flag:
+        from ColorPrint import err_print
+        err_print_not_import_flag = False
+    err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn)
+
+
+def get_working_dir():
+    return working_dir
+
+
+def get_config_path():
+    return config_path
 
 
 def __init_settings():
     if os.path.exists(config_path):
         os.remove(config_path)
     settings = {'bangumi_dir': '',
+                'temp_dir': '',
                 'check_frequency': 5,
                 'download_resolution': '1080',
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
@@ -53,6 +72,8 @@ def __init_settings():
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
+                'save_logs': True,
+                'quantity_of_logs': 7,
                 'config_version': latest_config_version,
                 'database_version': latest_database_version
                 }
@@ -105,10 +126,21 @@ def __update_settings(old_settings):  # 升级配置文件
         new_settings['multi_downloading_segment'] = 2
 
     new_settings['database_version'] = latest_database_version  # v3.2 新增数据库版本号
+
+    if 'save_logs' not in new_settings.keys():  # v4.0 新增日志开关
+        new_settings['save_logs'] = True
+
+    if 'quantity_of_logs' not in new_settings.keys():  # v4.0 新增日志数量配置(一天一日志)
+        new_settings['quantity_of_logs'] = 7
+
+    if 'temp_dir' not in new_settings.keys():  # v4.0 新增缓存目录选项
+        new_settings['temp_dir'] = ''
+
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
-    err_print('配置文件從 v'+str(old_settings['config_version'])+' 升級到 v'+str(latest_config_version)+' 你的有效配置不會丟失!', True)
+    msg = '配置文件從 v'+str(old_settings['config_version'])+' 升級到 v'+str(latest_config_version)+' 你的有效配置不會丟失!'
+    __color_print(0, msg, status=2, no_sn=True)
 
 
 def __update_database(old_version):
@@ -160,13 +192,20 @@ def __update_database(old_version):
     cursor.close()
     conn.commit()
     conn.close()
-    err_print('資料庫從 v'+str(old_version)+' 升級到 v'+str(latest_database_version)+' 内部資料不會丟失', True)
+    msg = '資料庫從 v'+str(old_version)+' 升級到 v'+str(latest_database_version)+' 内部資料不會丟失'
+    __color_print(0, msg, status=2, no_sn=True)
 
 
 def __read_settings_file():
-    with open(config_path, 'r', encoding='utf-8') as f:
-        # 转义win路径
-        return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            # 转义win路径
+            return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
+    except BaseException as e:
+        __color_print(0, '讀取配置發生異常, 將重置配置! '+str(e), status=1, no_sn=True)
+        __init_settings()
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
 
 
 def read_settings():
@@ -189,12 +228,16 @@ def read_settings():
 
     if settings['ftp']['port']:
         settings['ftp']['port'] = int(settings['ftp']['port'])
+
     # 防呆
     settings['check_frequency'] = int(settings['check_frequency'])
     settings['download_resolution'] = str(settings['download_resolution'])
     settings['multi-thread'] = int(settings['multi-thread'])
     if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
         settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
+    if settings['quantity_of_logs'] < 1:  # 日志数量不可小于 1
+        settings['quantity_of_logs'] = 7
+
     # 如果用户自定了番剧目录且存在
     if settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir']):
         # 番剧路径规范化
@@ -202,6 +245,15 @@ def read_settings():
     else:
         # 如果用户没有有自定番剧目录或目录不存在，则保存在本地 bangumi 目录
         settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
+
+    # 如果用户自定了缓存目录且存在
+    if settings['temp_dir'] and os.path.exists(settings['temp_dir']):
+        # 缓存路径规范化
+        settings['temp_dir'] = os.path.abspath(settings['temp_dir'])
+    else:
+        # 如果用户没有有自定缓存目录或目录不存在，则保存在本地 temp 目录
+        settings['temp_dir'] = os.path.join(working_dir, 'temp')
+
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version
     # 修正 proxies 字典, 使 key 为 int, 方便用于链式代理
@@ -220,6 +272,10 @@ def read_settings():
     if not new_proxies:
         settings['use_proxy'] = False
 
+    if settings['save_logs']:
+        # 刪除过期日志
+        __remove_superfluous_logs(settings['quantity_of_logs'])
+
     return settings
 
 
@@ -237,20 +293,25 @@ def read_sn_list():
             elif re.match(r'^@ *', i):
                 bangumi_tag = ''
                 continue
-            i = re.sub(r'#.+\n', '', i).strip()
+            i = re.sub(r'#.+\n', '', i).strip()  # 刪除注释
             i = re.sub(r' +', ' ', i)  # 去除多余空格
             a = i.split(" ")
             if not a[0]:  # 跳过纯注释行
                 continue
             if re.match(r'^\d+$', a[0]):
+                rename = ''
                 if len(a) > 1:  # 如果有特別指定下载模式
                     if re.match(r'^(all|latest|largest-sn)$', a[1]):  # 仅认可合法的模式
                         sn_dict[int(a[0])] = {'mode': a[1]}
                     else:
                         sn_dict[int(a[0])] = {'mode': settings['default_download_mode']}  # 非法模式一律替换成默认模式
+                    # 是否有设定番剧重命名
+                    if re.match(r'.*<.*>.*', i):
+                        rename = re.findall(r'<.*>', i)[0][1:-1]
                 else:  # 没有指定下载模式则使用默认设定
                     sn_dict[int(a[0])] = {'mode': settings['default_download_mode']}
                 sn_dict[int(a[0])]['tag'] = bangumi_tag
+                sn_dict[int(a[0])]['rename'] = rename
         return sn_dict
 
 
@@ -283,7 +344,7 @@ def renew_cookies(new_cookie):
             break
         except:
             if try_counter > 3:
-                err_print('新cookie保存失敗!')
+                __color_print(0, '新cookie保存失敗!', status=1, no_sn=True)
                 break
             time.sleep(2)
             try_counter = try_counter + 1
@@ -301,6 +362,17 @@ def read_latest_version_on_github():
         remote_version['tag_name'] = aniGamerPlus_version  # 拉取github版本号失败
         remote_version['body'] = ''
     return remote_version
+
+
+def __remove_superfluous_logs(max_num):
+    if os.path.exists(logs_dir):
+        logs_list = os.listdir(logs_dir)
+        if len(logs_list) > max_num:
+            logs_list.sort()
+            logs_need_remove = logs_list[0:len(logs_list)-max_num]
+            for log in logs_need_remove:
+                log_path = os.path.join(logs_dir, log)
+                os.remove(log_path)
 
 
 if __name__ == '__main__':

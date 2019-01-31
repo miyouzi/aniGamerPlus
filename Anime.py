@@ -24,6 +24,7 @@ class Anime():
         self._cookies = Config.read_cookie()
         self._working_dir = self._settings['working_dir']
         self._bangumi_dir = self._settings['bangumi_dir']
+        self._temp_dir = self._settings['temp_dir']
 
         self._session = requests.session()
         self._title = ''
@@ -100,8 +101,7 @@ class Anime():
             self._title = soup.find('meta', property="og:title")['content']  # 提取标题（含有集数）
         except TypeError:
             # 该sn下没有动画
-            err_msg = 'ERROR: 該 sn=' + str(self._sn) + ' 下真的有動畫？'
-            err_print(err_msg)
+            err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
             self._episode_list = {}
             sys.exit(1)
 
@@ -155,10 +155,11 @@ class Anime():
                     f = self._session.get(req, headers=self._req_header, cookies={}, timeout=10)
             except requests.exceptions.RequestException as e:
                 if error_cnt >= max_retry:
-                    raise TryTooManyTimeError('任務狀態: sn='+str(self._sn)+' 请求失败次数过多！请求链接：\n%s' % req)
-                err_msg = '任務狀態: sn='+str(self._sn)+' ERROR: 请求失败！except：\n'+str(e)+'\n3s后重试(最多重试'+str(max_retry)+'次)'
+                    raise TryTooManyTimeError('任務狀態: sn=' + str(self._sn) + ' 请求失败次数过多！请求链接：\n%s' % req)
+                err_detail = 'ERROR: 请求失败！except：\n' + str(e) + '\n3s后重试(最多重试' + str(
+                    max_retry) + '次)'
                 if show_fail:
-                    print(err_msg)
+                    err_print(self._sn, '任務狀態', err_detail)
                 time.sleep(3)
                 error_cnt += 1
             else:
@@ -190,13 +191,13 @@ class Anime():
                             try_counter = try_counter + 1
                     if not succeed_flag:
                         self._cookies = {}
-                        err_print(str(datetime.datetime.now()) + ' 用戶cookie更新失敗! 使用游客身份訪問')
+                        err_print(0, '用戶cookie更新失敗! 使用游客身份訪問', status=1, no_sn=True)
 
                 elif '__cfduid' in f.headers.get('set-cookie'):  # cookie 刷新两步走, 这是第二步, 追加在第一步后面
                     # 此时self._cookies已是完整新cookie,不需要再从文件载入
                     self._cookies['__cfduid'] = f.cookies.get_dict()['__cfduid']
                     Config.renew_cookies(self._cookies)  # 保存全新cookie
-                    err_print(str(datetime.datetime.now()) + ' 用戶cookie已更新!', True)
+                    err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
                 else:  # 这是第一步
                     # 本线程收到了新cookie
@@ -262,10 +263,10 @@ class Anime():
                     # print('check_no_ad: Adaway!')
                     pass
                 else:
-                    print('check_no_ad: Ads not away?')
+                    err_print(self._sn, 'check_no_ad: Ads not away?', status=1)
             else:
                 # print('check_no_ad: Not in right area.')
-                err_print(str(datetime.datetime.now()) + ' 遭到動畫瘋地區限制, 你的IP可能不被動畫瘋認可!')
+                err_print(self._sn, '遭到動畫瘋地區限制, 你的IP可能不被動畫瘋認可!', status=1)
                 sys.exit(1)
 
         def parse_playlist():
@@ -301,7 +302,7 @@ class Anime():
             self.__get_m3u8_dict()
         return self._m3u8_dict
 
-    def __segment_download_mode(self, resolution='', bangumi_tag=''):
+    def __segment_download_mode(self, resolution=''):
         # 设定文件存放路径
         if self._settings['add_bangumi_name_to_video_filename']:
             filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
@@ -319,13 +320,13 @@ class Anime():
         legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
         merging_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', merging_filename)
         output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
-        merging_file = os.path.join(self._bangumi_dir, merging_filename)
+        merging_file = os.path.join(self._temp_dir, merging_filename)
 
-        url_path = os.path.split(self._m3u8_dict[resolution])[0]   # 用于构造完整 chunk 链接
-        temp_dir = os.path.join(self._bangumi_dir, str(self._sn)+'-downloading-by-aniGamerPlus')  # 临时目录以 sn 命令
+        url_path = os.path.split(self._m3u8_dict[resolution])[0]  # 用于构造完整 chunk 链接
+        temp_dir = os.path.join(self._temp_dir, str(self._sn) + '-downloading-by-aniGamerPlus')  # 临时目录以 sn 命令
         if not os.path.exists(temp_dir):  # 创建临时目录
             os.makedirs(temp_dir)
-        m3u8_path = os.path.join(temp_dir, str(self._sn)+'.m3u8')  # m3u8 存放位置
+        m3u8_path = os.path.join(temp_dir, str(self._sn) + '.m3u8')  # m3u8 存放位置
         m3u8_text = self.__request(self._m3u8_dict[resolution], no_cookies=True).text  # 请求 m3u8 文件
         with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存 m3u8 文件在本地
             f.write(m3u8_text)
@@ -355,7 +356,7 @@ class Anime():
             except TryTooManyTimeError:
                 nonlocal failed_flag
                 failed_flag = True
-                err_print('下載狀態: sn=' + str(self._sn) + ' Bad segment='+chunk_name)
+                err_print(self._sn, '下載狀態', 'Bad segment=' + chunk_name, status=1)
                 sys.exit(1)
 
             if self.realtime_show_file_size:
@@ -373,12 +374,12 @@ class Anime():
             sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
             sys.stdout.flush()
         else:
-            print('正在下載: sn=' + str(self._sn) + ' ' + filename)
+            err_print(self._sn, '正在下載', filename+' title='+self._title)
 
         chunk_tasks_list = []
         for chunk in chunk_list:
             chunk_uri = url_path + '/' + chunk
-            task = threading.Thread(target=download_chunk, args=(chunk_uri, ))
+            task = threading.Thread(target=download_chunk, args=(chunk_uri,))
             chunk_tasks_list.append(task)
             task.setDaemon(True)
             task.start()
@@ -386,7 +387,7 @@ class Anime():
         for task in chunk_tasks_list:  # 等待所有任务完成
             while True:
                 if failed_flag:
-                    err_print('下載失败! sn=' + str(self._sn) + ' ' + filename)
+                    err_print(self._sn, '下載失败', filename, status=1)
                     self.video_size = 0
                     return
                 if task.isAlive():
@@ -396,10 +397,10 @@ class Anime():
 
         # m3u8 本地化
         # replace('\\', '\\\\') 为转义win路径
-        m3u8_text_local_version = m3u8_text.replace(key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\', '\\\\')
+        m3u8_text_local_version = m3u8_text.replace(key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\','\\\\')
         for chunk in chunk_list:
             chunk_filename = re.findall(r'media_b.+ts', chunk)[0]  # chunk 文件名
-            chunk_path = os.path.join(temp_dir, chunk_filename).replace('\\','\\\\')  # chunk 本地路径
+            chunk_path = os.path.join(temp_dir, chunk_filename).replace('\\', '\\\\')  # chunk 本地路径
             m3u8_text_local_version = m3u8_text_local_version.replace(chunk, chunk_path)
         with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存本地化的 m3u8
             f.write(m3u8_text_local_version)
@@ -407,7 +408,7 @@ class Anime():
         if self.realtime_show_file_size:
             sys.stdout.write('\n')
             sys.stdout.flush()
-        print('下載狀態: sn=' + str(self._sn) + ' ' + filename + ' 下載完成, 正在解密合并……')
+        err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合并……')
 
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
@@ -430,7 +431,7 @@ class Anime():
         self.local_video_path = output_file  # 记录保存路径, FTP上传用
         self._video_filename = legal_filename  # 记录文件名, FTP上传用
 
-        err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
+        err_print(self._sn, '下載完成', filename, status=2)
 
     def __ffmpeg_download_mode(self, resolution=''):
         # 设定文件存放路径
@@ -450,7 +451,7 @@ class Anime():
         legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
         downloading_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', downloading_filename)
         output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
-        downloading_file = os.path.join(self._bangumi_dir, downloading_filename)
+        downloading_file = os.path.join(self._temp_dir, downloading_filename)
 
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
@@ -473,7 +474,7 @@ class Anime():
                 sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
                 sys.stdout.flush()
             else:
-                print('正在下載: sn=' + str(self._sn) + ' ' + filename)
+                err_print(self._sn, '正在下載', filename+' title='+self._title)
 
             time.sleep(2)
             time_counter = 1
@@ -486,7 +487,8 @@ class Anime():
                         size = os.path.getsize(downloading_file)
                         size = size / float(1024 * 1024)
                         size = round(size, 2)
-                        sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB      ')
+                        sys.stdout.write(
+                            '\r正在下載: sn=' + str(self._sn) + ' ' + filename + '    ' + str(size) + 'MB      ')
                         sys.stdout.flush()
                     else:
                         sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + '    文件尚未生成  ')
@@ -496,8 +498,9 @@ class Anime():
                     temp_file_size = os.path.getsize(downloading_file)
                     a = temp_file_size - pre_temp_file_size
                     if a < (3 * 1024 * 1024):
-                        err_print('下載失败! sn=' + str(self._sn) + ' ' + downloading_filename + ' 在一分钟内仅增加' + str(
-                            int(a / float(1024))) + 'KB 判定为卡死, 任务失败!')
+                        err_msg_detail = downloading_filename + ' 在一分钟内仅增加' + str(
+                            int(a / float(1024))) + 'KB 判定为卡死, 任务失败!'
+                        err_print(self._sn, '下載失败', err_msg_detail, status=1)
                         run_ffmpeg.kill()
                         return
                     pre_temp_file_size = temp_file_size
@@ -522,12 +525,13 @@ class Anime():
             self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
             self.local_video_path = output_file  # 记录保存路径, FTP上传用
             self._video_filename = legal_filename  # 记录文件名, FTP上传用
-            err_print('下載完成: sn=' + str(self._sn) + ' ' + filename, True)
+            err_print(self._sn, '下載完成', filename, status=2)
         else:
-            err_print('下載失败! sn=' + str(self._sn) + ' ' + filename + ' ffmpeg_return_code=' + str(
-                run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment')))
+            err_msg_detail = filename + ' ffmpeg_return_code=' + str(
+                run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment'))
+            err_print(self._sn, '下載失败', err_msg_detail, status=1)
 
-    def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False):
+    def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False, rename=''):
         self.realtime_show_file_size = realtime_show_file_size
         if not resolution:
             resolution = self._settings['download_resolution']
@@ -535,11 +539,15 @@ class Anime():
         if save_dir:
             self._bangumi_dir = save_dir  # 用于 cui 用户指定下载在当前目录
 
+        if rename:
+            # 如果设定重命名了番剧
+            self._bangumi_name = rename
+
         try:
             self.__get_m3u8_dict()  # 获取 m3u8 列表
         except TryTooManyTimeError:
             # 如果在获取 m3u8 过程中发生意外, 则取消此次下载
-            print('下載狀態: sn=' + str(self._sn) + ' 獲取 m3u8 失敗!')
+            err_print(self._sn, '下載狀態', '獲取 m3u8 失敗!', status=1)
             self.video_size = 0
             return
 
@@ -553,7 +561,7 @@ class Anime():
             else:
                 self._ffmpeg_path = os.path.join(self._working_dir, 'ffmpeg')
             if not os.path.exists(self._ffmpeg_path):
-                err_print('本項目依賴於ffmpeg, 但ffmpeg未找到')
+                err_print(0, '本項目依賴於ffmpeg, 但ffmpeg未找到', status=1, no_sn=True)
                 raise FileNotFoundError  # 如果本地目录下也没有找到 ffmpeg 则丢出异常
 
         # 创建存放番剧的目录，去除非法字符
@@ -562,6 +570,9 @@ class Anime():
         self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
         if not os.path.exists(self._bangumi_dir):
             os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
+
+        if not os.path.exists(self._temp_dir):  # 建立临时文件夹
+            os.makedirs(self._temp_dir)
 
         # 如果不存在指定清晰度，则选取最近可用清晰度
         if resolution not in self._m3u8_dict.keys():
@@ -577,8 +588,8 @@ class Anime():
             # resolution_list.sort()
             # resolution = str(resolution_list[-1])  # 选取最高可用清晰度
             resolution = str(closest_resolution)
-            err_msg = 'ERROR: 指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
-            err_print(err_msg)
+            err_msg_detail = '指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
+            err_print(self._sn, '任務狀態', err_msg_detail, status=1)
         self.video_resolution = int(resolution)
 
         if self._settings['segment_download_mode']:
@@ -588,7 +599,7 @@ class Anime():
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
-        tmp_dir = str(self._sn)+'-uploading-by-aniGamerPlus'
+        tmp_dir = str(self._sn) + '-uploading-by-aniGamerPlus'
 
         if debug_file:
             self.local_video_path = debug_file
@@ -619,19 +630,22 @@ class Anime():
                 except ftplib.error_temp as e:
                     if show_err:
                         if 'Too many connections' in str(e):
-                            err_print('FTP狀態: sn='+str(self._sn)+' '+self._video_filename + ' 当前FTP連接數過多, 5分鐘后重試, 最多重試三次: ' + str(e))
+                            detail = self._video_filename + ' 当前FTP連接數過多, 5分鐘后重試, 最多重試三次: ' + str(e)
+                            err_print(self._sn, 'FTP狀態', detail, status=1)
                         else:
-                            err_print('FTP狀態: sn='+str(self._sn)+' '+self._video_filename + ' 連接FTP時發生錯誤, 5分鐘后重試, 最多重試三次: ' + str(e))
+                            detail = self._video_filename + ' 連接FTP時發生錯誤, 5分鐘后重試, 最多重試三次: ' + str(e)
+                            err_print(self._sn, 'FTP狀態', detail, status=1)
                     err_counter = err_counter + 1
                     for i in range(5 * 60):
                         time.sleep(1)
                 except BaseException as e:
                     if show_err:
-                        err_print(self._video_filename + ' 在連接FTP時發生無法處理的異常:' + str(e))
+                        detail = self._video_filename + ' 在連接FTP時發生無法處理的異常:' + str(e)
+                        err_print(self._sn, 'FTP狀態', detail, status=1)
                     break
 
             if not connect_flag:
-                err_print('上傳失败: sn='+str(self._sn)+' '+self._video_filename)
+                err_print(self._sn, '上傳失败', self._video_filename, status=1)
                 return connect_flag  # 如果连接失败, 直接放弃
 
             ftp.voidcmd('TYPE I')  # 二进制模式
@@ -641,7 +655,7 @@ class Anime():
                     ftp.cwd(self._settings['ftp']['cwd'])  # 进入用户指定目录
                 except ftplib.error_perm as e:
                     if show_err:
-                        err_print('FTP狀態: sn='+str(self._sn)+' '+'ERROR: 進入指定FTP目錄時出錯: ' + str(e))
+                        err_print(self._sn, 'FTP狀態', '進入指定FTP目錄時出錯: ' + str(e), status=1)
 
             if bangumi_tag:  # 番剧分类
                 try:
@@ -652,7 +666,7 @@ class Anime():
                         ftp.cwd(bangumi_tag)
                     except ftplib.error_perm as e:
                         if show_err:
-                            err_print('FTP狀態: sn='+str(self._sn)+' '+'創建目錄番劇目錄時發生異常, 你可能沒有權限創建目錄: ' + str(e))
+                            err_print(self._sn, 'FTP狀態', '創建目錄番劇目錄時發生異常, 你可能沒有權限創建目錄: ' + str(e), status=1)
 
             # 归类番剧
             ftp_bangumi_dir = re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name)  # 保证合法
@@ -664,7 +678,8 @@ class Anime():
                     ftp.cwd(ftp_bangumi_dir)
                 except ftplib.error_perm as e:
                     if show_err:
-                        err_print('FTP狀態: sn='+str(self._sn)+' '+'你可能沒有權限創建目錄(用於分類番劇), 視頻文件將會直接上傳, 收到異常: ' + str(e))
+                        detail = '你可能沒有權限創建目錄(用於分類番劇), 視頻文件將會直接上傳, 收到異常: ' + str(e)
+                        err_print(self._sn, 'FTP狀態', detail, status=1)
 
             # 删除旧的临时文件夹
             nonlocal first_connect
@@ -689,7 +704,7 @@ class Anime():
                 ftp.quit()
             except BaseException as e:
                 if show_err and self._settings['ftp']['show_error_detail']:
-                    print('FTP狀態: sn='+str(self._sn)+' '+'將强制關閉FTP連接, 因爲在退出時收到異常: ' + str(e))
+                    err_print(self._sn, 'FTP狀態', '將强制關閉FTP連接, 因爲在退出時收到異常: ' + str(e))
                 ftp.close()
 
         def remove_dir(dir_name):
@@ -721,7 +736,7 @@ class Anime():
         if not connect_ftp():  # 连接 FTP
             return self.upload_succeed_flag  # 如果连接失败
 
-        print('正在上傳: sn='+str(self._sn)+' '+self._video_filename + '……')
+        err_print(self._sn, '正在上傳', self._video_filename+' title='+self._title + '……')
         try_counter = 0
         video_filename = self._video_filename  # video_filename 将可能会储存 pure-ftpd 缓存文件名
         max_try_num = self._settings['ftp']['max_retry_num']
@@ -730,7 +745,8 @@ class Anime():
             try:
                 if try_counter > 0:
                     # 传输遭中断后处理
-                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 发生异常, 重連FTP, 續傳文件, 將重試最多'+str(max_try_num)+'次……')
+                    detail = self._video_filename + ' 发生异常, 重連FTP, 續傳文件, 將重試最多' + str(max_try_num) + '次……'
+                    err_print(self._sn, '上傳狀態', detail, status=1)
                     if not connect_ftp():  # 重连
                         return self.upload_succeed_flag
 
@@ -769,7 +785,7 @@ class Anime():
 
                 conn.close()
 
-                print('上傳狀態: sn='+str(self._sn)+' '+'檢查遠端文件大小是否與本地一致……')
+                err_print(self._sn, '上傳狀態', '檢查遠端文件大小是否與本地一致……')
                 exit_ftp(False)
                 connect_ftp(False)
                 # 不重连的话, 下面查询远程文件大小会返回 None, 懵逼...
@@ -781,17 +797,17 @@ class Anime():
                         remote_size = ftp.size(video_filename)  # 远程文件大小
                         break
                     except ftplib.error_perm as e1:
-                        print('ftplib.error_perm: '+str(e1))
+                        err_print(self._sn, 'FTP狀態', 'ftplib.error_perm: ' + str(e1))
                         remote_size = 0
                         break
                     except OSError as e2:
-                        print('OSError: '+str(e2))
+                        err_print(self._sn, 'FTP狀態', 'OSError: ' + str(e2))
                         remote_size = 0
                         connect_ftp(False)  # 掉线重连
                         err_counter = err_counter + 1
 
                 if remote_size is None:
-                    print('remote_size is None')
+                    err_print(self._sn, 'FTP狀態', 'remote_size is None')
                     remote_size = 0
                 # 远程文件大小获取失败, 可能文件不存在或者抽风
                 # 那上面获取远程字节数将会是0, 导致重新下载, 那么此时应该清空缓存目录下的文件
@@ -803,9 +819,10 @@ class Anime():
                     # 如果远程文件大小与本地不一致
                     # print('remote_size='+str(remote_size))
                     # print('local_size ='+str(local_size))
-                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在遠端為' + str(round(remote_size / float(1024 * 1024), 2)) + 'MB' +
-                              ' 與本地' + str(round(local_size / float(1024 * 1024), 2)) + 'MB 不一致! 將重試最多' + str(
-                        max_try_num) + '次')
+                    detail = self._video_filename + ' 在遠端為' + str(
+                        round(remote_size / float(1024 * 1024), 2)) + 'MB' + ' 與本地' + str(
+                        round(local_size / float(1024 * 1024), 2)) + 'MB 不一致! 將重試最多' + str(max_try_num) + '次'
+                    err_print(self._sn, '上傳狀態', detail, status=1)
                     try_counter = try_counter + 1
                     continue  # 续传
 
@@ -824,23 +841,26 @@ class Anime():
 
             except ConnectionResetError as e:
                 if self._settings['ftp']['show_error_detail']:
-                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程中網絡被重置, 將重試最多'+str(max_try_num)+'次'+', 收到異常: ' + str(e))
+                    detail = self._video_filename + ' 在上傳過程中網絡被重置, 將重試最多' + str(max_try_num) + '次' + ', 收到異常: ' + str(e)
+                    err_print(self._sn, '上傳狀態', detail, status=1)
                 try_counter = try_counter + 1
             except TimeoutError as e:
                 if self._settings['ftp']['show_error_detail']:
-                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程中超時, 將重試最多'+str(max_try_num)+'次, 收到異常: ' + str(e))
+                    detail = self._video_filename + ' 在上傳過程中超時, 將重試最多' + str(max_try_num) + '次, 收到異常: ' + str(e)
+                    err_print(self._sn, '上傳狀態', detail, status=1)
                 try_counter = try_counter + 1
             except socket.timeout as e:
                 if self._settings['ftp']['show_error_detail']:
-                    err_print('上傳狀態: sn='+str(self._sn)+' '+self._video_filename + ' 在上傳過程socket超時, 將重試最多'+str(max_try_num)+'次, 收到異常: ' + str(e))
+                    detail = self._video_filename + ' 在上傳過程socket超時, 將重試最多' + str(max_try_num) + '次, 收到異常: ' + str(e)
+                    err_print(self._sn, '上傳狀態', detail, status=1)
                 try_counter = try_counter + 1
 
         if not self.upload_succeed_flag:
-            err_print('上傳失敗: sn='+str(self._sn)+' '+self._video_filename + ' 放棄上傳!')
+            err_print(self._sn, '上傳失敗', self._video_filename + ' 放棄上傳!', status=1)
             exit_ftp()
             return self.upload_succeed_flag
 
-        err_print('上傳完成: sn='+str(self._sn)+' '+self._video_filename, True)
+        err_print(self._sn, '上傳完成', self._video_filename, status=2)
         exit_ftp()  # 登出 FTP
         return self.upload_succeed_flag
 

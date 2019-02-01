@@ -423,7 +423,7 @@ class Anime():
         # 重命名
         if os.path.exists(output_file):
             os.remove(output_file)
-        os.renames(merging_file, output_file)
+        shutil.move(merging_file, output_file)
         # 删除临时目录
         shutil.rmtree(temp_dir)
 
@@ -521,7 +521,7 @@ class Anime():
             # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
             if os.path.exists(output_file):
                 os.remove(output_file)
-            os.renames(downloading_file, output_file)  # 下载完成，更改文件名
+            shutil.move(downloading_file, output_file)  # 下载完成，更改文件名
             self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
             self.local_video_path = output_file  # 记录保存路径, FTP上传用
             self._video_filename = legal_filename  # 记录文件名, FTP上传用

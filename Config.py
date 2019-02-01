@@ -15,7 +15,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 err_print_not_import_flag = True
-aniGamerPlus_version = 'v9.0'
+aniGamerPlus_version = 'v9.1'
 latest_config_version = 4.0
 latest_database_version = 2.0
 

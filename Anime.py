@@ -421,6 +421,7 @@ class Anime():
         run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         run_ffmpeg.communicate()
         # 重命名
+        err_print(self._sn, '下載狀態', filename + ' 解密合并完成, 正在移至番劇目錄……')
         if os.path.exists(output_file):
             os.remove(output_file)
         shutil.move(merging_file, output_file)
@@ -521,6 +522,7 @@ class Anime():
             # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
             if os.path.exists(output_file):
                 os.remove(output_file)
+            err_print(self._sn, '下載狀態', filename + ' 正在移至番劇目錄……')
             shutil.move(downloading_file, output_file)  # 下载完成，更改文件名
             self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
             self.local_video_path = output_file  # 记录保存路径, FTP上传用

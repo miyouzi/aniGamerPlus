@@ -15,23 +15,52 @@ import argparse
 import re
 import subprocess
 import platform
+import random
+import socket
 
 import Config
 from Anime import Anime, TryTooManyTimeError
 from ColorPrint import err_print
 
 
+def port_is_available(port):
+    # 检测端口是否可用(未占用), 可用返回 True
+    # 参考: https://blog.csdn.net/roger_royer/article/details/79519826
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex(('127.0.0.1', port))
+    sock.close()
+    if result == 0:
+        return False
+    else:
+        return True
+
+
+def gost_port():
+    random_port = random.randint(40000, 60000)
+    while not port_is_available(random_port):
+        # 如果该端口不可用
+        random_port = random.randint(40000, 60000)
+    return random_port
+
+
 def build_anime(sn):
     anime = {'anime': None, 'failed': True}
     try:
-        anime['anime'] = Anime(sn)
+        if settings['use_gost']:
+            # 如果使用 gost, 则随机一个 gost 监听端口
+            anime['anime'] = Anime(sn, gost_port=gost_port)
+        else:
+            anime['anime'] = Anime(sn)
         anime['failed'] = False
     except TryTooManyTimeError:
         err_print(sn, '抓取失敗', '影片信息抓取失敗!', status=1)
+    except BaseException as e:
+        err_print(sn, '抓取失敗', '抓取影片信息時發生未知錯誤: '+str(e), status=1)
     return anime
 
 
 def read_db(sn):
+    db_locker.acquire()
     # 传入sn(int)，读取该 sn 资料，返回 dict
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -41,6 +70,9 @@ def read_db(sn):
     try:
         values = cursor.fetchall()[0]
     except IndexError as e:
+        cursor.close()
+        conn.close()
+        db_locker.release()
         raise e
     anime_db = {'sn': values[0],
                 'title': values[1],
@@ -54,10 +86,12 @@ def read_db(sn):
 
     cursor.close()
     conn.close()
+    db_locker.release()
     return anime_db
 
 
 def insert_db(anime):
+    db_locker.acquire()
     # 向数据库插入新资料
     anime_dict = {'sn': str(anime.get_sn()),
                   'title': anime.get_title(),
@@ -76,9 +110,11 @@ def insert_db(anime):
     cursor.close()
     conn.commit()
     conn.close()
+    db_locker.release()
 
 
 def update_db(anime):
+    db_locker.acquire()
     # 更新数据库 status, resolution, file_size 资料
     anime_dict = {}
     if anime.video_size > 10:
@@ -103,17 +139,25 @@ def update_db(anime):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute(
-        "UPDATE anime SET status=:status,"
-        "remote_status=:remote_status,"
-        "resolution=:resolution,"
-        "file_size=:file_size,"
-        "local_file_path=:local_file_path WHERE sn=:sn",
-        anime_dict)
+    try:
+        cursor.execute(
+            "UPDATE anime SET status=:status,"
+            "remote_status=:remote_status,"
+            "resolution=:resolution,"
+            "file_size=:file_size,"
+            "local_file_path=:local_file_path WHERE sn=:sn",
+            anime_dict)
+    except IndexError as e:
+        cursor.close()
+        conn.commit()
+        conn.close()
+        db_locker.release()
+        raise e
 
     cursor.close()
     conn.commit()
     conn.close()
+    db_locker.release()
 
 
 def worker(sn, sn_info):
@@ -216,12 +260,12 @@ def worker(sn, sn_info):
 
 def check_tasks():
     for sn in sn_dict.keys():
-        try:
-            anime = Anime(sn)
-            episode_list = list(anime.get_episode_list().values())
-        except TryTooManyTimeError:
+        anime = build_anime(sn)
+        if anime['failed']:
             err_print(sn, '更新狀態', '檢查更新失敗, 跳過等待下次檢查', status=1)
             continue
+        anime = anime['anime']
+        episode_list = list(anime.get_episode_list().values())
 
         if sn_dict[sn]['mode'] == 'all':
             # 如果用户选择全部下载 download_mode = 'all'
@@ -236,11 +280,14 @@ def check_tasks():
                     if anime.get_sn() == ep:
                         new_anime = anime  # 如果是本身则不用重复创建实例
                     else:
-                        new_anime = Anime(ep)
+                        new_anime = build_anime(ep)
+                        if new_anime['failed']:
+                            err_print(ep, '更新狀態', '更新數據失敗, 跳過等待下次檢查', status=1)
+                            continue
+                        new_anime = new_anime['anime']
                     insert_db(new_anime)
-                    queue[ep] = sn_dict[sn]
+                    queue[ep] = sn_dict[sn]  # 添加至列队
         else:
-
             if sn_dict[sn]['mode'] == 'largest-sn':
                 # 如果用户选择仅下载最新上传, download_mode = 'largest_sn', 则对 sn 进行排序
                 episode_list.sort()
@@ -256,7 +303,11 @@ def check_tasks():
                 if anime.get_sn() == latest_sn:
                     new_anime = anime  # 如果是本身则不用重复创建实例
                 else:
-                    new_anime = Anime(latest_sn)
+                    new_anime = build_anime(latest_sn)
+                    if new_anime['failed']:
+                        err_print(latest_sn, '更新狀態', '更新數據失敗, 跳過等待下次檢查', status=1)
+                        continue
+                    new_anime = new_anime['anime']
                 insert_db(new_anime)
                 queue[latest_sn] = sn_dict[sn]
 
@@ -428,10 +479,10 @@ def __init_proxy(kill=False):
             else:
                 gost_path = os.path.join(working_dir, 'gost')
             if not os.path.exists(gost_path):
-                err_print('當前代理使用擴展協議, 需要使用gost, 但是gost未找到')
+                err_print(0, '當前代理使用擴展協議, 需要使用gost, 但是gost未找到', status=1, no_sn=True)
                 raise FileNotFoundError  # 如果本地目录下也没有找到 gost 则丢出异常
         # 构造 gost 命令
-        gost_cmd = [gost_path, '-L=:34173']  # 本地监听端口 34173
+        gost_cmd = [gost_path, '-L=:'+str(gost_port)]  # 本地监听端口 34173
         proxies_keys = list(settings['proxies'].keys())
         proxies_keys.sort()  # 排序, 确保链式结构正确
         for key in proxies_keys:
@@ -463,8 +514,10 @@ if __name__ == '__main__':
     processing_queue = []
     thread_limiter = threading.Semaphore(settings['multi-thread'])  # 下载并发限制器
     upload_limiter = threading.Semaphore(settings['multi_upload'])  # 并发上传限制器
+    db_locker = threading.Semaphore(1)
     thread_tasks = []
     gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
+    gost_port = gost_port()  # gost 端口
 
     if settings['check_latest_version']:
         check_new_version()  # 检查新版

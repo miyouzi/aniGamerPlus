@@ -13,18 +13,18 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 
-
 class TryTooManyTimeError(BaseException):
     pass
 
 
 class Anime():
-    def __init__(self, sn, debug_mode=False):
+    def __init__(self, sn, debug_mode=False, gost_port=34173):
         self._settings = Config.read_settings()
         self._cookies = Config.read_cookie()
         self._working_dir = self._settings['working_dir']
         self._bangumi_dir = self._settings['bangumi_dir']
         self._temp_dir = self._settings['temp_dir']
+        self._gost_port = str(gost_port)
 
         self._session = requests.session()
         self._title = ''
@@ -59,8 +59,8 @@ class Anime():
     def __init_proxy(self):
         if self._settings['use_gost']:
             # 需要使用 gost 的情况, 代理到 gost
-            os.environ['HTTP_PROXY'] = 'http://127.0.0.1:34173'
-            os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:34173'
+            os.environ['HTTP_PROXY'] = 'http://127.0.0.1:'+self._gost_port
+            os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:'+self._gost_port
         else:
             # 无需 gost 的情况
             key = list(self._settings['proxies'].keys())[0]

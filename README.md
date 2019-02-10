@@ -70,6 +70,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",  #  請求UA, 需要和獲取cookie的瀏覽器相同
     "check_latest_version": true,  # 檢查更新開關, 默認為 true
     "upload_to_server": false,  # 上傳功能開關
     "ftp": {  # FTP配置
@@ -253,7 +254,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v9.0
+當前aniGamerPlus版本: v9.3
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]

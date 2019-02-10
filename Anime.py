@@ -206,6 +206,7 @@ class Anime():
 
                 else:  # 这是第一步
                     # 本线程收到了新cookie
+                    err_print(self._sn, '收到新cookie', display=False)
                     Config.renew_cookies(f.cookies.get_dict())  # 保存一半新cookie
                     self._cookies = Config.read_cookie()  # 载入一半新cookie
                     self.__request('https://ani.gamer.com.tw/')  # 马上完成cookie刷新第二步, 以免正好在刚要解析m3u8时掉链子

@@ -176,18 +176,23 @@ class Anime():
                 if 'deleted' in f.headers.get('set-cookie'):
                     # set-cookie刷新cookie只有一次机会, 如果其他线程先收到, 则此处会返回 deleted
                     # 等待其他线程刷新了cookie, 重新读入cookie
+                    err_print(self._sn, '收到cookie重置響應', display=False)
                     time.sleep(2)
                     try_counter = 0
                     succeed_flag = False
                     while try_counter < 3:  # 尝试读三次, 不行就算了
                         old_BAHARUNE = self._cookies['BAHARUNE']
                         self._cookies = Config.read_cookie()
+                        err_print(self._sn, '讀取cookie', 'cookie.txt最後修改時間: '+Config.get_cookie_time()+' 第'+str(try_counter)+'次嘗試', display=False)
                         if old_BAHARUNE != self._cookies['BAHARUNE']:
                             # 新cookie读取成功
                             succeed_flag = True
+                            err_print(self._sn, '讀取cookie', '新cookie讀取成功', display=False)
                             break
                         else:
-                            time.sleep(3)
+                            err_print(self._sn, '讀取cookie', '新cookie讀取失敗', display=False)
+                            random_wait_time = random.uniform(2, 5)
+                            time.sleep(random_wait_time)
                             try_counter = try_counter + 1
                     if not succeed_flag:
                         self._cookies = {}
@@ -578,6 +583,12 @@ class Anime():
 
         # 如果不存在指定清晰度，则选取最近可用清晰度
         if resolution not in self._m3u8_dict.keys():
+            if self._settings['lock_resolution']:
+                # 如果用户设定锁定清晰度, 則下載取消
+                err_msg_detail = '指定清晰度不存在, 因當前鎖定了清晰度, 下載取消. 可用的清晰度: '+'P '.join(self._m3u8_dict.keys())+'P'
+                err_print(self._sn, '任務狀態', err_msg_detail, status=1)
+                return
+
             resolution_list = map(lambda x: int(x), self._m3u8_dict.keys())
             resolution_list = list(resolution_list)
             flag = 9999
@@ -590,7 +601,7 @@ class Anime():
             # resolution_list.sort()
             # resolution = str(resolution_list[-1])  # 选取最高可用清晰度
             resolution = str(closest_resolution)
-            err_msg_detail = '指定清晰度不存在，選取最近可用清晰度: ' + resolution + 'P'
+            err_msg_detail = '指定清晰度不存在, 選取最近可用清晰度: ' + resolution + 'P'
             err_print(self._sn, '任務狀態', err_msg_detail, status=1)
         self.video_resolution = int(resolution)
 

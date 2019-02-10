@@ -60,6 +60,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 文件夾下
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
+    "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 3,  # 最大并發下載數
     "multi_upload": 3,  # 最大并發上傳數

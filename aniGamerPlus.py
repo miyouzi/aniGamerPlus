@@ -451,7 +451,7 @@ def __kill_thread_when_ctrl_c():
 
 
 def user_exit(signum, frame):
-    err_print(0, '\n\n你終止了程序!', status=1, no_sn=True)
+    err_print(0, '你終止了程序!', '\n', status=1, no_sn=True, prefix='\n\n')
     gost_subprocess.kill()  # 结束 gost
     sys.exit(255)
 
@@ -464,7 +464,7 @@ def check_new_version():
         err_print(0, msg, status=1, no_sn=True)
 
 
-def __init_proxy(kill=False):
+def __init_proxy():
     if settings['use_gost']:
         print('使用代理連接動畫瘋, 使用擴展的代理協議')
         # 需要使用 gost 的情况

@@ -5,7 +5,7 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, re, sys, requests, time
+import os, json, re, sys, requests, time, random
 import sqlite3
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,19 +14,18 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-err_print_not_import_flag = True
-aniGamerPlus_version = 'v9.1'
-latest_config_version = 4.0
+aniGamerPlus_version = 'v9.2'
+latest_config_version = 4.1
 latest_database_version = 2.0
 
 
-def __color_print(sn, err_msg, detail='', status=0, no_sn=False):
+def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
     # 避免与 ColorPrint.py 相互调用产生问题
-    global err_print_not_import_flag
-    if err_print_not_import_flag:
+    try:
+        err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn, display=display)
+    except UnboundLocalError:
         from ColorPrint import err_print
-        err_print_not_import_flag = False
-    err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn)
+        err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn, display=display)
 
 
 def get_working_dir():
@@ -44,6 +43,7 @@ def __init_settings():
                 'temp_dir': '',
                 'check_frequency': 5,
                 'download_resolution': '1080',
+                'lock_resolution': False,  # 锁定分辨率, 如果分辨率不存在, 则宣布下载失败
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
                 'multi-thread': 3,  # 最大并发下载数
                 'multi_upload': 3,
@@ -135,6 +135,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'temp_dir' not in new_settings.keys():  # v4.0 新增缓存目录选项
         new_settings['temp_dir'] = ''
+
+    if 'lock_resolution' not in new_settings.keys():
+        new_settings['lock_resolution'] = False  # v4.1 新增分辨率锁定开关
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -330,6 +333,19 @@ def read_cookie():
         return {}
 
 
+def time_stamp_to_time(timestamp):
+    # 把时间戳转化为时间: 1479264792 to 2016-11-16 10:53:12
+    # 代码来自: https://www.cnblogs.com/shaosks/p/5614630.html
+    timeStruct = time.localtime(timestamp)
+    return time.strftime('%Y-%m-%d %H:%M:%S',timeStruct)
+
+
+def get_cookie_time():
+    # 获取 cookie 修改时间
+    cookie_time = os.path.getmtime(cookies_path)
+    return time_stamp_to_time(cookie_time)
+
+
 def renew_cookies(new_cookie):
     new_cookie_str = ''
     for key, value in new_cookie.items():
@@ -341,13 +357,16 @@ def renew_cookies(new_cookie):
         try:
             with open(cookies_path, 'w', encoding='utf-8') as f:
                 f.write(new_cookie_str)
-            break
-        except:
+        except BaseException as e:
             if try_counter > 3:
-                __color_print(0, '新cookie保存失敗!', status=1, no_sn=True)
+                __color_print(0, '新cookie保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
                 break
-            time.sleep(2)
+            random_wait_time = random.uniform(2, 5)
+            time.sleep(random_wait_time)
             try_counter = try_counter + 1
+        else:
+            __color_print(0, '新cookie保存成功', no_sn=True, display=False)
+            break
 
 
 def read_latest_version_on_github():
@@ -358,9 +377,11 @@ def read_latest_version_on_github():
         latest_releases_info = session.get(req, timeout=3).json()
         remote_version['tag_name'] = latest_releases_info['tag_name']
         remote_version['body'] = latest_releases_info['body']  # 更新内容
+        __color_print(0, '檢查更新', '檢查更新成功', no_sn=True, display=False)
     except:
         remote_version['tag_name'] = aniGamerPlus_version  # 拉取github版本号失败
         remote_version['body'] = ''
+        __color_print(0, '檢查更新', '檢查更新失敗', no_sn=True, display=False)
     return remote_version
 
 
@@ -373,6 +394,7 @@ def __remove_superfluous_logs(max_num):
             for log in logs_need_remove:
                 log_path = os.path.join(logs_dir, log)
                 os.remove(log_path)
+                __color_print(0, '刪除過期日志: ' + log, no_sn=True, display=False)
 
 
 if __name__ == '__main__':

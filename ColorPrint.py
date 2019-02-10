@@ -30,7 +30,7 @@ def read_log_settings():
 log_settings = read_log_settings()
 
 
-def err_print(sn, err_msg, detail='', status=0, no_sn=False):
+def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=True):
     # status 三个设定值, 0 为一般输出, 1 为错误输出, 2 为成功输出
     # err_msg 为信息类型/概要, 最好为四字中文
     # detail 为详细信息描述
@@ -54,20 +54,21 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False):
             else:
                 cprint(msg, 'red', attrs=['bold'])
     if no_sn:
-        msg = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ' ' + detail
+        msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ' ' + detail
     else:
-        msg = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ': sn=' + str(sn) + ' ' + detail
+        msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ': sn=' + str(sn) + ' ' + detail
 
-    if status == 0:
-        print(msg)
-    elif status == 1:
-        # 为 1 错误输出
-        green = False
-        succeed_or_failed_print()
-    else:
-        # 为 2 成功输出
-        green = True
-        succeed_or_failed_print()
+    if display:
+        if status == 0:
+            print(msg)
+        elif status == 1:
+            # 为 1 错误输出
+            green = False
+            succeed_or_failed_print()
+        else:
+            # 为 2 成功输出
+            green = True
+            succeed_or_failed_print()
 
     if log_settings['save_logs']:
         logs_dir = os.path.join(Config.get_working_dir(), 'logs')

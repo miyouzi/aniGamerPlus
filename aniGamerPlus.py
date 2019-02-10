@@ -521,7 +521,8 @@ if __name__ == '__main__':
 
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
-    print('當前aniGamerPlus版本: ' + settings['aniGamerPlus_version'])
+    version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
+    print(version_msg)
 
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
@@ -581,6 +582,8 @@ if __name__ == '__main__':
             __init_proxy()
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir)
 
+    err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
+    err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)
     # 初始化 sqlite3 数据库
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

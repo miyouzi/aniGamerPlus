@@ -157,7 +157,8 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 ### cookie.txt
 
-用戶cookie文件, 將瀏覽器的cookie字段複製, 已**cookie.txt**為文件名保存在程序目錄下即可
+1.  用戶cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為文件名保存在程序目錄下
+2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目
 
 **v6.0版本開始支持自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
 
@@ -172,6 +173,14 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
     
  - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
     ![](screenshot/CookiesFormat.png)
+
+#### 使用Chrome舉例如何獲取 UA:
+
+ - 訪問 **https://developers.whatismybrowser.com/useragents/parse/?analyse-my-user-agent=yes** 即可查看該瀏覽器 UA
+    ![](screenshot/how_to_get_my_ua.png)
+    
+ - 將 UA 複製粘貼到```config.json```的```ua```項目
+    ![](screenshot/how_to_use_my_ua.png)
 
 ### sn_list.txt
 

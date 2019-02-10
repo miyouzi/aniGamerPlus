@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookies_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v9.2'
-latest_config_version = 4.1
+aniGamerPlus_version = 'v9.3'
+latest_config_version = 4.2
 latest_database_version = 2.0
 
 
@@ -53,6 +53,8 @@ def __init_settings():
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_video_filename_suffix': '',  # 用户自定后缀
+                # cookie的自动刷新对 UA 有检查
+                'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
                 'use_proxy': False,
                 'proxies': {  # 代理功能
                     1: 'socks5://127.0.0.1:1080',
@@ -138,6 +140,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'lock_resolution' not in new_settings.keys():
         new_settings['lock_resolution'] = False  # v4.1 新增分辨率锁定开关
+
+    if 'ua' not in new_settings.keys():  # v4.2 新增 UA 配置
+        new_settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

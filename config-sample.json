@@ -13,7 +13,7 @@
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",
     "customized_video_filename_suffix": "",
-    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
     "use_proxy": false,
     "proxies": {
         "1": "socks5://127.0.0.1:1080",

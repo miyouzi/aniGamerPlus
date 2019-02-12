@@ -11,20 +11,20 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
 
 ## 特性
 
- - 支持多綫程下載
- - 支持cookie，支持下載 1080P
+ - 支援多綫程下載
+ - 支援cookie，支援下載 1080P
  - 下載模式有僅下載最新一集, 下載最新上傳, 下載全部可選.
  - 自定義檢查更新間隔時間
  - 自定義番劇下載目錄
  - 自定義下載文件名前綴後綴及是否添加清晰度
  - 下載失敗, 下載過慢自動重啓任務
- - 支持使用FTP上傳至伺服器, 支持斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支持 FTP over TLS
+ - 支援使用FTP上傳至伺服器, 支援斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支援 FTP over TLS
  - 檢查程序更新功能
- - 支持新番分類
- - v6.0 開始支持cookie自動刷新
- - v7.0 開始支持使用(鏈式)代理
- - v9.0 開始支持記錄日志
- - v9.0 開始自動下載支持自定義番劇名
+ - 支援新番分類
+ - v6.0 開始支援cookie自動刷新
+ - v7.0 開始支援使用(鏈式)代理
+ - v9.0 開始支援記錄日志
+ - v9.0 開始自動下載支援自定義番劇名
  
  
 ## **注意**:warning:
@@ -41,6 +41,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
 ## 任務列表
  - [x] 下載使用代理
  - [x] 使用ftp上傳至遠程伺服器
+ - [ ] 代理可用故障轉移模式
  
 ## 配置説明
 
@@ -81,12 +82,12 @@ pip3 install requests beautifulsoup4 lxml termcolor
         "cwd": "",  # 登陸後首先進入的目錄
         "tls": true,  # 是否是 FTP over TLS
         "show_error_detail": false,  # 是否顯示細節錯誤信息
-        "max_retry_num": 10  # 最大重傳數, 支持續傳
+        "max_retry_num": 10  # 最大重傳數, 支援續傳
     },
     "use_proxy": true,  # 代理開關
     "proxies": {
         "1": "socks5://127.0.0.1:1080",  # 代理配置
-        "2": "http://user:passwd@example.com:1000"  # 支持鏈式代理
+        "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
     }
     
     "config_version": 4.0,  # 配置文件版本
@@ -98,10 +99,10 @@ pip3 install requests beautifulsoup4 lxml termcolor
 }
 ```
 
-模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
+模式僅支援在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
 
 ### 使用代理
-aniGamerPlus本身支持使用單個```http```或```https```代理.
+aniGamerPlus本身支援使用單個```http```或```https```代理.
 
 無密碼驗證的代理使用以下格式:
 ```
@@ -117,7 +118,7 @@ http://user:passwd@example.com:1000
 
 若想使用鏈式代理, 請使用整數作爲 key, 代理出口將會是 key 最大的代理服務器.
 
-Gost 支持 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://github.com/shadowsocks/shadowsocks-go), 目前僅支持這幾種加密方式: ```aes-128-cfb``` ```aes-192-cfb``` ```aes-256-cfb``` ```bf-cfb``` ```cast5-cfb``` ```des-cfb``` ```rc4-md5``` ```rc4-md5-6``` ```chacha20``` ```salsa20``` ```rc4``` ```table```
+Gost 支援 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://github.com/shadowsocks/shadowsocks-go), 目前僅支援這幾種加密方式: ```aes-128-cfb``` ```aes-192-cfb``` ```aes-256-cfb``` ```bf-cfb``` ```cast5-cfb``` ```des-cfb``` ```rc4-md5``` ```rc4-md5-6``` ```chacha20``` ```salsa20``` ```rc4``` ```table```
 
 通過 Gost 擴展, aniGamerPlus 可以使用 ```sock4``` ```sock5``` ```ss``` 等協議
 
@@ -161,7 +162,9 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 1.  用戶cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為文件名保存在程序目錄下
 2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目
 
-**v6.0版本開始支持自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
+**v6.0版本開始支援自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
+
+取得cookie后, 登陸狀態會顯示在 **https://home.gamer.com.tw/login_devices.php** , 你可以從這裏點擊```退出```來失效你的cookie, 其顯示的信息來自與你取得cookie的瀏覽器(UA)
 
 :warning: **登陸時請勾選"保持登入狀態"**
 
@@ -191,7 +194,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 支援注釋 **#** 後面的所有字符程序均不會讀取, 可以標記番劇名
 
-模式僅支持在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**中定義的默認下載模式
+模式僅支援在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**中定義的默認下載模式
 
 格式:
 ```
@@ -223,7 +226,7 @@ sn碼 下載模式(可空) #注釋(可空)
 ```
 上面表示將會把**ENDRO**和**上野**放在**2019一月番**文件夾裏, 將**刀劍**放在**2019十月番**文件夾裏, **動物朋友** 不分類, 直接放在番劇目錄下
 
-自 v9.0 開始, 支持重命名番劇, 在注釋之前, 模式之後, 用 ```<``` 與 ```>``` 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名
+自 v9.0 開始, 支援重命名番劇, 在注釋之前, 模式之後, 用 ```<``` 與 ```>``` 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名
 
 PS: 連續多個空格將會被替換爲單個空格, 和模式需要間隔一個空格
 
@@ -294,7 +297,7 @@ optional arguments:
  
  - **-c** 開關, 指定時將會下載到當前工作路徑下
 
- - **-e** 下載此番劇指定劇集, 支持範圍輸入, 支持多個不連續聚集下載, 僅支持整數命名的劇集
+ - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
     
     - -e 參數優先于 -m 參數, 使用 -e 參數時, 强制為 range 模式
     

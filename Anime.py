@@ -127,11 +127,7 @@ class Anime():
         # 伪装为Chrome
         host = 'ani.gamer.com.tw'
         origin = 'https://' + host
-        if self._settings['ua']:
-            ua = self._settings['ua']
-        else:
-            # cookie 自动刷新需要 UA 一致
-            ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"
+        ua = self._settings['ua']   # cookie 自动刷新需要 UA 一致
         ref = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
         lang = 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.6'
         accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'

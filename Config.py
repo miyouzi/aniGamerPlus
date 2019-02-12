@@ -12,9 +12,9 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 # working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
-cookies_path = os.path.join(working_dir, 'cookie.txt')
+cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v9.3'
+aniGamerPlus_version = 'v9.4'
 latest_config_version = 4.2
 latest_database_version = 2.0
 
@@ -54,7 +54,7 @@ def __init_settings():
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_video_filename_suffix': '',  # 用户自定后缀
                 # cookie的自动刷新对 UA 有检查
-                'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
+                'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
                 'use_proxy': False,
                 'proxies': {  # 代理功能
                     1: 'socks5://127.0.0.1:1080',
@@ -142,7 +142,7 @@ def __update_settings(old_settings):  # 升级配置文件
         new_settings['lock_resolution'] = False  # v4.1 新增分辨率锁定开关
 
     if 'ua' not in new_settings.keys():  # v4.2 新增 UA 配置
-        new_settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"
+        new_settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -245,6 +245,9 @@ def read_settings():
         settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
     if settings['quantity_of_logs'] < 1:  # 日志数量不可小于 1
         settings['quantity_of_logs'] = 7
+    if not settings['ua']:
+        # 如果 ua 项目为空
+        settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
 
     # 如果用户自定了番剧目录且存在
     if settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir']):
@@ -324,12 +327,12 @@ def read_sn_list():
 
 
 def read_cookie():
-    old_cookie_path = cookies_path.replace('cookie.txt', 'cookies.txt')
+    old_cookie_path = cookie_path.replace('cookie.txt', 'cookies.txt')
     if os.path.exists(old_cookie_path):
-        os.rename(old_cookie_path, cookies_path)
+        os.rename(old_cookie_path, cookie_path)
     # 用户可以将cookie保存在程序所在目录下，保存为 cookies.txt ，UTF-8 编码
-    if os.path.exists(cookies_path):
-        with open(cookies_path, 'r', encoding='utf-8') as f:
+    if os.path.exists(cookie_path):
+        with open(cookie_path, 'r', encoding='utf-8') as f:
             cookies = f.readline()
             cookies = dict([l.split("=", 1) for l in cookies.split("; ")])
             cookies.pop('ckBH_lastBoard', 404)
@@ -347,7 +350,7 @@ def time_stamp_to_time(timestamp):
 
 def get_cookie_time():
     # 获取 cookie 修改时间
-    cookie_time = os.path.getmtime(cookies_path)
+    cookie_time = os.path.getmtime(cookie_path)
     return time_stamp_to_time(cookie_time)
 
 
@@ -360,7 +363,7 @@ def renew_cookies(new_cookie):
     try_counter = 0
     while True:
         try:
-            with open(cookies_path, 'w', encoding='utf-8') as f:
+            with open(cookie_path, 'w', encoding='utf-8') as f:
                 f.write(new_cookie_str)
         except BaseException as e:
             if try_counter > 3:

@@ -124,8 +124,6 @@ Gost 支援 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://githu
 
 **注意: ```read_config_when_checking_update``` 配置對代理配置無效**
 
-**PS: 使用通過 Gost 擴展的協議將占用本機```34173```端口**
-
 **使用代理建議使用分段下載模式**
 
 **如果代理網路不穩定, 建議```multi-thread```配置為```1```**

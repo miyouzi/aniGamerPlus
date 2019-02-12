@@ -437,7 +437,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
 
     __kill_thread_when_ctrl_c()
-    gost_subprocess.kill()  # 结束 gost
+    kill_gost()  # 结束 gost
     sys.exit(0)
 
 
@@ -450,9 +450,14 @@ def __kill_thread_when_ctrl_c():
                 break
 
 
+def kill_gost():
+    if gost_subprocess is not None:
+        gost_subprocess.kill()  # 结束 gost
+
+
 def user_exit(signum, frame):
     err_print(0, '你終止了程序!', '\n', status=1, no_sn=True, prefix='\n\n')
-    gost_subprocess.kill()  # 结束 gost
+    kill_gost()  # 结束 gost
     sys.exit(255)
 
 

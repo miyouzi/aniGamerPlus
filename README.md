@@ -7,7 +7,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
 
 ## 鳴謝
 
-本項目m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
+本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
 
 ## 特性
 
@@ -31,7 +31,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
 
 Python 版本 3 以上
 
-**本項目依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
+**本專案依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
 
 **使用前确认已安装好依赖**
 ```

@@ -5,7 +5,7 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, re, sys, requests, time, random
+import os, json, re, sys, requests, time, random, codecs
 import sqlite3
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v9.4'
+aniGamerPlus_version = 'v9.5'
 latest_config_version = 4.2
 latest_database_version = 2.0
 
@@ -209,11 +209,52 @@ def __read_settings_file():
         with open(config_path, 'r', encoding='utf-8') as f:
             # 转义win路径
             return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
+    except json.JSONDecodeError:
+        # 如果带有 BOM 头, 则去除
+        try:
+            __del_bom(config_path)
+            # 重新读取
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
+        except BaseException as e:
+            __color_print(0, '讀取配置發生異常, 將重置配置! ' + str(e), status=1, no_sn=True)
+            __init_settings()
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
     except BaseException as e:
         __color_print(0, '讀取配置發生異常, 將重置配置! '+str(e), status=1, no_sn=True)
         __init_settings()
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
+
+
+def __del_bom(path):
+    # 处理 UTF-8-BOM
+    have_bom = False
+    with open(path, 'rb') as f:
+        content = f.read()
+        if content.startswith(codecs.BOM_UTF8):
+            content = content[len(codecs.BOM_UTF8):]
+            have_bom = True
+    if have_bom:
+        filename = os.path.split(path)[1]
+        print(filename)
+        __color_print(0, '發現 '+filename+' 帶有BOM頭, 將移除后保存', no_sn=True)
+        try_counter = 0
+        while True:
+            try:
+                with open(path, 'wb') as f:
+                    f.write(content)
+            except BaseException as e:
+                if try_counter > 3:
+                    __color_print(0, '無BOM '+filename+' 保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
+                    raise e
+                random_wait_time = random.uniform(2, 5)
+                time.sleep(random_wait_time)
+                try_counter = try_counter + 1
+            else:
+                __color_print(0, '無BOM '+filename+' 保存成功', status=2, no_sn=True)
+                break
 
 
 def read_settings():

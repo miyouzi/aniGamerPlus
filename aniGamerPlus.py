@@ -512,7 +512,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, user_exit)
     signal.signal(signal.SIGTERM, user_exit)
     settings = Config.read_settings()
-    sn_dict = Config.read_sn_list()
     working_dir = settings['working_dir']
     db_path = os.path.join(working_dir, 'aniGamer.db')
     queue = {}  # 储存 sn 相关信息, {'tag': TAG, 'rename': RENAME}, rename,
@@ -609,6 +608,7 @@ if __name__ == '__main__':
     if settings['use_proxy']:
         __init_proxy()
 
+    sn_dict = Config.read_sn_list()
     while True:
         print()
         err_print(0, '開始更新', no_sn=True)

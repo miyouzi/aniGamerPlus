@@ -17,9 +17,15 @@ def read_log_settings():
         with open(Config.get_config_path(), 'r', encoding='utf-8') as f:
             # 转义win路径
             settings = json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
-    except:
+    except json.JSONDecodeError:
+        Config.del_bom(Config.get_config_path(), display=False)  # 移除bom
+        # 重新载入
+        with open(Config.get_config_path(), 'r', encoding='utf-8') as f:
+            settings = json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
+    except BaseException:
         settings['save_logs'] = True
         settings['quantity_of_logs'] = 7
+        print('日志配置讀取失敗, 將使用默認配置: 啓用日志, 最多保存7份')
     if 'save_logs' not in settings.keys():
         settings['save_logs'] = True
     if 'quantity_of_logs' not in settings.keys():
@@ -53,6 +59,7 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
                 cprint(msg, 'green', attrs=['bold'])
             else:
                 cprint(msg, 'red', attrs=['bold'])
+
     if no_sn:
         msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ' ' + detail
     else:
@@ -74,9 +81,9 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
         logs_dir = os.path.join(Config.get_working_dir(), 'logs')
         if not os.path.exists(logs_dir):
             os.makedirs(logs_dir)
-        log_path = os.path.join(logs_dir, datetime.now().strftime("%Y-%m-%d")+'.log')
+        log_path = os.path.join(logs_dir, datetime.now().strftime("%Y-%m-%d") + '.log')
         with open(log_path, 'a+', encoding='utf-8') as log:
-            log.write(msg+'\n')
+            log.write(msg + '\n')
 
 
 # 用於Win下染色輸出，代碼來自 https://blog.csdn.net/five3/article/details/7630295
@@ -86,7 +93,7 @@ class Color:
 
     def __init__(self):
         self.FOREGROUND_RED = 0x04
-        self.FOREGROUND_GREEN= 0x02
+        self.FOREGROUND_GREEN = 0x02
         self.FOREGROUND_BLUE = 0x01
         self.FOREGROUND_INTENSITY = 0x08
         STD_OUTPUT_HANDLE = -11

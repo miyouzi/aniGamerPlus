@@ -212,7 +212,7 @@ def __read_settings_file():
     except json.JSONDecodeError:
         # 如果带有 BOM 头, 则去除
         try:
-            __del_bom(config_path)
+            del_bom(config_path)
             # 重新读取
             with open(config_path, 'r', encoding='utf-8') as f:
                 return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
@@ -228,7 +228,7 @@ def __read_settings_file():
             return json.load(f)
 
 
-def __del_bom(path):
+def del_bom(path, display=True):
     # 处理 UTF-8-BOM
     have_bom = False
     with open(path, 'rb') as f:
@@ -238,8 +238,8 @@ def __del_bom(path):
             have_bom = True
     if have_bom:
         filename = os.path.split(path)[1]
-        print(filename)
-        __color_print(0, '發現 '+filename+' 帶有BOM頭, 將移除后保存', no_sn=True)
+        if display:
+            __color_print(0, '發現 '+filename+' 帶有BOM頭, 將移除后保存', no_sn=True)
         try_counter = 0
         while True:
             try:
@@ -247,13 +247,15 @@ def __del_bom(path):
                     f.write(content)
             except BaseException as e:
                 if try_counter > 3:
-                    __color_print(0, '無BOM '+filename+' 保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
+                    if display:
+                        __color_print(0, '無BOM '+filename+' 保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
                     raise e
                 random_wait_time = random.uniform(2, 5)
                 time.sleep(random_wait_time)
                 try_counter = try_counter + 1
             else:
-                __color_print(0, '無BOM '+filename+' 保存成功', status=2, no_sn=True)
+                if display:
+                    __color_print(0, '無BOM '+filename+' 保存成功', status=2, no_sn=True)
                 break
 
 
@@ -335,6 +337,7 @@ def read_sn_list():
     settings = read_settings()
     if not os.path.exists(sn_list_path):
         return {}
+    del_bom(sn_list_path)  # 去除 BOM
     with open(sn_list_path, 'r', encoding='utf-8') as f:
         sn_dict = {}
         bangumi_tag = ''
@@ -373,6 +376,7 @@ def read_cookie():
         os.rename(old_cookie_path, cookie_path)
     # 用户可以将cookie保存在程序所在目录下，保存为 cookies.txt ，UTF-8 编码
     if os.path.exists(cookie_path):
+        del_bom(cookie_path)  # 移除 bom
         with open(cookie_path, 'r', encoding='utf-8') as f:
             cookies = f.readline()
             cookies = dict([l.split("=", 1) for l in cookies.split("; ")])

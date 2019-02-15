@@ -42,6 +42,7 @@ pip3 install requests beautifulsoup4 lxml termcolor
  - [x] 下載使用代理
  - [x] 使用ftp上傳至遠程伺服器
  - [ ] 代理可用故障轉移模式
+ - [ ] Web控制臺(可能永遠都不會有)
  
 ## 配置説明
 

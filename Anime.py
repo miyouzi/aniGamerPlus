@@ -539,7 +539,7 @@ class Anime():
                 run_ffmpeg.returncode) + ' Bad segment=' + str(return_str.find('Failed to open segment'))
             err_print(self._sn, '下載失败', err_msg_detail, status=1)
 
-    def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False, rename=''):
+    def download(self, resolution='', save_dir='', bangumi_tag='', realtime_show_file_size=False, rename='', classify=True):
         self.realtime_show_file_size = realtime_show_file_size
         if not resolution:
             resolution = self._settings['download_resolution']
@@ -575,7 +575,8 @@ class Anime():
         # 创建存放番剧的目录，去除非法字符
         if bangumi_tag:  # 如果指定了番剧分类
             self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', bangumi_tag))
-        self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
+        if classify:  # 控制是否建立番剧文件夹
+            self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
         if not os.path.exists(self._bangumi_dir):
             os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
 

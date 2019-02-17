@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v9.5'
-latest_config_version = 4.2
+aniGamerPlus_version = 'v10.0'
+latest_config_version = 5.0
 latest_database_version = 2.0
 
 
@@ -41,12 +41,13 @@ def __init_settings():
         os.remove(config_path)
     settings = {'bangumi_dir': '',
                 'temp_dir': '',
-                'check_frequency': 5,
-                'download_resolution': '1080',
+                'classify_bangumi': True,  # 控制是否建立番剧目录
+                'check_frequency': 5,  # 检查 cd 时间, 单位分钟
+                'download_resolution': '1080',  # 下载分辨率
                 'lock_resolution': False,  # 锁定分辨率, 如果分辨率不存在, 则宣布下载失败
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
                 'multi-thread': 3,  # 最大并发下载数
-                'multi_upload': 3,
+                'multi_upload': 3,  # 最大并发上传数
                 'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
                 'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数
                 'add_bangumi_name_to_video_filename': True,
@@ -143,6 +144,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'ua' not in new_settings.keys():  # v4.2 新增 UA 配置
         new_settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
+
+    if 'classify_bangumi' not in new_settings.keys():
+        new_settings['classify_bangumi'] = True  # v5.0 新增是否建立番剧目录开关
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

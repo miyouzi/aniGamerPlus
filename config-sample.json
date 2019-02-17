@@ -1,6 +1,7 @@
 {
     "bangumi_dir": "",
     "temp_dir": "",
+	"classify_bangumi": true,
     "check_frequency": 5,
     "download_resolution": "1080",
 	"lock_resolution": false,

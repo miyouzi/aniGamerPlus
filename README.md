@@ -3,7 +3,7 @@
 
 windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
 
-ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個文件夾下即可.
+ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
 
 ## 鳴謝
 
@@ -58,8 +58,9 @@ pip3 install requests beautifulsoup4 lxml termcolor
 
 ```
 {
-    "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分文件夾存放
-    "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 文件夾下
+    "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分資料夾存放
+    "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
+    "classify_bangumi": true,  # 控制是否建立番劇資料夾
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
@@ -90,7 +91,6 @@ pip3 install requests beautifulsoup4 lxml termcolor
         "1": "socks5://127.0.0.1:1080",  # 代理配置
         "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
     }
-    
     "config_version": 4.0,  # 配置文件版本
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
@@ -131,7 +131,7 @@ Gost 支援 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://githu
 
 ### 下載模式説明
 
-v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀取 m3u8 文件, 下載 key 及所有影片分段至臨時文件夾, 再使用 ffmpeg 解密合并.
+v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀取 m3u8 文件, 下載 key 及所有影片分段至臨時資料夾, 再使用 ffmpeg 解密合并.
 
 **分段下載模式特點:**
 
@@ -148,7 +148,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 - 一個分段下載失敗即判斷爲下載失敗
 - 在下載過程中可能出現 ffmpeg 卡死的情況
-- 不會生成臨時文件夾
+- 不會生成臨時資料夾
 - 命令行模式下下載單個視頻時, 實時顯示已下載的大小
 
 
@@ -209,7 +209,7 @@ sn碼 下載模式(可空) #注釋(可空)
 11317 lastest # SSSS.GRIDMAN
 ```
 
-自v6.0開始, 新增對番劇進行分類功能, 在一排番劇列表的上方 **@** 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的文件夾下
+自v6.0開始, 新增對番劇進行分類功能, 在一排番劇列表的上方 **@** 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的資料夾下
 
 若單獨 **@** 表示不分類
 
@@ -223,7 +223,7 @@ sn碼 下載模式(可空) #注釋(可空)
 @
 11468 # 動物朋友
 ```
-上面表示將會把**ENDRO**和**上野**放在**2019一月番**文件夾裏, 將**刀劍**放在**2019十月番**文件夾裏, **動物朋友** 不分類, 直接放在番劇目錄下
+上面表示將會把**ENDRO**和**上野**放在**2019一月番**資料夾裏, 將**刀劍**放在**2019十月番**資料夾裏, **動物朋友** 不分類, 直接放在番劇目錄下
 
 自 v9.0 開始, 支援重命名番劇, 在注釋之前, 模式之後, 用 ```<``` 與 ```>``` 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名
 
@@ -256,11 +256,11 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v9.3
+當前aniGamerPlus版本: v10.0
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
-                       [--episodes EPISODES]
+                       [--episodes EPISODES] [--no_classify]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -274,6 +274,7 @@ optional arguments:
   --current_path, -c    下載到當前工作目錄
   --episodes EPISODES, -e EPISODES
                         僅下載指定劇集
+  --no_classify, -n     不建立番劇資料夾
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -295,6 +296,8 @@ optional arguments:
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
  
  - **-c** 開關, 指定時將會下載到當前工作路徑下
+ 
+ - **-n** 不建立番劇資料夾
 
  - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
     

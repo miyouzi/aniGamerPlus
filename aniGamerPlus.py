@@ -219,7 +219,7 @@ def worker(sn, sn_info):
     anime = anime['anime']
 
     try:
-        anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag, rename=rename)
+        anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag, rename=rename, classify=settings['classify_bangumi'])
     except BaseException as e:
         # 兜一下各种奇奇怪怪的错误
         err_print(sn, '下載異常', '發生未知錯誤: '+str(e), status=1)
@@ -312,7 +312,7 @@ def check_tasks():
                 queue[latest_sn] = sn_dict[sn]
 
 
-def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False):
+def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False, classify=True):
     # 仅下载,不操作数据库
     thread_limiter.acquire()
     err_counter = 0
@@ -324,9 +324,9 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
 
     try:
         if dl_resolution:
-            anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size)
+            anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
         else:
-            anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size)
+            anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
     except BaseException as e:
         err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
         anime.video_size = 0
@@ -344,9 +344,9 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
 
             try:
                 if dl_resolution:
-                    anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size)
+                    anime.download(dl_resolution, dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
                 else:
-                    anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size)
+                    anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
             except BaseException as e:
                 err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
                 anime.video_size = 0
@@ -354,7 +354,7 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
     thread_limiter.release()
 
 
-def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir=''):
+def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True):
     if cui_thread_limit == 1:
         realtime_show_file_size = True
     else:
@@ -368,7 +368,8 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             sys.exit(1)
         anime = anime['anime']
 
-        anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)  # True 是实时显示文件大小, 仅一个下载任务时适用
+        # True 是实时显示文件大小, 仅一个下载任务时适用
+        anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
@@ -387,7 +388,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             bangumi_list.sort()
 
         if bangumi_list[-1] == sn:
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
         else:
 
             anime = build_anime(bangumi_list[-1])
@@ -395,7 +396,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
                 sys.exit(1)
             anime = anime['anime']
 
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True)
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
 
     elif cui_download_mode == 'all':
         print('當前下載模式: 下載本番劇所有劇集\n')
@@ -408,7 +409,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
         bangumi_list = list(anime.get_episode_list().values())
         bangumi_list.sort()
         for anime_sn in bangumi_list:
-            task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size))
+            task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size, classify))
             task.setDaemon(True)
             thread_tasks.append(task)
             task.start()
@@ -537,6 +538,7 @@ if __name__ == '__main__':
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
+        parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
         arg = parser.parse_args()
 
         save_dir = ''
@@ -546,6 +548,11 @@ if __name__ == '__main__':
             print('使用命令行模式, 指定下載到當前目錄:\n    ' + save_dir)
         else:
             print('使用命令行模式, 文件將保存在配置文件中指定的目錄下:\n    ' + settings['bangumi_dir'])
+
+        classify = True
+        if arg.no_classify:
+            classify = False
+            print('將不會建立番劇資料夾')
 
         if not arg.episodes and arg.download_mode == 'range':
             err_print(0, 'ERROR: 當前指定範圍下載模式, 但下載範圍未指定!', status=1, no_sn=True)
@@ -584,7 +591,7 @@ if __name__ == '__main__':
 
         if settings['use_proxy']:
             __init_proxy()
-        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir)
+        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

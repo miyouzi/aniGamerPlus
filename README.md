@@ -74,7 +74,11 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
     "customized_video_filename_suffix": "",  # 影片文件名後綴
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",  #  請求UA, 需要和獲取cookie的瀏覽器相同
-    "check_latest_version": true,  # 檢查更新開關, 默認為 true
+    "use_proxy": true,  # 代理開關
+    "proxies": {
+        "1": "socks5://127.0.0.1:1080",  # 代理配置
+        "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
+    }
     "upload_to_server": false,  # 上傳功能開關
     "ftp": {  # FTP配置
         "server": "",  # FTP Server IP
@@ -86,17 +90,13 @@ pip3 install requests beautifulsoup4 lxml termcolor
         "show_error_detail": false,  # 是否顯示細節錯誤信息
         "max_retry_num": 10  # 最大重傳數, 支援續傳
     },
-    "use_proxy": true,  # 代理開關
-    "proxies": {
-        "1": "socks5://127.0.0.1:1080",  # 代理配置
-        "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
-    }
-    "config_version": 4.0,  # 配置文件版本
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
     "save_logs": true,  # 是否記錄日志, 一天一個日志
-    "quantity_of_logs": 7  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
+    "quantity_of_logs": 7,  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
+    "config_version": 5.0,  # 配置文件版本
+    "database_version": 2.0  # 資料庫版本
 }
 ```
 

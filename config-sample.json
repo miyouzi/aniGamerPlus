@@ -1,10 +1,10 @@
 {
     "bangumi_dir": "",
     "temp_dir": "",
-	"classify_bangumi": true,
+    "classify_bangumi": true,
     "check_frequency": 5,
     "download_resolution": "1080",
-	"lock_resolution": false,
+    "lock_resolution": false,
     "default_download_mode": "latest",
     "multi-thread": 3,
     "multi_upload": 3,
@@ -36,6 +36,6 @@
     "read_config_when_checking_update": true,
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 4.1,
+    "config_version": 5.0,
     "database_version": 2.0
 }

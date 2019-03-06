@@ -1,4 +1,12 @@
-# aniGamerPlus
+<h1 align="center">aniGamerPlus</h1>
+
+<p align="center">
+ <img alt="GitHub" src="https://img.shields.io/github/license/miyouzi/aniGamerPlus.svg">
+ <img alt="GitHub release" src="https://img.shields.io/github/release/miyouzi/aniGamerPlus.svg">
+ <img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/miyouzi/aniGamerPlus.svg">
+ <img alt="GitHub Releases" src="https://img.shields.io/github/downloads/miyouzi/aniGamerPlus/latest/total.svg">
+</p>
+
 巴哈姆特動畫瘋自動下載工具
 
 windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.

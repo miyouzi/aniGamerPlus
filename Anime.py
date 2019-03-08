@@ -364,6 +364,11 @@ class Anime():
                 failed_flag = True
                 err_print(self._sn, '下載狀態', 'Bad segment=' + chunk_name, status=1)
                 sys.exit(1)
+            except BaseException as e:
+                nonlocal failed_flag
+                failed_flag = True
+                err_print(self._sn, '下載狀態', 'Bad segment=' + chunk_name + ' 發生未知錯誤: ' + str(e), status=1)
+                sys.exit(1)
 
             if self.realtime_show_file_size:
                 # 显示完成百分比

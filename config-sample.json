@@ -6,7 +6,7 @@
     "download_resolution": "1080",
     "lock_resolution": false,
     "default_download_mode": "latest",
-    "multi-thread": 3,
+    "multi-thread": 1,
     "multi_upload": 3,
     "segment_download_mode": true,
     "multi_downloading_segment": 2,

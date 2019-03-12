@@ -7,7 +7,21 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
 
 ## 鳴謝
 
-本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader) 
+本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)
+
+## 目錄
+
+* [特性](#特性)
+* [注意](#注意warning)
+* [任務列表](#任務列表)
+* [配置説明](#配置説明)
+    * [主配置 config.json](#configjson)
+    * [使用代理](#使用代理)
+    * [下載模式説明](#下載模式説明)
+    * [使用 cookie](#cookietxt)
+    * [自動下載配置 sn_list.txt](#sn_listtxt)
+    * [任務狀態資料庫 aniGamer.db](#anigamerdb)
+* [命令行使用](#命令行使用)
 
 ## 特性
 
@@ -16,7 +30,7 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - 下載模式有僅下載最新一集, 下載最新上傳, 下載全部可選.
  - 自定義檢查更新間隔時間
  - 自定義番劇下載目錄
- - 自定義下載文件名前綴後綴及是否添加清晰度
+ - 自定義下載檔名前綴後綴及是否添加清晰度
  - 下載失敗, 下載過慢自動重啓任務
  - 支援使用FTP上傳至伺服器, 支援斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支援 FTP over TLS
  - 檢查程序更新功能
@@ -70,9 +84,9 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
     "multi_downloading_segment": 2  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
-    "add_resolution_to_video_filename": true,  # 是否在影片文件名中添加清晰度, 格式舉例: [1080P]
-    "customized_video_filename_prefix": "【動畫瘋】",  # 影片文件名前綴
-    "customized_video_filename_suffix": "",  # 影片文件名後綴
+    "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
+    "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
+    "customized_video_filename_suffix": "",  # 影片檔名後綴
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",  #  請求UA, 需要和獲取cookie的瀏覽器相同
     "use_proxy": true,  # 代理開關
     "proxies": {
@@ -158,12 +172,14 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 ### cookie.txt
 
-1.  用戶cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為文件名保存在程序目錄下
+1.  用戶cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為檔名保存在程序目錄下
 2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目
 
 **v6.0版本開始支援自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
 
 取得cookie后, 登陸狀態會顯示在 **https://home.gamer.com.tw/login_devices.php** , 你可以從這裏點擊```退出```來失效你的cookie, 其顯示的信息來自與你取得cookie的瀏覽器(UA)
+
+使用cookie后所抓取的影片記錄會記錄在你的[觀看紀錄](https://ani.gamer.com.tw/viewList.php)中
 
 :warning: **登陸時請勾選"保持登入狀態"**
 

@@ -17,6 +17,7 @@ logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v10.1'
 latest_config_version = 5.0
 latest_database_version = 2.0
+cookie = None
 
 
 def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
@@ -339,6 +340,12 @@ def read_settings():
 
 def read_sn_list():
     settings = read_settings()
+
+    # 防呆 https://github.com/miyouzi/aniGamerPlus/issues/5
+    error_sn_list_path = sn_list_path.replace('sn_list.txt', 'sn_list.txt.txt')
+    if os.path.exists(error_sn_list_path):
+        os.rename(error_sn_list_path, sn_list_path)
+
     if not os.path.exists(sn_list_path):
         return {}
     del_bom(sn_list_path)  # 去除 BOM
@@ -375,19 +382,33 @@ def read_sn_list():
 
 
 def read_cookie():
+    # 如果 cookie 已读入内存, 则直接返回
+    global cookie
+    if cookie is not None:
+        return cookie
+    # 兼容旧版cookie命名
     old_cookie_path = cookie_path.replace('cookie.txt', 'cookies.txt')
     if os.path.exists(old_cookie_path):
         os.rename(old_cookie_path, cookie_path)
+    # 防呆 https://github.com/miyouzi/aniGamerPlus/issues/5
+    error_cookie_path = cookie_path.replace('cookie.txt', 'cookie.txt.txt')
+    if os.path.exists(error_cookie_path):
+        os.rename(error_cookie_path, cookie_path)
     # 用户可以将cookie保存在程序所在目录下，保存为 cookies.txt ，UTF-8 编码
     if os.path.exists(cookie_path):
         del_bom(cookie_path)  # 移除 bom
+        __color_print(0, '讀取cookie', detail='發現cookie檔案', no_sn=True, display=False)
         with open(cookie_path, 'r', encoding='utf-8') as f:
             cookies = f.readline()
             cookies = dict([l.split("=", 1) for l in cookies.split("; ")])
             cookies.pop('ckBH_lastBoard', 404)
-            return cookies
+            cookie = cookies
+            __color_print(0, '讀取cookie', detail='已讀取cookie', no_sn=True, display=False)
+            return cookie
     else:
-        return {}
+        __color_print(0, '讀取cookie', detail='未發現cookie檔案', no_sn=True, display=False)
+        cookie = {}
+        return cookie
 
 
 def time_stamp_to_time(timestamp):
@@ -404,6 +425,8 @@ def get_cookie_time():
 
 
 def renew_cookies(new_cookie):
+    global cookie
+    cookie = None  # 重置cookie
     new_cookie_str = ''
     for key, value in new_cookie.items():
         new_cookie_str = new_cookie_str + key + '=' + value + '; '

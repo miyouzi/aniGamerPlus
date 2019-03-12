@@ -355,19 +355,20 @@ class Anime():
             limiter.acquire()
             chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名
             chunk_local_path = os.path.join(temp_dir, chunk_name)  # chunk 路径
+            nonlocal failed_flag
 
             try:
                 with open(chunk_local_path, 'wb') as f:
                     f.write(self.__request(uri, no_cookies=True, show_fail=False, max_retry=8).content)
             except TryTooManyTimeError:
-                nonlocal failed_flag
                 failed_flag = True
                 err_print(self._sn, '下載狀態', 'Bad segment=' + chunk_name, status=1)
+                limiter.release()
                 sys.exit(1)
             except BaseException as e:
-                nonlocal failed_flag
                 failed_flag = True
                 err_print(self._sn, '下載狀態', 'Bad segment=' + chunk_name + ' 發生未知錯誤: ' + str(e), status=1)
+                limiter.release()
                 sys.exit(1)
 
             if self.realtime_show_file_size:

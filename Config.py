@@ -47,7 +47,7 @@ def __init_settings():
                 'download_resolution': '1080',  # 下载分辨率
                 'lock_resolution': False,  # 锁定分辨率, 如果分辨率不存在, 则宣布下载失败
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
-                'multi-thread': 3,  # 最大并发下载数
+                'multi-thread': 1,  # 最大并发下载数
                 'multi_upload': 3,  # 最大并发上传数
                 'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
                 'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数

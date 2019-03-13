@@ -87,30 +87,30 @@ pip3 install requests beautifulsoup4 lxml termcolor
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
-    "multi-thread": 3,  # 最大并發下載數
+    "multi-thread": 1,  # 最大并發下載數
     "multi_upload": 3,  # 最大并發上傳數
     "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
-    "multi_downloading_segment": 2  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效
+    "multi_downloading_segment": 2,  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
     "customized_video_filename_suffix": "",  # 影片檔名後綴
-    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",  #  請求UA, 需要和獲取cookie的瀏覽器相同
-    "use_proxy": true,  # 代理開關
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  #  請求UA, 需要和獲取cookie的瀏覽器相同
+    "use_proxy": false,  # 代理開關
     "proxies": {
         "1": "socks5://127.0.0.1:1080",  # 代理配置
         "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
-    }
+    },
     "upload_to_server": false,  # 上傳功能開關
     "ftp": {  # FTP配置
         "server": "",  # FTP Server IP
         "port": "",  # 端口
         "user": "",  # 用戶名
         "pwd": "",  # 密碼
-        "cwd": "",  # 登陸後首先進入的目錄
         "tls": true,  # 是否是 FTP over TLS
+        "cwd": "",  # 登陸後首先進入的目錄
         "show_error_detail": false,  # 是否顯示細節錯誤信息
-        "max_retry_num": 10  # 最大重傳數, 支援續傳
+        "max_retry_num": 15  # 最大重傳數, 支援續傳
     },
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序

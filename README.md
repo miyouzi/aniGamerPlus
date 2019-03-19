@@ -57,7 +57,7 @@ Python 版本 3 以上
 
 **使用前确认已安装好依赖**
 ```
-pip3 install requests beautifulsoup4 lxml termcolor
+pip3 install requests beautifulsoup4 lxml termcolor chardet
 ```
  
 ## 任務列表

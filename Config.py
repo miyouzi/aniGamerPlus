@@ -5,7 +5,7 @@
 # @File    : Config.py
 # @Software: PyCharm
 
-import os, json, re, sys, requests, time, random, codecs
+import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v10.1'
+aniGamerPlus_version = 'v10.2'
 latest_config_version = 5.0
 latest_database_version = 2.0
 cookie = None
@@ -217,7 +217,8 @@ def __read_settings_file():
     except json.JSONDecodeError:
         # 如果带有 BOM 头, 则去除
         try:
-            del_bom(config_path)
+            # del_bom(config_path)
+            check_encoding(config_path)
             # 重新读取
             with open(config_path, 'r', encoding='utf-8') as f:
                 return json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
@@ -338,6 +339,24 @@ def read_settings():
     return settings
 
 
+def check_encoding(file_path):
+    # 识别文件编码, 将非 UTF-8 编码转为 UTF-8
+    with open(file_path, 'rb') as f:
+        data = f.read()
+        file_encoding = chardet.detect(data)['encoding']  # 识别文件编码
+        if file_encoding == 'utf-8' or file_encoding == 'ascii':
+            # 如果为 UTF-8 编码, 无需操作
+            return
+        else:
+            # 如果为其他编码, 则转为 UTF-8 编码, 包含處理 BOM 頭
+            with open(file_path, 'wb') as f2:
+                __color_print(0, '檔案讀取', file_path+' 編碼為 '+file_encoding+' 將轉碼為 UTF-8', no_sn=True, status=1)
+                data = data.decode(file_encoding)  # 解码
+                data = data.encode('utf-8')  # 编码
+                f2.write(data)  # 写入文件
+                __color_print(0, '檔案讀取', file_path + ' 轉碼成功', no_sn=True, status=2)
+
+
 def read_sn_list():
     settings = read_settings()
 
@@ -348,7 +367,8 @@ def read_sn_list():
 
     if not os.path.exists(sn_list_path):
         return {}
-    del_bom(sn_list_path)  # 去除 BOM
+    # del_bom(sn_list_path)  # 去除 BOM
+    check_encoding(sn_list_path)
     with open(sn_list_path, 'r', encoding='utf-8') as f:
         sn_dict = {}
         bangumi_tag = ''
@@ -396,7 +416,8 @@ def read_cookie():
         os.rename(error_cookie_path, cookie_path)
     # 用户可以将cookie保存在程序所在目录下，保存为 cookies.txt ，UTF-8 编码
     if os.path.exists(cookie_path):
-        del_bom(cookie_path)  # 移除 bom
+        # del_bom(cookie_path)  # 移除 bom
+        check_encoding(cookie_path)  # 移除 bom
         __color_print(0, '讀取cookie', detail='發現cookie檔案', no_sn=True, display=False)
         with open(cookie_path, 'r', encoding='utf-8') as f:
             cookies = f.readline()

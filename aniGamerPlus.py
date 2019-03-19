@@ -545,9 +545,13 @@ if __name__ == '__main__':
         download_mode = arg.download_mode
         if arg.current_path:
             save_dir = os.getcwd()
-            print('使用命令行模式, 指定下載到當前目錄:\n    ' + save_dir)
+            info = '使用命令行模式, 指定下載到當前目錄: '
+            print(info + '\n    ' + save_dir)
+            err_print(0, info + save_dir, no_sn=True, display=False)
         else:
-            print('使用命令行模式, 文件將保存在配置文件中指定的目錄下:\n    ' + settings['bangumi_dir'])
+            info = '使用命令行模式, 文件將保存在配置文件中指定的目錄下: '
+            print(info + '\n    ' + settings['bangumi_dir'])
+            err_print(0, info + settings['bangumi_dir'], no_sn=True, display=False)
 
         classify = True
         if arg.no_classify:
@@ -624,6 +628,7 @@ if __name__ == '__main__':
         if settings['read_config_when_checking_update']:
             settings = Config.read_settings()
         check_tasks()  # 检查更新，生成任务列队
+        new_tasks_counter = 0  # 新增任务计数器
         if queue:
             for task_sn in queue.keys():
                 if task_sn not in processing_queue:  # 如果该任务没有在进行中，则启动
@@ -631,7 +636,10 @@ if __name__ == '__main__':
                     task.setDaemon(True)
                     task.start()
                     processing_queue.append(task_sn)
+                    new_tasks_counter = new_tasks_counter + 1
                     err_print(task_sn, '加入任务列隊')
+        info = '本次更新添加了 '+str(new_tasks_counter)+' 個新任務, 目前列隊中共有 ' + str(len(processing_queue)) + ' 個任務'
+        err_print(0, '更新資訊', info, no_sn=True)
         err_print(0, '更新终了', no_sn=True)
         print()
         for i in range(settings['check_frequency'] * 60):

@@ -13,6 +13,7 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 
+
 class TryTooManyTimeError(BaseException):
     pass
 
@@ -584,10 +585,16 @@ class Anime():
         if classify:  # 控制是否建立番剧文件夹
             self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
         if not os.path.exists(self._bangumi_dir):
-            os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
+            try:
+                os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
+            except FileExistsError as e:
+                err_print(self._sn, '下載狀態', '慾創建的番劇資料夾已存在 '+str(e),display=False)
 
         if not os.path.exists(self._temp_dir):  # 建立临时文件夹
-            os.makedirs(self._temp_dir)
+            try:
+                os.makedirs(self._temp_dir)
+            except FileExistsError as e:
+                err_print(self._sn, '下載狀態', '慾創建的臨時資料夾已存在 '+str(e),display=False)
 
         # 如果不存在指定清晰度，则选取最近可用清晰度
         if resolution not in self._m3u8_dict.keys():

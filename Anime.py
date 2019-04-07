@@ -471,7 +471,7 @@ class Anime():
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
                       '-user_agent',
-                      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) Gecko/20100101 Firefox/64.0",
+                      self._settings['ua'],
                       '-headers', "Origin: https://ani.gamer.com.tw",
                       '-i', self._m3u8_dict[resolution],
                       '-c', 'copy', downloading_file,

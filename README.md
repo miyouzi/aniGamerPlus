@@ -368,6 +368,6 @@ optional arguments:
         
         ![](screenshot/cui_range_mode_err.png)
         
-        在Android中使用(使用Termux)
+        在Android中使用 (使用Termux)
         
         ![](screenshot/cui_on_android.jpg)

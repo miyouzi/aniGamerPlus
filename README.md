@@ -68,9 +68,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet
  
 ## 配置説明
 
-:warning: **以下所有配置請使用UTF-8無BOM編碼** :warning:
-
-**推薦使用 [notepad++](https://notepad-plus-plus.org/) 進行編輯**
+**推薦使用 [notepad++](https://notepad-plus-plus.org/) 進行編輯, 編碼推薦使用UTF-8**
 
 ### config.json
 

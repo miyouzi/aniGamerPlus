@@ -206,6 +206,14 @@ class Anime():
                     Config.renew_cookies(self._cookies)  # 保存全新cookie
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
+                elif 'hahatoken' in f.headers.get('set-cookie'):
+                    # 巴哈cookie升级
+                    # https://github.com/miyouzi/aniGamerPlus/issues/8
+                    # 每次请求都会返回一个token, token生命周期 3000s (即50min)
+                    # 这一点都不节能啊! (
+                    self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
+                    Config.renew_cookies(self._cookies, log=False)
+
                 else:  # 这是第一步
                     # 本线程收到了新cookie
                     err_print(self._sn, '收到新cookie', display=False)

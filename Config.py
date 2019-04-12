@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v10.23'
+aniGamerPlus_version = 'v10.3'
 latest_config_version = 5.0
 latest_database_version = 2.0
 cookie = None
@@ -459,7 +459,7 @@ def get_cookie_time():
     return time_stamp_to_time(cookie_time)
 
 
-def renew_cookies(new_cookie):
+def renew_cookies(new_cookie, log=True):
     global cookie
     cookie = None  # 重置cookie
     new_cookie_str = ''
@@ -480,7 +480,8 @@ def renew_cookies(new_cookie):
             time.sleep(random_wait_time)
             try_counter = try_counter + 1
         else:
-            __color_print(0, '新cookie保存成功', no_sn=True, display=False)
+            if log:
+                __color_print(0, '新cookie保存成功', no_sn=True, display=False)
             break
 
 

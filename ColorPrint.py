@@ -36,7 +36,7 @@ def read_log_settings():
 log_settings = read_log_settings()
 
 
-def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=True):
+def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=True, display_time=True):
     # status 三个设定值, 0 为一般输出, 1 为错误输出, 2 为成功输出
     # err_msg 为信息类型/概要, 最好为四字中文
     # detail 为详细信息描述
@@ -60,10 +60,15 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
             else:
                 cprint(msg, 'red', attrs=['bold'])
 
-    if no_sn:
-        msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ' ' + detail
+    if display_time:
+        msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' '
     else:
-        msg = prefix + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' ' + err_msg + ': sn=' + str(sn) + ' ' + detail
+        msg = prefix
+
+    if no_sn:
+        msg = msg + err_msg + ' ' + detail
+    else:
+        msg = msg + err_msg + ': sn=' + str(sn) + ' ' + detail
 
     if display:
         if status == 0:

@@ -354,28 +354,53 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
     thread_limiter.release()
 
 
-def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True):
+def __get_info_only(sn):
+    thread_limiter.acquire()
+
+    anime = build_anime(sn)
+    if anime['failed']:
+        sys.exit(1)
+    anime = anime['anime']
+    anime.get_info()
+
+    thread_limiter.release()
+
+
+def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True, get_info=False):
+
     if cui_thread_limit == 1:
         realtime_show_file_size = True
     else:
         realtime_show_file_size = False
 
     if cui_download_mode == 'single':
-        print('當前下載模式: 僅下載本集\n')
+        if get_info:
+            print('當前模式: 查詢本集資訊\n')
+        else:
+            print('當前下載模式: 僅下載本集\n')
 
         anime = build_anime(sn)
         if anime['failed']:
             sys.exit(1)
         anime = anime['anime']
 
-        # True 是实时显示文件大小, 仅一个下载任务时适用
-        anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+        if get_info:
+            anime.get_info()
+        else:
+            # True 是实时显示文件大小, 仅一个下载任务时适用
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
-            print('當前下載模式: 下載本番劇最後一集\n')
+            if get_info:
+                print('當前模式: 查詢本番劇最後一集資訊\n')
+            else:
+                print('當前下載模式: 下載本番劇最後一集\n')
         else:
-            print('當前下載模式: 下載本番劇最近上傳的一集\n')
+            if get_info:
+                print('當前模式: 查詢本番劇最近上傳一集資訊\n')
+            else:
+                print('當前下載模式: 下載本番劇最近上傳的一集\n')
 
         anime = build_anime(sn)
         if anime['failed']:
@@ -388,7 +413,10 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             bangumi_list.sort()
 
         if bangumi_list[-1] == sn:
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+            if get_info:
+                anime.get_info()
+            else:
+                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
         else:
 
             anime = build_anime(bangumi_list[-1])
@@ -396,10 +424,16 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
                 sys.exit(1)
             anime = anime['anime']
 
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+            if get_info:
+                anime.get_info()
+            else:
+                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
 
     elif cui_download_mode == 'all':
-        print('當前下載模式: 下載本番劇所有劇集\n')
+        if get_info:
+            print('當前模式: 查詢本番劇所有劇集資訊\n')
+        else:
+            print('當前下載模式: 下載本番劇所有劇集\n')
 
         anime = build_anime(sn)
         if anime['failed']:
@@ -408,16 +442,27 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
         bangumi_list = list(anime.get_episode_list().values())
         bangumi_list.sort()
+        tasks_counter = 0  # 任务计数器
         for anime_sn in bangumi_list:
-            task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size, classify))
+            if get_info:
+                task = threading.Thread(target=__get_info_only, args=(anime_sn,))
+            else:
+                task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size, classify))
             task.setDaemon(True)
             thread_tasks.append(task)
             task.start()
+            tasks_counter = tasks_counter + 1
             print('添加任务列隊: sn=' + str(anime_sn))
-        print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
+        if get_info:
+            print('所有查詢任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務\n')
+        else:
+            print('所有下載任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode == 'range':
-        print('當前下載模式: 下載本番劇指定劇集\n')
+        if get_info:
+            print('當前模式: 查詢本番劇指定劇集資訊\n')
+        else:
+            print('當前下載模式: 下載本番劇指定劇集\n')
 
         anime = build_anime(sn)
         if anime['failed']:
@@ -426,16 +471,24 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
         episode_dict = anime.get_episode_list()
         bangumi_ep_list = list(episode_dict.keys())  # 本番剧集列表
+        tasks_counter = 0  # 任务计数器
         for ep in ep_range:
             if ep in bangumi_ep_list:
-                a = threading.Thread(target=__download_only, args=(episode_dict[ep], cui_resolution, cui_save_dir, realtime_show_file_size))
+                if get_info:
+                    a = threading.Thread(target=__get_info_only, args=(episode_dict[ep],))
+                else:
+                    a = threading.Thread(target=__download_only, args=(episode_dict[ep], cui_resolution, cui_save_dir, realtime_show_file_size))
                 a.setDaemon(True)
                 thread_tasks.append(a)
                 a.start()
-                print('添加任务列隊: sn='+str(episode_dict[ep])+' 《'+anime.get_bangumi_name()+'》 第 '+ep+' 集')
+                tasks_counter = tasks_counter + 1
+                if get_info:
+                    print('添加查詢列隊: sn=' + str(episode_dict[ep]) + ' 《' + anime.get_bangumi_name() + '》 第 ' + ep + ' 集')
+                else:
+                    print('添加任务列隊: sn='+str(episode_dict[ep])+' 《'+anime.get_bangumi_name()+'》 第 '+ep+' 集')
             else:
                 err_print(0, '《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!', status=1, no_sn=True)
-        print('所有下載任務已添加至列隊, 執行緒數: ' + str(cui_thread_limit) + '\n')
+        print('所有任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
     __kill_thread_when_ctrl_c()
     kill_gost()  # 结束 gost
@@ -539,6 +592,7 @@ if __name__ == '__main__':
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
         parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
+        parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊')
         arg = parser.parse_args()
 
         save_dir = ''
@@ -559,7 +613,7 @@ if __name__ == '__main__':
             print('將不會建立番劇資料夾')
 
         if not arg.episodes and arg.download_mode == 'range':
-            err_print(0, 'ERROR: 當前指定範圍下載模式, 但下載範圍未指定!', status=1, no_sn=True)
+            err_print(0, 'ERROR: 當前為指定範圍模式, 但範圍未指定!', status=1, no_sn=True)
             sys.exit(1)
 
         download_episodes = []
@@ -581,21 +635,27 @@ if __name__ == '__main__':
 
         if not arg.resolution:
             resolution = settings['download_resolution']
-            print('未设定下载清晰度, 将使用配置文件指定的清晰度: ' + resolution + 'P')
+            print('未设定下载解析度, 将使用配置文件指定的清晰度: ' + resolution + 'P')
         else:
             resolution = str(arg.resolution)
-            print('指定下载清晰度: ' + resolution + 'P')
+            print('指定下载解析度: ' + resolution + 'P')
 
-        if arg.thread_limit:
-            # 用戶設定并發數
-            thread_limit = arg.thread_limit
-            thread_limiter = threading.Semaphore(arg.thread_limit)
+        if arg.information_only:
+            # 为避免排版混乱, 仅显示信息时强制为单线程
+            thread_limit = 1
+            thread_limiter = threading.Semaphore(thread_limit)
         else:
-            thread_limit = settings['multi-thread']
+            if arg.thread_limit:
+                # 用戶設定并發數
+                thread_limit = arg.thread_limit
+                thread_limiter = threading.Semaphore(thread_limit)
+            else:
+                thread_limit = settings['multi-thread']
 
         if settings['use_proxy']:
             __init_proxy()
-        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify)
+
+        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify, get_info=arg.information_only)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

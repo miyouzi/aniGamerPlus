@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v10.3'
+aniGamerPlus_version = 'v11'
 latest_config_version = 5.0
 latest_database_version = 2.0
 cookie = None
@@ -439,6 +439,8 @@ def invalid_cookie():
         try:
             global cookie
             cookie = None  # 重置已读取的cookie
+            if os.path.exists(invalid_cookie_path):
+                os.remove(invalid_cookie_path)
             os.rename(cookie_path, invalid_cookie_path)
         except BaseException as e:
             __color_print(0, 'cookie狀態', '嘗試標記失效cookie時遇到未知錯誤: '+str(e), no_sn=True, status=1)

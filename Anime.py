@@ -116,9 +116,21 @@ class Anime():
     def __get_episode_list(self):
         try:
             a = self._src.find('section', 'season').find_all('a')
+            p = self._src.find('section', 'season').find_all('p')
+            # https://github.com/miyouzi/aniGamerPlus/issues/9
+            # 样本 https://ani.gamer.com.tw/animeVideo.php?sn=10210
+            # 20190413 动画疯将特别篇分离
+            index_counter = {}  # 记录剧集数字重复次数, 用作列表类型的索引 ('本篇', '特別篇')
+            if len(p) > 0:
+                p = list(map(lambda x: x.contents[0], p))
             for i in a:
                 sn = int(i['href'].replace('?sn=', ''))
                 ep = str(i.string)
+                if ep not in index_counter.keys():
+                    index_counter[ep] = 0
+                if ep in self._episode_list.keys():
+                    index_counter[ep] = index_counter[ep] + 1
+                    ep = p[index_counter[ep]]+ep
                 self._episode_list[ep] = sn
         except AttributeError:
             # 当只有一集时，不存在剧集列表，self._episode_list 只有本身
@@ -171,7 +183,8 @@ class Anime():
         # 如果用户有提供 cookie，则跳过
         elif 'nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys():
             if 'nologinuser' in f.cookies.get_dict().keys():
-                self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
+                # self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
+                self._cookies = f.cookies.get_dict()
         else:  # 如果用户提供了 cookie, 则处理cookie刷新
             if 'set-cookie' in f.headers.keys():  # 发现server响应了set-cookie
                 if 'deleted' in f.headers.get('set-cookie'):
@@ -900,6 +913,11 @@ class Anime():
         err_print(self._sn, '上傳完成', self._video_filename, status=2)
         exit_ftp()  # 登出 FTP
         return self.upload_succeed_flag
+
+    def get_info(self):
+        err_print(self._sn, '顯示資訊')
+        err_print(0, '                    影片標題:', self.get_title(), no_sn=True, display_time=False)
+        err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys())+'P\n', no_sn=True, display_time=False)
 
 
 if __name__ == '__main__':

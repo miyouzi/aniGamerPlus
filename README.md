@@ -292,11 +292,12 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v10.0
+當前aniGamerPlus版本: v11
 usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
+                       [--information_only]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -311,6 +312,8 @@ optional arguments:
   --episodes EPISODES, -e EPISODES
                         僅下載指定劇集
   --no_classify, -n     不建立番劇資料夾
+  --information_only, -i
+                        僅查詢資訊
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -334,6 +337,8 @@ optional arguments:
  - **-c** 開關, 指定時將會下載到當前工作路徑下
  
  - **-n** 不建立番劇資料夾
+ 
+ - **-i** 僅顯示影片資訊
 
  - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
     

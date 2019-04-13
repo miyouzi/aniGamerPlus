@@ -578,6 +578,7 @@ class Anime():
 
         if rename:
             # 如果设定重命名了番剧
+            self._title = self._title.replace(self._bangumi_name, rename)
             self._bangumi_name = rename
 
         try:

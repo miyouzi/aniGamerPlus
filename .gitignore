@@ -109,6 +109,7 @@ venv.bak/
 bangumi/
 cookies.txt
 cookie.txt
+invalid_cookie.txt
 config.json
 sn_list.txt
 aniGamer.db

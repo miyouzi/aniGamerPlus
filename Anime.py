@@ -79,12 +79,18 @@ class Anime():
         return self._sn
 
     def get_bangumi_name(self):
+        if self._bangumi_name == '':
+            self.__get_bangumi_name()
         return self._bangumi_name
 
     def get_episode(self):
+        if self._episode == '':
+            self.__get_episode()
         return self._episode
 
     def get_episode_list(self):
+        if self._episode_list == {}:
+            self.__get_episode_list()
         return self._episode_list
 
     def get_title(self):
@@ -107,11 +113,11 @@ class Anime():
             sys.exit(1)
 
     def __get_bangumi_name(self):
-        self._bangumi_name = re.sub(r'\[.+\]$', '', self._title)  # 提取番剧名（去掉集数后缀）
+        self._bangumi_name = self._title.replace('['+self.get_episode()+']', '')  # 提取番剧名（去掉集数后缀）
 
     def __get_episode(self):  # 提取集数
-        self._episode = re.findall(r'\[.+\]$', self._title)
-        self._episode = str(self._episode[0][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
+        self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+        self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
 
     def __get_episode_list(self):
         try:
@@ -144,14 +150,14 @@ class Anime():
         ref = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
         lang = 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.6'
         accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-        accept__encoding = 'gzip, deflate, br'
-        cache_control = 'no-cache'
+        accept_encoding = 'gzip, deflate, br'
+        cache_control = 'max-age=0'
         header = {
             "user-agent": ua,
             "referer": ref,
             "accept-language": lang,
             "accept": accept,
-            "accept-encoding": accept__encoding,
+            "accept-encoding": accept_encoding,
             "cache-control": cache_control,
             "origin": origin
         }
@@ -178,10 +184,11 @@ class Anime():
             else:
                 break
         # 处理 cookie
-        if not self._cookies:  # 当用户没有提供 cookie
+        if not self._cookies:
+            # 当实例中尚无 cookie, 则读取
             self._cookies = f.cookies.get_dict()
-        # 如果用户有提供 cookie，则跳过
         elif 'nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys():
+            # 处理游客cookie
             if 'nologinuser' in f.cookies.get_dict().keys():
                 # self._cookies['nologinuser'] = f.cookies.get_dict()['nologinuser']
                 self._cookies = f.cookies.get_dict()
@@ -219,7 +226,7 @@ class Anime():
                     Config.renew_cookies(self._cookies)  # 保存全新cookie
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
-                elif 'hahatoken' in f.headers.get('set-cookie'):
+                elif 'hahatoken' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # 巴哈cookie升级
                     # https://github.com/miyouzi/aniGamerPlus/issues/8
                     # 每次请求都会返回一个token, token生命周期 3000s (即50min)
@@ -346,8 +353,9 @@ class Anime():
         # downloading_filename 为下载时文件名，下载完成后更名为 output_file
         merging_filename = filename + self._settings['customized_video_filename_suffix'] + '.MERGING.mp4'
         filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
-        legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
-        merging_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', merging_filename)
+        legal_filename = Config.legalize_filename(filename)  # 去除非法字符
+        filename = legal_filename
+        merging_filename = Config.legalize_filename(merging_filename)
         output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
         merging_file = os.path.join(self._temp_dir, merging_filename)
 
@@ -484,8 +492,9 @@ class Anime():
         # downloading_filename 为下载时文件名，下载完成后更名为 output_file
         downloading_filename = filename + self._settings['customized_video_filename_suffix'] + '.DOWNLOADING.mp4'
         filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
-        legal_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', filename)  # 去除非法字符
-        downloading_filename = re.sub(r'[\|\?\*<\":>/\'\\]+', '', downloading_filename)
+        legal_filename = Config.legalize_filename(filename)  # 去除非法字符
+        filename = legal_filename
+        downloading_filename = Config.legalize_filename(downloading_filename)
         output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
         downloading_file = os.path.join(self._temp_dir, downloading_filename)
 
@@ -604,9 +613,9 @@ class Anime():
 
         # 创建存放番剧的目录，去除非法字符
         if bangumi_tag:  # 如果指定了番剧分类
-            self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', bangumi_tag))
+            self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(bangumi_tag))
         if classify:  # 控制是否建立番剧文件夹
-            self._bangumi_dir = os.path.join(self._bangumi_dir, re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name))
+            self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(self._bangumi_name))
         if not os.path.exists(self._bangumi_dir):
             try:
                 os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类
@@ -720,7 +729,7 @@ class Anime():
                             err_print(self._sn, 'FTP狀態', '創建目錄番劇目錄時發生異常, 你可能沒有權限創建目錄: ' + str(e), status=1)
 
             # 归类番剧
-            ftp_bangumi_dir = re.sub(r'[\|\?\*<\":>/\'\\]+', '', self._bangumi_name)  # 保证合法
+            ftp_bangumi_dir = Config.legalize_filename(self._bangumi_name)  # 保证合法
             try:
                 ftp.cwd(ftp_bangumi_dir)
             except ftplib.error_perm:
@@ -918,6 +927,8 @@ class Anime():
     def get_info(self):
         err_print(self._sn, '顯示資訊')
         err_print(0, '                    影片標題:', self.get_title(), no_sn=True, display_time=False)
+        err_print(0, '                    番劇名稱:', self.get_bangumi_name(), no_sn=True, display_time=False)
+        err_print(0, '                    劇集標題:', self.get_episode(), no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys())+'P\n', no_sn=True, display_time=False)
 
 

@@ -655,6 +655,7 @@ if __name__ == '__main__':
         if settings['use_proxy']:
             __init_proxy()
 
+        Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify, get_info=arg.information_only)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
@@ -683,6 +684,7 @@ if __name__ == '__main__':
     while True:
         print()
         err_print(0, '開始更新', no_sn=True)
+        Config.test_cookie()  # 测试cookie
         if settings['read_sn_list_when_checking_update']:
             sn_dict = Config.read_sn_list()
         if settings['read_config_when_checking_update']:

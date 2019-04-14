@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v11.01'
+aniGamerPlus_version = 'v11.1'
 latest_config_version = 5.0
 latest_database_version = 2.0
 cookie = None
@@ -27,6 +27,20 @@ def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
     except UnboundLocalError:
         from ColorPrint import err_print
         err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn, display=display)
+
+
+def legalize_filename(filename):
+    # 文件名合法化
+    legal_filename = re.sub(r'\|+', '｜', filename)  # 处理 | , 转全型｜
+    legal_filename = re.sub(r'\?+', '？', legal_filename)  # 处理 ? , 转中文 ？
+    legal_filename = re.sub(r'\*+', '＊', legal_filename)  # 处理 * , 转全型＊
+    legal_filename = re.sub(r'<+', '＜', legal_filename)  # 处理 < , 转全型＜
+    legal_filename = re.sub(r'>+', '＞', legal_filename)  # 处理 < , 转全型＞
+    legal_filename = re.sub(r'\"+', '＂', legal_filename)  # 处理 " , 转全型＂
+    legal_filename = re.sub(r':+', '：', legal_filename)  # 处理 : , 转中文：
+    legal_filename = re.sub(r'\\', '＼', legal_filename)  # 处理 \ , 转全型＼
+    legal_filename = re.sub(r'/', '／', legal_filename)  # 处理 / , 转全型／
+    return legal_filename
 
 
 def get_working_dir():
@@ -401,7 +415,12 @@ def read_sn_list():
         return sn_dict
 
 
-def read_cookie():
+def test_cookie():
+    # 测试cookie.txt是否存在, 是否能正常读取, 并记录日志
+    read_cookie(log=True)
+
+
+def read_cookie(log=False):
     # 如果 cookie 已读入内存, 则直接返回
     global cookie
     if cookie is not None:
@@ -418,18 +437,27 @@ def read_cookie():
     if os.path.exists(cookie_path):
         # del_bom(cookie_path)  # 移除 bom
         check_encoding(cookie_path)  # 移除 bom
-        __color_print(0, '讀取cookie', detail='發現cookie檔案', no_sn=True, display=False)
+        if log:
+            __color_print(0, '讀取cookie', detail='發現cookie檔案', no_sn=True, display=False)
         with open(cookie_path, 'r', encoding='utf-8') as f:
-            cookies = f.readline()
-            cookies = dict([l.split("=", 1) for l in cookies.split("; ")])
-            cookies.pop('ckBH_lastBoard', 404)
-            cookie = cookies
-            __color_print(0, '讀取cookie', detail='已讀取cookie', no_sn=True, display=False)
-            return cookie
+            for line in f.readlines():
+                if not line.isspace():  # 跳过空白行
+                    cookies = line.replace('\n', '')  # 刪除换行符
+                    cookies = dict([l.split("=", 1) for l in cookies.split("; ")])
+                    cookies.pop('ckBH_lastBoard', 404)
+                    cookie = cookies
+                    if log:
+                        __color_print(0, '讀取cookie', detail='已讀取cookie', no_sn=True, display=False)
+                    return cookie  # cookie仅一行, 读到后马上return
     else:
         __color_print(0, '讀取cookie', detail='未發現cookie檔案', no_sn=True, display=False)
         cookie = {}
         return cookie
+    # 如果什么也没读到(空文件)
+    __color_print(0, '讀取cookie', detail='cookie檔案為空', no_sn=True, status=1)
+    invalid_cookie()
+    cookie = {}
+    return cookie
 
 
 def invalid_cookie():

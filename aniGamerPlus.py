@@ -559,7 +559,7 @@ def __init_proxy():
         time.sleep(3)  # 给时间让 gost 启动
 
     else:
-        print('使用代理連接動畫瘋, 使用http/https協議')
+        print('使用代理連接動畫瘋, 使用http/https/socks5協議')
 
 
 if __name__ == '__main__':

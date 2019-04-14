@@ -57,7 +57,7 @@ Python 版本 3 以上
 
 **使用前确认已安装好依赖**
 ```
-pip3 install requests beautifulsoup4 lxml termcolor chardet
+pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
 ```
  
 ## 任務列表
@@ -123,7 +123,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet
 模式僅支援在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**latest**模式
 
 ### 使用代理
-aniGamerPlus本身支援使用單個```http```或```https```代理.
+aniGamerPlus本身支援使用單個```http```或```https```或```socks5```(v12開始支援)代理.
 
 無密碼驗證的代理使用以下格式:
 ```
@@ -133,6 +133,11 @@ http://example.com:1000
 有密碼驗證的代理使用以下格式:
 ```
 http://user:passwd@example.com:1000
+```
+
+使用socks5代理支援遠端DNS, 配置時使用```socks5h```代替```socks5```, 如:
+```
+socks5h://127.0.0.1:1483
 ```
 
 如果想使用其他的代理協議或使用鏈式代理, 需要下載 [**Gost**](https://github.com/ginuerzh/gost) 放置在系統PATH, 或本程序目錄下, 並命名爲 ```gost```, windows平臺為```gost.exe```

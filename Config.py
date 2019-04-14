@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v11.1'
+aniGamerPlus_version = 'v12'
 latest_config_version = 5.0
 latest_database_version = 2.0
 cookie = None
@@ -335,10 +335,13 @@ def read_settings():
     use_gost = False
     for key, value in settings['proxies'].items():
         if value:
-            if not (re.match(r'^http://', value.lower()) or re.match(r'^https://', value.lower())):
-                #  如果出现非 http 也非 https 的协议
+            if not (re.match(r'^http://', value.lower())
+                    or re.match(r'^https://', value.lower())
+                    or re.match(r'^socks5://', value.lower())  # v12开始原生支持 socks5 代理
+                    or re.match(r'^socks5h://', value.lower())):  # socks5h 远程解析域名
+                #  如果出现非自身支持的协议
                 use_gost = True
-            new_proxies[int(key)]=value
+            new_proxies[int(key)] = value
     if len(new_proxies.keys()) > 1:  # 如果代理配置大于 1 , 即使用链式代理, 则同样需要 gost
         use_gost = True
     settings['proxies'] = new_proxies

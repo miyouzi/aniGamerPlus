@@ -146,8 +146,6 @@ socks5h://127.0.0.1:1483
 
 Gost 支援 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://github.com/shadowsocks/shadowsocks-go), 目前僅支援這幾種加密方式: ```aes-128-cfb``` ```aes-192-cfb``` ```aes-256-cfb``` ```bf-cfb``` ```cast5-cfb``` ```des-cfb``` ```rc4-md5``` ```rc4-md5-6``` ```chacha20``` ```salsa20``` ```rc4``` ```table```
 
-通過 Gost 擴展, aniGamerPlus 可以使用 ```sock4``` ```sock5``` ```ss``` 等協議
-
 **注意: ```read_config_when_checking_update``` 配置對代理配置無效**
 
 **使用代理建議使用分段下載模式**

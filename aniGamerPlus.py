@@ -585,7 +585,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
-        parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 720, 1080])
+        parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 576, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
                             choices=['single', 'latest', 'largest-sn', 'all', 'range'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')

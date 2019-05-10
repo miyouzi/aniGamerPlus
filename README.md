@@ -82,7 +82,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
     "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
     "classify_bangumi": true,  # 控制是否建立番劇資料夾
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
-    "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 720 1080
+    "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "multi-thread": 1,  # 最大并發下載數
@@ -295,8 +295,8 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v11
-usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
+當前aniGamerPlus版本: v12.1
+usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,576,720,1080}]
                        [--download_mode {single,latest,largest-sn,all,range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
@@ -305,7 +305,7 @@ usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,720,1080}]
 optional arguments:
   -h, --help            show this help message and exit
   --sn SN, -s SN        視頻sn碼(數字)
-  --resolution {360,480,540,720,1080}, -r {360,480,540,720,1080}
+  --resolution {360,480,540,576,720,1080}, -r {360,480,540,576,720,1080}
                         指定下載清晰度(數字)
   --download_mode {single,latest,largest-sn,all,range}, -m {single,latest,largest-sn,all,range}
                         下載模式

@@ -220,8 +220,10 @@ class Anime():
                         err_print(0, '用戶cookie更新失敗! 使用游客身份訪問', status=1, no_sn=True)
                         Config.invalid_cookie()  # 将失效cookie更名
 
-                elif '__cfduid' in f.headers.get('set-cookie'):  # cookie 刷新两步走, 这是第二步, 追加在第一步后面
+                elif '__cfduid' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
+                    # cookie 刷新两步走, 这是第二步, 追加在第一步后面
                     # 此时self._cookies已是完整新cookie,不需要再从文件载入
+                    # 20190507 发现是一步到位了, 但保不准会不会该回去, 姑且加个 and
                     self._cookies['__cfduid'] = f.cookies.get_dict()['__cfduid']
                     Config.renew_cookies(self._cookies)  # 保存全新cookie
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)

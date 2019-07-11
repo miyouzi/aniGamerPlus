@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v12.1'
-latest_config_version = 5.0
+aniGamerPlus_version = 'v13'
+latest_config_version = 6.0
 latest_database_version = 2.0
 cookie = None
 
@@ -61,6 +61,7 @@ def __init_settings():
                 'download_resolution': '1080',  # 下载分辨率
                 'lock_resolution': False,  # 锁定分辨率, 如果分辨率不存在, 则宣布下载失败
                 'default_download_mode': 'latest',  # 仅下载最新一集，另一个模式是 'all' 下载所有及日后更新
+                'use_copyfile_method': False,  # 转移视频至番剧目录时是否使用复制法, 使用 True 以兼容 rclone 挂载盘
                 'multi-thread': 1,  # 最大并发下载数
                 'multi_upload': 3,  # 最大并发上传数
                 'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
@@ -69,6 +70,7 @@ def __init_settings():
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_video_filename_suffix': '',  # 用户自定后缀
+                'zerofill': 1,  # 剧集名补零, 此项填补足位数, 小于等于 1 即不补零
                 # cookie的自动刷新对 UA 有检查
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
                 'use_proxy': False,
@@ -162,6 +164,14 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'classify_bangumi' not in new_settings.keys():
         new_settings['classify_bangumi'] = True  # v5.0 新增是否建立番剧目录开关
+
+    if 'use_copyfile_method' not in new_settings.keys():
+        # v6.0 新增视频转移方法开关, 配置 True 以适配 rclone 挂载盘
+        new_settings['use_copyfile_method'] = False
+
+    if 'zerofill' not in new_settings.keys():
+        # v6.0 新增剧集名补零, 该项数字为补足位数, 默认为 1, 小于等于 1 即不补 0
+        new_settings['zerofill'] = 1
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -304,6 +314,7 @@ def read_settings():
     settings['check_frequency'] = int(settings['check_frequency'])
     settings['download_resolution'] = str(settings['download_resolution'])
     settings['multi-thread'] = int(settings['multi-thread'])
+    settings['zerofill'] = int(settings['zerofill'])  # 保证为整数
     if not re.match(r'^(all|latest|largest-sn)$', settings['default_download_mode']):
         settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
     if settings['quantity_of_logs'] < 1:  # 日志数量不可小于 1

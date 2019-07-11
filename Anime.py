@@ -269,7 +269,8 @@ class Anime():
         def gain_access():
             req = 'https://ani.gamer.com.tw/ajax/token.php?adID=0&sn=' + str(
                 self._sn) + "&device=" + self._device_id + "&hash=" + random_string(12)
-            f = self.__request(req)
+            # 返回基础信息, 用于判断是不是VIP
+            return self.__request(req).json()
 
         def unlock():
             req = 'https://ani.gamer.com.tw/ajax/unlock.php?sn=' + str(self._sn) + "&ttl=0"
@@ -322,14 +323,21 @@ class Anime():
             self._m3u8_dict = m3u8_dict
 
         get_device_id()
-        gain_access()
+        user_info = gain_access()
         unlock()
         check_lock()
         unlock()
         unlock()
-        start_ad()
-        time.sleep(3)
-        skip_ad()
+
+        if not user_info['vip']:
+            # 如果用户不是 VIP, 那么等待广告(8s)
+            err_print(self._sn, '正在等待', '《'+self.get_title() + '》 由於不是VIP賬戶, 正在等待8s廣告時間')
+            start_ad()
+            time.sleep(8)
+            skip_ad()
+        else:
+            err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP賬戶, 立即下載')
+
         video_start()
         check_no_ad()
         get_playlist()
@@ -343,12 +351,19 @@ class Anime():
     def __segment_download_mode(self, resolution=''):
         # 设定文件存放路径
         if self._settings['add_bangumi_name_to_video_filename']:
-            filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
+                # 如果剧集名为数字, 且用户开启补零
+                episode = ' ['+self._episode.zfill(self._settings['zerofill'])+']'
+                filename = self._settings['customized_video_filename_prefix'] + self._bangumi_name + episode
+            else:
+                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
         else:
             # 如果用户不要将番剧名添加到文件名
-            episode = self._episode
-            if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
-                episode = '0' + self._episode
+            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
+                # 如果剧集名为数字, 且用户开启补零
+                episode = self._episode.zfill(self._settings['zerofill'])
+            else:
+                episode = self._episode
             filename = self._settings['customized_video_filename_prefix'] + episode
         if self._settings['add_resolution_to_video_filename']:
             filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
@@ -465,15 +480,22 @@ class Anime():
         # 执行 ffmpeg
         run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         run_ffmpeg.communicate()
+        # 记录文件大小，单位为 MB
+        self.video_size = int(os.path.getsize(merging_file) / float(1024 * 1024))
         # 重命名
-        err_print(self._sn, '下載狀態', filename + ' 解密合并完成, 正在移至番劇目錄……')
+        err_print(self._sn, '下載狀態', filename + ' 解密合并完成, 本集 ' + str(self.video_size)+'MB, 正在移至番劇目錄……')
         if os.path.exists(output_file):
             os.remove(output_file)
-        shutil.move(merging_file, output_file)
+
+        if self._settings['use_copyfile_method']:
+            shutil.copyfile(merging_file, output_file)  # 适配rclone挂载盘
+            os.remove(merging_file)  # 刪除临时合并文件
+        else:
+            shutil.move(merging_file, output_file)  # 此方法在遇到rclone挂载盘时会出错
+
         # 删除临时目录
         shutil.rmtree(temp_dir)
 
-        self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
         self.local_video_path = output_file  # 记录保存路径, FTP上传用
         self._video_filename = legal_filename  # 记录文件名, FTP上传用
 
@@ -482,13 +504,21 @@ class Anime():
     def __ffmpeg_download_mode(self, resolution=''):
         # 设定文件存放路径
         if self._settings['add_bangumi_name_to_video_filename']:
-            filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
+                # 如果剧集名为数字, 且用户开启补零
+                episode = ' ['+self._episode.zfill(self._settings['zerofill'])+']'
+                filename = self._settings['customized_video_filename_prefix'] + self._bangumi_name + episode
+            else:
+                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
         else:
             # 如果用户不要将番剧名添加到文件名
-            episode = self._episode
-            if re.match(r'^\d$', self._episode):  # 如果剧集名为个位数, 则补零
-                episode = '0' + self._episode
+            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
+                # 如果剧集名为数字, 且用户开启补零
+                episode = self._episode.zfill(self._settings['zerofill'])
+            else:
+                episode = self._episode
             filename = self._settings['customized_video_filename_prefix'] + episode
+
         if self._settings['add_resolution_to_video_filename']:
             filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
         # downloading_filename 为下载时文件名，下载完成后更名为 output_file
@@ -568,9 +598,16 @@ class Anime():
             # 执行成功 (ffmpeg正常结束, 每个分段都成功下载)
             if os.path.exists(output_file):
                 os.remove(output_file)
-            err_print(self._sn, '下載狀態', filename + ' 正在移至番劇目錄……')
-            shutil.move(downloading_file, output_file)  # 下载完成，更改文件名
-            self.video_size = int(os.path.getsize(output_file) / float(1024 * 1024))  # 记录文件大小，单位为 MB
+            # 记录文件大小，单位为 MB
+            self.video_size = int(os.path.getsize(downloading_file) / float(1024 * 1024))
+            err_print(self._sn, '下載狀態', filename + '本集 ' + str(self.video_size) + 'MB, 正在移至番劇目錄……')
+
+            if self._settings['use_copyfile_method']:
+                shutil.copyfile(downloading_file, output_file)  # 适配rclone挂载盘
+                os.remove(downloading_file)  # 刪除临时合并文件
+            else:
+                shutil.move(downloading_file, output_file)  # 此方法在遇到rclone挂载盘时会出错
+
             self.local_video_path = output_file  # 记录保存路径, FTP上传用
             self._video_filename = legal_filename  # 记录文件名, FTP上传用
             err_print(self._sn, '下載完成', filename, status=2)

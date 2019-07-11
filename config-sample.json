@@ -6,6 +6,7 @@
     "download_resolution": "1080",
     "lock_resolution": false,
     "default_download_mode": "latest",
+    "use_copyfile_method": false,
     "multi-thread": 1,
     "multi_upload": 3,
     "segment_download_mode": true,
@@ -14,6 +15,7 @@
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",
     "customized_video_filename_suffix": "",
+    "zerofill": 1,
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
     "use_proxy": false,
     "proxies": {
@@ -36,6 +38,6 @@
     "read_config_when_checking_update": true,
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 5.0,
+    "config_version": 6.0,
     "database_version": 2.0
 }

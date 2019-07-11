@@ -85,6 +85,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
+    "use_copyfile_method": false,  # 轉移影片至番劇資料夾時使用複製方法, 適用於保存到 rclone 掛載盤的情況
     "multi-thread": 1,  # 最大并發下載數
     "multi_upload": 3,  # 最大并發上傳數
     "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
@@ -93,6 +94,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
     "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
     "customized_video_filename_suffix": "",  # 影片檔名後綴
+    "zerofill": 1,  # 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  #  請求UA, 需要和獲取cookie的瀏覽器相同
     "use_proxy": false,  # 代理開關
     "proxies": {

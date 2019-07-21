@@ -113,7 +113,6 @@ invalid_cookie.txt
 config.json
 sn_list.txt
 aniGamer.db
-requirements.txt
 .idea/aniGamerPlus-Git.iml
 .idea/inspectionProfiles/
 .idea/misc.xml
@@ -125,3 +124,4 @@ releases/
 logs/
 temp/
 Dashboard/
+cookie2.txt

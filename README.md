@@ -93,6 +93,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
+    "customized_bangumi_name_suffix": "",  # 影片檔名中番劇名的后缀, 在劇集名之前
     "customized_video_filename_suffix": "",  # 影片檔名後綴
     "zerofill": 1,  # 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  #  請求UA, 需要和獲取cookie的瀏覽器相同
@@ -117,7 +118,7 @@ pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
     "save_logs": true,  # 是否記錄日志, 一天一個日志
     "quantity_of_logs": 7,  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
-    "config_version": 5.0,  # 配置文件版本
+    "config_version": 7.0,  # 配置文件版本
     "database_version": 2.0  # 資料庫版本
 }
 ```

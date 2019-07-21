@@ -348,32 +348,58 @@ class Anime():
             self.__get_m3u8_dict()
         return self._m3u8_dict
 
-    def __segment_download_mode(self, resolution=''):
-        # 设定文件存放路径
-        if self._settings['add_bangumi_name_to_video_filename']:
-            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
-                # 如果剧集名为数字, 且用户开启补零
-                episode = ' ['+self._episode.zfill(self._settings['zerofill'])+']'
-                filename = self._settings['customized_video_filename_prefix'] + self._bangumi_name + episode
+    def __get_filename(self, resolution, without_suffix=False):
+        # 处理剧集名补零
+        if re.match(r'^[+-]?\d+(\.\d+){0,1}$', self._episode) and self._settings['zerofill'] > 1:
+            # 正则考虑到了带小数点的剧集
+            # 如果剧集名为数字, 且用户开启补零
+            if re.match(r'^\d+\.\d+$', self._episode):
+                # 如果是浮点数
+                a = re.findall(r'^\d+\.',self._episode)[0][:-1]
+                b = re.findall(r'\.\d+$',self._episode)[0]
+                episode = '[' + a.zfill(self._settings['zerofill'])+b+']'
             else:
-                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
+                # 如果是整数
+                episode = '[' + self._episode.zfill(self._settings['zerofill']) + ']'
+        else:
+            episode = '[' + self._episode + ']'
+
+        if self._settings['add_bangumi_name_to_video_filename']:
+            # 如果用户需要番剧名
+            bangumi_name = self._settings['customized_video_filename_prefix']\
+                           + self._bangumi_name\
+                           + self._settings['customized_bangumi_name_suffix']
+
+            filename = bangumi_name + episode  # 有番剧名的文件名
         else:
             # 如果用户不要将番剧名添加到文件名
-            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
-                # 如果剧集名为数字, 且用户开启补零
-                episode = self._episode.zfill(self._settings['zerofill'])
-            else:
-                episode = self._episode
             filename = self._settings['customized_video_filename_prefix'] + episode
+
+        # 添加分辨率后缀
         if self._settings['add_resolution_to_video_filename']:
-            filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
-        # downloading_filename 为下载时文件名，下载完成后更名为 output_file
-        merging_filename = filename + self._settings['customized_video_filename_suffix'] + '.MERGING.mp4'
+            filename = filename + '[' + resolution + 'P]'
+
+        if without_suffix:
+            return filename  # 截止至清晰度的文件名, 用于 __get_temp_filename()
+
         filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
         legal_filename = Config.legalize_filename(filename)  # 去除非法字符
         filename = legal_filename
-        merging_filename = Config.legalize_filename(merging_filename)
-        output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
+        return filename
+
+    def __get_temp_filename(self, resolution, temp_suffix):
+        filename = self.__get_filename(resolution, without_suffix=True)
+        # temp_filename 为临时文件名，下载完成后更名正式文件名
+        temp_filename = filename + self._settings['customized_video_filename_suffix']+'.'+temp_suffix+'.mp4'
+        temp_filename = Config.legalize_filename(temp_filename)
+        return temp_filename
+
+    def __segment_download_mode(self, resolution=''):
+        # 设定文件存放路径
+        filename = self.__get_filename(resolution)
+        merging_filename = self.__get_temp_filename(resolution, temp_suffix='MERGING')
+
+        output_file = os.path.join(self._bangumi_dir, filename)  # 完整输出路径
         merging_file = os.path.join(self._temp_dir, merging_filename)
 
         url_path = os.path.split(self._m3u8_dict[resolution])[0]  # 用于构造完整 chunk 链接
@@ -497,37 +523,16 @@ class Anime():
         shutil.rmtree(temp_dir)
 
         self.local_video_path = output_file  # 记录保存路径, FTP上传用
-        self._video_filename = legal_filename  # 记录文件名, FTP上传用
+        self._video_filename = filename  # 记录文件名, FTP上传用
 
         err_print(self._sn, '下載完成', filename, status=2)
 
     def __ffmpeg_download_mode(self, resolution=''):
         # 设定文件存放路径
-        if self._settings['add_bangumi_name_to_video_filename']:
-            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
-                # 如果剧集名为数字, 且用户开启补零
-                episode = ' ['+self._episode.zfill(self._settings['zerofill'])+']'
-                filename = self._settings['customized_video_filename_prefix'] + self._bangumi_name + episode
-            else:
-                filename = self._settings['customized_video_filename_prefix'] + self._title  # 添加用户自定义前缀
-        else:
-            # 如果用户不要将番剧名添加到文件名
-            if re.match(r'^\d+$', self._episode) and self._settings['zerofill'] > 1:
-                # 如果剧集名为数字, 且用户开启补零
-                episode = self._episode.zfill(self._settings['zerofill'])
-            else:
-                episode = self._episode
-            filename = self._settings['customized_video_filename_prefix'] + episode
+        filename = self.__get_filename(resolution)
+        downloading_filename = self.__get_temp_filename(resolution, temp_suffix='DOWNLOADING')
 
-        if self._settings['add_resolution_to_video_filename']:
-            filename = filename + '[' + resolution + 'P]'  # 添加分辨率后缀
-        # downloading_filename 为下载时文件名，下载完成后更名为 output_file
-        downloading_filename = filename + self._settings['customized_video_filename_suffix'] + '.DOWNLOADING.mp4'
-        filename = filename + self._settings['customized_video_filename_suffix'] + '.mp4'  # 添加用户后缀及扩展名
-        legal_filename = Config.legalize_filename(filename)  # 去除非法字符
-        filename = legal_filename
-        downloading_filename = Config.legalize_filename(downloading_filename)
-        output_file = os.path.join(self._bangumi_dir, legal_filename)  # 完整输出路径
+        output_file = os.path.join(self._bangumi_dir, filename)  # 完整输出路径
         downloading_file = os.path.join(self._temp_dir, downloading_filename)
 
         # 构造 ffmpeg 命令
@@ -609,7 +614,7 @@ class Anime():
                 shutil.move(downloading_file, output_file)  # 此方法在遇到rclone挂载盘时会出错
 
             self.local_video_path = output_file  # 记录保存路径, FTP上传用
-            self._video_filename = legal_filename  # 记录文件名, FTP上传用
+            self._video_filename = filename  # 记录文件名, FTP上传用
             err_print(self._sn, '下載完成', filename, status=2)
         else:
             err_msg_detail = filename + ' ffmpeg_return_code=' + str(

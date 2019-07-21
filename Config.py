@@ -15,7 +15,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v13'
-latest_config_version = 6.0
+latest_config_version = 7.0
 latest_database_version = 2.0
 cookie = None
 
@@ -69,6 +69,7 @@ def __init_settings():
                 'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
+                'customized_bangumi_name_suffix': '',  # 用户自定义番剧名后缀 (在剧集名之前)
                 'customized_video_filename_suffix': '',  # 用户自定后缀
                 'zerofill': 1,  # 剧集名补零, 此项填补足位数, 小于等于 1 即不补零
                 # cookie的自动刷新对 UA 有检查
@@ -172,6 +173,10 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'zerofill' not in new_settings.keys():
         # v6.0 新增剧集名补零, 该项数字为补足位数, 默认为 1, 小于等于 1 即不补 0
         new_settings['zerofill'] = 1
+
+    if 'customized_bangumi_name_suffix' not in new_settings.keys():
+        # v7.0 新增自定义番剧名后缀
+        new_settings['customized_bangumi_name_suffix'] = ''
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

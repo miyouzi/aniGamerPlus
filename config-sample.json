@@ -14,6 +14,7 @@
     "add_bangumi_name_to_video_filename": true,
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",
+    "customized_bangumi_name_suffix": "",
     "customized_video_filename_suffix": "",
     "zerofill": 1,
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
@@ -38,6 +39,6 @@
     "read_config_when_checking_update": true,
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 6.0,
+    "config_version": 7.0,
     "database_version": 2.0
 }

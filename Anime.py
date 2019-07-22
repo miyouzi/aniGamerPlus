@@ -329,6 +329,14 @@ class Anime():
         unlock()
         unlock()
 
+        # 收到錯誤反饋
+        # 可能是限制級動畫要求登陸
+        if 'error' in user_info.keys():
+            msg = '《'+self._title+'》 '
+            msg = msg+'code='+str(user_info['error']['code'])+' message: '+user_info['error']['message']
+            err_print(self._sn, '收到錯誤', msg, status=1)
+            sys.exit(1)
+
         if not user_info['vip']:
             # 如果用户不是 VIP, 那么等待广告(8s)
             err_print(self._sn, '正在等待', '《'+self.get_title() + '》 由於不是VIP賬戶, 正在等待8s廣告時間')

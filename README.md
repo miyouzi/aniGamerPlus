@@ -217,7 +217,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
  - 開啓Chrome的**無痕模式**, 登陸動畫瘋, 記得勾選**保持登入狀態**
 
- - 按 F12 調出開發者工具, 前往動畫瘋, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
+ - 按 F12 調出開發者工具, 前往動畫瘋首頁, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)
     
  - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可

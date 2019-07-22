@@ -9,9 +9,39 @@
 
 巴哈姆特動畫瘋自動下載工具
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
+## **注意**:warning:
+
+**本專案依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
+
+## EXE 檔案運行(對於不熟悉Python的用戶)
+
+windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
+
+## 源碼運行
+
+Python 版本 3 以上
+
+**使用前确认已安装好依赖**
+```
+pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
+```
+
+下載源碼
+```
+git clone https://github.com/miyouzi/aniGamerPlus.git
+```
+
+升級
+```
+git pull https://github.com/miyouzi/aniGamerPlus.git
+```
+
+使用
+```
+python3 aniGamerPlus.py
+```
 
 ## 鳴謝
 
@@ -47,18 +77,6 @@ ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zera
  - v7.0 開始支援使用(鏈式)代理
  - v9.0 開始支援記錄日志
  - v9.0 開始自動下載支援自定義番劇名
- 
- 
-## **注意**:warning:
-
-Python 版本 3 以上
-
-**本專案依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
-
-**使用前确认已安装好依赖**
-```
-pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
-```
  
 ## 任務列表
  - [x] 下載使用代理

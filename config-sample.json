@@ -34,11 +34,12 @@
         "show_error_detail": false,
         "max_retry_num": 15
     },
+    "user_command": "shutdown -s -t 60",
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 7.0,
+    "config_version": 8.0,
     "database_version": 2.0
 }

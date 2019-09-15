@@ -104,10 +104,10 @@ python3 aniGamerPlus.py
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "use_copyfile_method": false,  # 轉移影片至番劇資料夾時使用複製方法, 適用於保存到 rclone 掛載盤的情況
-    "multi-thread": 1,  # 最大并發下載數
+    "multi-thread": 1,  # 最大并發下載數, 最高為 5, 超過將重置為 5
     "multi_upload": 3,  # 最大并發上傳數
     "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
-    "multi_downloading_segment": 2,  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效
+    "multi_downloading_segment": 3,  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效, 最高為 5, 超過將重置為 5
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
     "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
@@ -131,6 +131,7 @@ python3 aniGamerPlus.py
         "show_error_detail": false,  # 是否顯示細節錯誤信息
         "max_retry_num": 15  # 最大重傳數, 支援續傳
     },
+    "user_command": "shutdown -s -t 60"  # 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
@@ -311,24 +312,25 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 **配置文件中的代理配置同樣適用於命令行模式!** 
 
-**命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
+**除了使用 list 模式的情況, 命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v12.1
-usage: aniGamerPlus.py [-h] --sn SN [--resolution {360,480,540,576,720,1080}]
-                       [--download_mode {single,latest,largest-sn,all,range}]
+當前aniGamerPlus版本: v15
+usage: aniGamerPlus.py [-h] [--sn SN]
+                       [--resolution {360,480,540,576,720,1080}]
+                       [--download_mode {single,latest,largest-sn,all,range,list}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
-                       [--information_only]
+                       [--information_only] [--user_command]
 
 optional arguments:
   -h, --help            show this help message and exit
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,576,720,1080}, -r {360,480,540,576,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,largest-sn,all,range}, -m {single,latest,largest-sn,all,range}
+  --download_mode {single,latest,largest-sn,all,range,list}, -m {single,latest,largest-sn,all,range,list}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
@@ -338,6 +340,7 @@ optional arguments:
   --no_classify, -n     不建立番劇資料夾
   --information_only, -i
                         僅查詢資訊
+  --user_command, -u    所有下載完成后執行用戶命令
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -355,6 +358,8 @@ optional arguments:
     - **largest-sn** 下載此番劇最近上傳的一集(即sn最大的一集)
     
     - **range** 下載此番指定的劇集
+    
+    - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
  
@@ -363,6 +368,8 @@ optional arguments:
  - **-n** 不建立番劇資料夾
  
  - **-i** 僅顯示影片資訊
+ 
+ - **-u** 所有任務完成后執行用戶命令 (配置在```config.json```的```user_command```中),  用於實現下載完成后關機等操作
 
  - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
     

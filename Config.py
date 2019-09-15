@@ -14,10 +14,12 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v14.1'
-latest_config_version = 7.0
+aniGamerPlus_version = 'v15'
+latest_config_version = 8.0
 latest_database_version = 2.0
 cookie = None
+max_multi_thread = 5
+max_multi_downloading_segment = 5
 
 
 def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
@@ -27,6 +29,10 @@ def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
     except UnboundLocalError:
         from ColorPrint import err_print
         err_print(sn, err_msg, detail=detail, status=status, no_sn=no_sn, display=display)
+
+
+def get_max_multi_thread():
+    return max_multi_thread
 
 
 def legalize_filename(filename):
@@ -90,6 +96,7 @@ def __init_settings():
                     'show_error_detail': False,
                     'max_retry_num': 15
                 },
+                'user_command': 'shutdown -s -t 60',
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -177,6 +184,11 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'customized_bangumi_name_suffix' not in new_settings.keys():
         # v7.0 新增自定义番剧名后缀
         new_settings['customized_bangumi_name_suffix'] = ''
+
+    if 'user_command' not in new_settings.keys():
+        # v8.0 新增命令行模式完成后, 执行自定义命令
+        # 默认命令为一分钟后关机
+        new_settings['user_command'] = 'shutdown -s -t 60'
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -295,6 +307,8 @@ def del_bom(path, display=True):
 
 
 def read_settings():
+
+
     if not os.path.exists(config_path):
         __init_settings()
 
@@ -324,6 +338,7 @@ def read_settings():
         settings['default_download_mode'] = 'latest'  # 如果输入非法模式, 将重置为 latest 模式
     if settings['quantity_of_logs'] < 1:  # 日志数量不可小于 1
         settings['quantity_of_logs'] = 7
+
     if not settings['ua']:
         # 如果 ua 项目为空
         settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
@@ -346,6 +361,7 @@ def read_settings():
 
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version
+
     # 修正 proxies 字典, 使 key 为 int, 方便用于链式代理
     new_proxies = {}
     use_gost = False
@@ -364,6 +380,14 @@ def read_settings():
     settings['use_gost'] = use_gost
     if not new_proxies:
         settings['use_proxy'] = False
+
+    if settings['multi-thread'] > max_multi_thread:
+        # 如果线程数超限
+        settings['multi-thread'] = max_multi_thread
+
+    if settings['multi_downloading_segment'] > max_multi_downloading_segment:
+        # 如果并发分段数超限
+        settings['multi_downloading_segment'] = max_multi_downloading_segment
 
     if settings['save_logs']:
         # 刪除过期日志

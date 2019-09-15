@@ -160,7 +160,7 @@ def update_db(anime):
     db_locker.release()
 
 
-def worker(sn, sn_info):
+def worker(sn, sn_info, realtime_show_file_size=False):
     bangumi_tag = sn_info['tag']
     rename = sn_info['rename']
 
@@ -198,7 +198,7 @@ def worker(sn, sn_info):
                 err_print(sn, '上传失敗', err_msg_detail, 1)
             else:
                 update_db(anime)
-                err_print(sn, '任务完成', status=2)
+                err_print(sn, '任務完成', status=2)
         except BaseException as e:
             err_msg_detail = 'title=\"' + anime.get_title() + '\" 發生未知錯誤, 等待下次更新重試: ' + str(e)
             err_print(sn, '上传失敗', err_msg_detail, 1)
@@ -219,7 +219,8 @@ def worker(sn, sn_info):
     anime = anime['anime']
 
     try:
-        anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag, rename=rename, classify=settings['classify_bangumi'])
+        anime.download(settings['download_resolution'], bangumi_tag=bangumi_tag, rename=rename,
+                       realtime_show_file_size=realtime_show_file_size, classify=settings['classify_bangumi'])
     except BaseException as e:
         # 兜一下各种奇奇怪怪的错误
         err_print(sn, '下載異常', '發生未知錯誤: '+str(e), status=1)
@@ -255,7 +256,7 @@ def worker(sn, sn_info):
 
     queue.pop(sn)  # 从任务列队中移除
     processing_queue.remove(sn)  # 从当前任务列队中移除
-    err_print(sn, '任务完成', status=2)
+    err_print(sn, '任務完成', status=2)
 
 
 def check_tasks():
@@ -366,7 +367,7 @@ def __get_info_only(sn):
     thread_limiter.release()
 
 
-def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True, get_info=False):
+def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True, get_info=False, user_cmd=False):
 
     if cui_thread_limit == 1:
         realtime_show_file_size = True
@@ -490,12 +491,34 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
                 err_print(0, '《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!', status=1, no_sn=True)
         print('所有任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
+    elif cui_download_mode == 'list':
+        check_tasks()  # 检查更新，生成任务列队
+        for task_sn in queue.keys():  # 遍历任务列队
+            processing_queue.append(task_sn)
+            task = threading.Thread(target=worker, args=(task_sn, queue[task_sn], realtime_show_file_size))
+            task.setDaemon(True)
+            thread_tasks.append(task)
+            task.start()
+            err_print(task_sn, '加入任务列隊')
+
+        msg = '共 ' + str(len(queue)) + ' 個任務'
+        err_print(0, '任務資訊', msg, no_sn=True)
+        print()
+
     __kill_thread_when_ctrl_c()
     kill_gost()  # 结束 gost
+
+    # 结束后执行用户自定义命令
+    if user_cmd:
+        print()
+        os.popen(settings['user_command'])
+        err_print(0, '任務完成', '已執行用戶命令', no_sn=True, status=2)
+
     sys.exit(0)
 
 
 def __kill_thread_when_ctrl_c():
+    # 等待所有任务完成
     for t in thread_tasks:  # 当用户 Ctrl+C 可以 kill 线程
         while True:
             if t.isAlive():
@@ -576,6 +599,7 @@ if __name__ == '__main__':
     thread_tasks = []
     gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
     gost_port = gost_port()  # gost 端口
+    sn_dict = Config.read_sn_list()
 
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
@@ -584,16 +608,21 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
-        parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)', required=True)
+        parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 576, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'largest-sn', 'all', 'range'])
+                            choices=['single', 'latest', 'largest-sn', 'all', 'range', 'list'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
         parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
         parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊')
+        parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
         arg = parser.parse_args()
+
+        if arg.download_mode != 'list' and arg.sn is None:
+            err_print(0, '參數錯誤', '非 list 模式需要提供 sn ', no_sn=True, status=1)
+            sys.exit(1)
 
         save_dir = ''
         download_mode = arg.download_mode
@@ -647,7 +676,11 @@ if __name__ == '__main__':
         else:
             if arg.thread_limit:
                 # 用戶設定并發數
-                thread_limit = arg.thread_limit
+                if arg.thread_limit > Config.get_max_multi_thread():
+                    # 是否超过最大允许线程数
+                    thread_limit = Config.get_max_multi_thread()
+                else:
+                    thread_limit = arg.thread_limit
                 thread_limiter = threading.Semaphore(thread_limit)
             else:
                 thread_limit = settings['multi-thread']
@@ -655,8 +688,14 @@ if __name__ == '__main__':
         if settings['use_proxy']:
             __init_proxy()
 
+        if arg.user_command:
+            user_command = True
+        else:
+            user_command =False
+
         Config.test_cookie()  # 测试cookie
-        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify, get_info=arg.information_only)
+        __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,
+              get_info=arg.information_only, user_cmd=user_command)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)
@@ -680,7 +719,6 @@ if __name__ == '__main__':
     if settings['use_proxy']:
         __init_proxy()
 
-    sn_dict = Config.read_sn_list()
     while True:
         print()
         err_print(0, '開始更新', no_sn=True)

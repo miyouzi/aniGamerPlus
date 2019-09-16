@@ -493,13 +493,13 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
 
     elif cui_download_mode == 'list':
         check_tasks()  # 检查更新，生成任务列队
-        for task_sn in queue.keys():  # 遍历任务列队
-            processing_queue.append(task_sn)
-            task = threading.Thread(target=worker, args=(task_sn, queue[task_sn], realtime_show_file_size))
+        for sn in queue.keys():  # 遍历任务列队
+            processing_queue.append(sn)
+            task = threading.Thread(target=worker, args=(sn, queue[sn], realtime_show_file_size))
             task.setDaemon(True)
             thread_tasks.append(task)
             task.start()
-            err_print(task_sn, '加入任务列隊')
+            err_print(sn, '加入任务列隊')
 
         msg = '共 ' + str(len(queue)) + ' 個任務'
         err_print(0, '任務資訊', msg, no_sn=True)

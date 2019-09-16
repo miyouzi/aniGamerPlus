@@ -10,7 +10,7 @@
     "multi-thread": 1,
     "multi_upload": 3,
     "segment_download_mode": true,
-    "multi_downloading_segment": 2,
+    "multi_downloading_segment": 3,
     "add_bangumi_name_to_video_filename": true,
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",

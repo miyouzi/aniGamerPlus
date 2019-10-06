@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v15'
-latest_config_version = 8.0
+aniGamerPlus_version = 'v16'
+latest_config_version = 9.0
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -72,6 +72,7 @@ def __init_settings():
                 'multi_upload': 3,  # 最大并发上传数
                 'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
                 'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数
+                'segment_max_retry': 8,  # 在分段下载模式时有效, 每个分段最大重试次数, -1 为 无限重试
                 'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
@@ -97,6 +98,17 @@ def __init_settings():
                     'max_retry_num': 15
                 },
                 'user_command': 'shutdown -s -t 60',
+                'coolq_notify': False,
+                'coolq_settings': {
+                    'host': '127.0.0.1',
+                    'port': '5700',
+                    'SSL': False,
+                    'api': 'send_group_msg',
+                    'query': {
+                        'group_id': '123456789',
+                    }
+                },
+                'faststart_movflags': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -189,6 +201,28 @@ def __update_settings(old_settings):  # 升级配置文件
         # v8.0 新增命令行模式完成后, 执行自定义命令
         # 默认命令为一分钟后关机
         new_settings['user_command'] = 'shutdown -s -t 60'
+
+    if 'segment_download_max_retry' not in new_settings.keys():
+        # v9.0 新增分段模式下, 分段重试次数
+        new_settings['segment_max_retry'] = 8
+
+    if 'coolq_notify' not in new_settings.keys():
+        # v9.0 新增推送通知到CQ的功能
+        new_settings['coolq_notify'] = False
+        new_settings['coolq_settings'] = {
+            'host': '127.0.0.1',
+            'port': '5700',
+            'SSL': False,
+            'api': 'send_group_msg',
+            'query': {
+                'group_id': '123456789',
+            }
+        }
+
+    if 'faststart_movflags' not in new_settings.keys():
+        # v9.0 新增功能: 将 metadata 移至视频文件头部
+        # 此功能可以更快的在线播放视频
+        new_settings['faststart_movflags'] = False
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

@@ -10,6 +10,7 @@
     "multi-thread": 1,
     "multi_upload": 3,
     "segment_download_mode": true,
+    "segment_max_retry": 8,
     "multi_downloading_segment": 3,
     "add_bangumi_name_to_video_filename": true,
     "add_resolution_to_video_filename": true,
@@ -35,6 +36,17 @@
         "max_retry_num": 15
     },
     "user_command": "shutdown -s -t 60",
+    "coolq_notify": false,
+    "coolq_settings": {
+        "host": "127.0.0.1",
+        "port": "5700",
+        "SSL": false,
+        "api": "send_group_msg",
+        "query": {
+            "group_id": "123456789"
+        }
+    },
+    "faststart_movflags": false,
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,

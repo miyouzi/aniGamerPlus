@@ -107,6 +107,7 @@ python3 aniGamerPlus.py
     "multi-thread": 1,  # 最大并發下載數, 最高為 5, 超過將重置為 5
     "multi_upload": 3,  # 最大并發上傳數
     "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
+    "segment_max_retry": 8,  # 在分段下載模式時有效, 每個分段最大重試次數, -1 為無限重試
     "multi_downloading_segment": 3,  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效, 最高為 5, 超過將重置為 5
     "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
     "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
@@ -132,6 +133,17 @@ python3 aniGamerPlus.py
         "max_retry_num": 15  # 最大重傳數, 支援續傳
     },
     "user_command": "shutdown -s -t 60"  # 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
+    "coolq_notify": false,  # 是否酷Q推送下載完成訊息
+    "coolq_settings": {
+        "host": "127.0.0.1",  # 酷Q HTTP API 地址
+        "port": "5700",  # 酷Q HTTP API Port
+        "SSL": false,  # 是否是 https
+        "api": "send_group_msg",  # 所使用的 API
+        "query": {  # 使用 GET 方法, 這裏配置 query 字段
+            "group_id": "123456789"
+        }
+    },
+    "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放 
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序

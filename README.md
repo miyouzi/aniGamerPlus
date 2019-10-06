@@ -77,6 +77,8 @@ python3 aniGamerPlus.py
  - v7.0 開始支援使用(鏈式)代理
  - v9.0 開始支援記錄日志
  - v9.0 開始自動下載支援自定義番劇名
+ - v16 支援向酷Q推送下載完成訊息
+ - v16 支援将影片 metadata 前置, 此功能會在綫觀看时更快播放
  
 ## 任務列表
  - [x] 下載使用代理
@@ -133,7 +135,7 @@ python3 aniGamerPlus.py
         "max_retry_num": 15  # 最大重傳數, 支援續傳
     },
     "user_command": "shutdown -s -t 60"  # 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
-    "coolq_notify": false,  # 是否酷Q推送下載完成訊息
+    "coolq_notify": false,  # 是否向酷Q推送下載完成訊息
     "coolq_settings": {
         "host": "127.0.0.1",  # 酷Q HTTP API 地址
         "port": "5700",  # 酷Q HTTP API Port

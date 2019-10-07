@@ -7,7 +7,9 @@
  <img alt="GitHub Releases" src="https://img.shields.io/github/downloads/miyouzi/aniGamerPlus/latest/total.svg?style=flat-square">
 </p>
 
-巴哈姆特動畫瘋自動下載工具
+巴哈姆特動畫瘋自動下載工具, 可隨著番劇更新自動下載, 適合部署在全天開機的伺服器或NAS上.
+
+同時支援命令行, 也適用於需要大批量下載的使用者, 如: 下載整部番劇. 命令行模式支援顯示下載進度, 但要求 **最大并發下載數** 設置為 **1** .
 
 ## **注意**:warning:
 
@@ -15,9 +17,9 @@
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
 
-## EXE 檔案運行(對於不熟悉Python的用戶)
+## EXE 檔案運行(對於不熟悉Python的使用者)
 
-windows 用戶可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
+windows 使用者可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
 
 ## 源碼運行
 
@@ -127,7 +129,7 @@ python3 aniGamerPlus.py
     "ftp": {  # FTP配置
         "server": "",  # FTP Server IP
         "port": "",  # 端口
-        "user": "",  # 用戶名
+        "user": "",  # 使用者名
         "pwd": "",  # 密碼
         "tls": true,  # 是否是 FTP over TLS
         "cwd": "",  # 登陸後首先進入的目錄
@@ -217,7 +219,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 ### cookie.txt
 
-1.  用戶cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為檔名保存在程序目錄下
+1.  使用者cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為檔名保存在程序目錄下
 2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目
 
 **v6.0版本開始支援自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
@@ -354,7 +356,7 @@ optional arguments:
   --no_classify, -n     不建立番劇資料夾
   --information_only, -i
                         僅查詢資訊
-  --user_command, -u    所有下載完成后執行用戶命令
+  --user_command, -u    所有下載完成后執行使用者命令
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -383,7 +385,7 @@ optional arguments:
  
  - **-i** 僅顯示影片資訊
  
- - **-u** 所有任務完成后執行用戶命令 (配置在```config.json```的```user_command```中),  用於實現下載完成后關機等操作
+ - **-u** 所有任務完成后執行使用者命令 (配置在```config.json```的```user_command```中),  用於實現下載完成后關機等操作
 
  - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
     

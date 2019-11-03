@@ -114,7 +114,7 @@ class Anime():
             sys.exit(1)
 
     def __get_bangumi_name(self):
-        self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '')  # 提取番剧名（去掉集数后缀）
+        self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '').strip()  # 提取番剧名（去掉集数后缀）
 
     def __get_episode(self):  # 提取集数
         self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
@@ -1004,9 +1004,9 @@ class Anime():
 
     def get_info(self):
         err_print(self._sn, '顯示資訊')
-        err_print(0, '                    影片標題:', self.get_title(), no_sn=True, display_time=False)
-        err_print(0, '                    番劇名稱:', self.get_bangumi_name(), no_sn=True, display_time=False)
-        err_print(0, '                    劇集標題:', self.get_episode(), no_sn=True, display_time=False)
+        err_print(0, '                    影片標題:', '\"'+self.get_title()+'\"', no_sn=True, display_time=False)
+        err_print(0, '                    番劇名稱:', '\"'+self.get_bangumi_name()+'\"', no_sn=True, display_time=False)
+        err_print(0, '                    劇集標題:', '\"'+self.get_episode()+'\"', no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 
 

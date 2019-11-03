@@ -7,7 +7,7 @@ import ftplib
 import shutil
 import Config
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random, sys, datetime
+import re, time, os, platform, subprocess, requests, random, sys
 from ColorPrint import err_print
 from ftplib import FTP, FTP_TLS
 import socket
@@ -106,7 +106,7 @@ class Anime():
     def __get_title(self):
         soup = self._src
         try:
-            self._title = soup.find('meta', property="og:title")['content']  # 提取标题（含有集数）
+            self._title = soup.find('div', 'anime_name').h1.string  # 提取标题（含有集数）
         except TypeError:
             # 该sn下没有动画
             err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)

@@ -10,13 +10,14 @@
     "multi-thread": 1,
     "multi_upload": 3,
     "segment_download_mode": true,
+    "multi_downloading_segment": 2,
     "segment_max_retry": 8,
-    "multi_downloading_segment": 3,
     "add_bangumi_name_to_video_filename": true,
     "add_resolution_to_video_filename": true,
     "customized_video_filename_prefix": "【動畫瘋】",
     "customized_bangumi_name_suffix": "",
     "customized_video_filename_suffix": "",
+    "video_filename_extension": "mp4",
     "zerofill": 1,
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
     "use_proxy": false,
@@ -52,6 +53,6 @@
     "read_config_when_checking_update": true,
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 8.0,
+    "config_version": 10.0,
     "database_version": 2.0
 }

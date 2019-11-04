@@ -90,8 +90,6 @@ python3 aniGamerPlus.py
  
 ## 配置説明
 
-**推薦使用 [notepad++](https://notepad-plus-plus.org/) 進行編輯, 編碼推薦使用UTF-8**
-
 ### config.json
 
 **config-sample.json**为范例配置文件, 可以将其修改后改名为**config.json**.
@@ -243,6 +241,9 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 #### 使用Chrome舉例如何獲取 UA:
 
  - 訪問 **https://developers.whatismybrowser.com/useragents/parse/?analyse-my-user-agent=yes** 即可查看該瀏覽器 UA
+ - 如果此網址失效，以下為可查詢UA的備用網址：
+    - https://www.whatsmyua.info/
+    - http://service.spiritsoft.cn/ua.html
     ![](screenshot/how_to_get_my_ua.png)
     
  - 將 UA 複製粘貼到```config.json```的```ua```項目

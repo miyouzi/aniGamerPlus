@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v16.2'
-latest_config_version = 9.0
+aniGamerPlus_version = 'v17'
+latest_config_version = 10.0
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -78,6 +78,7 @@ def __init_settings():
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_bangumi_name_suffix': '',  # 用户自定义番剧名后缀 (在剧集名之前)
                 'customized_video_filename_suffix': '',  # 用户自定后缀
+                'video_filename_extension': 'mp4',  # 视频扩展名/封装格式
                 'zerofill': 1,  # 剧集名补零, 此项填补足位数, 小于等于 1 即不补零
                 # cookie的自动刷新对 UA 有检查
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
@@ -223,6 +224,10 @@ def __update_settings(old_settings):  # 升级配置文件
         # v9.0 新增功能: 将 metadata 移至视频文件头部
         # 此功能可以更快的在线播放视频
         new_settings['faststart_movflags'] = False
+
+    if 'video_filename_extension' not in new_settings.keys():
+        # v17 新增用户自定义视频扩展名
+        new_settings['video_filename_extension'] = 'mp4'
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -422,6 +427,14 @@ def read_settings():
     if settings['multi_downloading_segment'] > max_multi_downloading_segment:
         # 如果并发分段数超限
         settings['multi_downloading_segment'] = max_multi_downloading_segment
+
+    if settings['video_filename_extension'].lower() == 'flv':
+        # flv 格式会输出异常, 强制重置
+        settings['video_filename_extension'] = 'mp4'
+
+    if settings['video_filename_extension'].lower() != 'mp4':
+        # 如果封装格式不是 mp4 则强制关闭 metadata 前置
+        settings['faststart_movflags'] = False
 
     if settings['save_logs']:
         # 刪除过期日志

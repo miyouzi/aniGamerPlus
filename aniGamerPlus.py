@@ -266,6 +266,7 @@ def check_tasks():
             err_print(sn, '更新狀態', '檢查更新失敗, 跳過等待下次檢查', status=1)
             continue
         anime = anime['anime']
+        err_print(sn, '更新資訊', '正在檢查《' + anime.get_bangumi_name() + '》')
         episode_list = list(anime.get_episode_list().values())
 
         if sn_dict[sn]['mode'] == 'all':
@@ -606,6 +607,23 @@ if __name__ == '__main__':
     version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
     print(version_msg)
 
+    # 初始化 sqlite3 数据库
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
+                   'sn INTEGER PRIMARY KEY NOT NULL,'
+                   'title VARCHAR(100) NOT NULL,'
+                   'anime_name VARCHAR(100) NOT NULL, '
+                   'episode VARCHAR(10) NOT NULL,'
+                   'status TINYINT DEFAULT 0,'
+                   'remote_status INTEGER DEFAULT 0,'
+                   'resolution INTEGER DEFAULT 0,'
+                   'file_size INTEGER DEFAULT 0,'
+                   'local_file_path VARCHAR(500),'
+                   "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
+    conn.commit()
+    conn.close()
+
     if len(sys.argv) > 1:  # 支持命令行使用
         parser = argparse.ArgumentParser()
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
@@ -699,22 +717,6 @@ if __name__ == '__main__':
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)
-    # 初始化 sqlite3 数据库
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
-                   'sn INTEGER PRIMARY KEY NOT NULL,'
-                   'title VARCHAR(100) NOT NULL,'
-                   'anime_name VARCHAR(100) NOT NULL, '
-                   'episode VARCHAR(10) NOT NULL,'
-                   'status TINYINT DEFAULT 0,'
-                   'remote_status INTEGER DEFAULT 0,'
-                   'resolution INTEGER DEFAULT 0,'
-                   'file_size INTEGER DEFAULT 0,'
-                   'local_file_path VARCHAR(500),'
-                   "[CreatedTime] TimeStamp NOT NULL DEFAULT (datetime('now','localtime')))")
-    conn.commit()
-    conn.close()
 
     if settings['use_proxy']:
         __init_proxy()

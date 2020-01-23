@@ -293,8 +293,12 @@ def check_tasks():
             if sn_dict[sn]['mode'] == 'largest-sn':
                 # 如果用户选择仅下载最新上传, download_mode = 'largest_sn', 则对 sn 进行排序
                 episode_list.sort()
+                latest_sn = episode_list[-1]
                 # 否则用户选择仅下载最后剧集, download_mode = 'latest', 即下载网页上显示在最右的剧集
-            latest_sn = episode_list[-1]
+            elif sn_dict[sn]['mode'] == 'single':
+                latest_sn = sn  # 适配命令行 sn-list 模式
+            else:
+                latest_sn = episode_list[-1]
             try:
                 db = read_db(latest_sn)
                 #           未下载的   或                设定要上传但是没上传的                         并且  还没在列队中
@@ -492,19 +496,54 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
                 err_print(0, '《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!', status=1, no_sn=True)
         print('所有任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
-    elif cui_download_mode == 'list':
-        check_tasks()  # 检查更新，生成任务列队
-        for sn in queue.keys():  # 遍历任务列队
-            processing_queue.append(sn)
-            task = threading.Thread(target=worker, args=(sn, queue[sn], realtime_show_file_size))
-            task.setDaemon(True)
-            thread_tasks.append(task)
-            task.start()
-            err_print(sn, '加入任务列隊')
+    elif cui_download_mode == 'multi':
+        if get_info:
+            print('當前模式: 查詢指定sn資訊\n')
+        else:
+            print('當前下載模式: 下載指定sn劇集\n')
 
-        msg = '共 ' + str(len(queue)) + ' 個任務'
-        err_print(0, '任務資訊', msg, no_sn=True)
-        print()
+        for i in ep_range:
+            anime = build_anime(i)
+            if anime['failed']:
+                sys.exit(1)
+            anime = anime['anime']
+
+            if get_info:
+                anime.get_info()
+            else:
+                # True 是实时显示文件大小, 仅一个下载任务时适用
+                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+
+    elif cui_download_mode in ('list', 'sn-list'):
+        if get_info:
+            # 如果為list模式也仅查询名单中的sn信息, 可用于检查sn是否输入正确
+            print('當前模式: 查詢sn_list.txt中指定sn的資訊\n')
+            ep_range = Config.read_sn_list().keys()
+            for sn in ep_range:
+                anime = build_anime(sn)
+                if anime['failed']:
+                    sys.exit(1)
+                anime = anime['anime']
+                anime.get_info()
+        else:
+            if cui_download_mode == 'sn-list':
+                print('當前下載模式: 下載sn_list.txt中指定的sn劇集\n')
+                for i in sn_dict:
+                    sn_dict[i]['mode'] = 'single'
+            else:
+                print('當前下載模式: 單次下載sn_list.txt中的番劇\n')
+
+            check_tasks()  # 检查更新，生成任务列队
+            for sn in queue.keys():  # 遍历任务列队
+                processing_queue.append(sn)
+                task = threading.Thread(target=worker, args=(sn, queue[sn], realtime_show_file_size))
+                task.setDaemon(True)
+                thread_tasks.append(task)
+                task.start()
+                err_print(sn, '加入任务列隊')
+            msg = '共 ' + str(len(queue)) + ' 個任務'
+            err_print(0, '任務資訊', msg, no_sn=True)
+            print()
 
     __kill_thread_when_ctrl_c()
     kill_gost()  # 结束 gost
@@ -629,7 +668,7 @@ if __name__ == '__main__':
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 576, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'largest-sn', 'all', 'range', 'list'])
+                            choices=['single', 'latest', 'largest-sn', 'multi', 'all', 'range', 'list', 'sn-list'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
@@ -638,8 +677,8 @@ if __name__ == '__main__':
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
         arg = parser.parse_args()
 
-        if arg.download_mode != 'list' and arg.sn is None:
-            err_print(0, '參數錯誤', '非 list 模式需要提供 sn ', no_sn=True, status=1)
+        if (arg.download_mode not in ('list', 'multi', 'sn-list')) and arg.sn is None:
+            err_print(0, '參數錯誤', '非 list/multi 模式需要提供 sn ', no_sn=True, status=1)
             sys.exit(1)
 
         save_dir = ''
@@ -664,28 +703,47 @@ if __name__ == '__main__':
             sys.exit(1)
 
         download_episodes = []
-        if arg.episodes:
-            for i in arg.episodes.split(','):
-                if re.match(r'^\d+-\d+$', i):
-                    episodes_range_start = int(i.split('-')[0])
-                    episodes_range_end = int(i.split('-')[1])
-                    if episodes_range_start > episodes_range_end:  # 如果有zz从大到小写
-                        episodes_range_start, episodes_range_end = episodes_range_end, episodes_range_start
-                    download_episodes.extend(list(range(episodes_range_start, episodes_range_end + 1)))
-                if re.match(r'^\d+$', i):
-                    download_episodes.append(int(i))
+        if arg.episodes or arg.download_mode == 'sn-list':
+            if arg.download_mode == 'multi':
+                # 如果此时为 multi 模式, 则 download_episodes 装的是 sn 码
+                for i in arg.episodes.split(','):
+                    if re.match(r'^\d+$', i):
+                        download_episodes.append(int(i))
+                if arg.sn:
+                    download_episodes.append(arg.sn)
+
+            elif arg.download_mode == 'sn-list':
+                # 如果此时为 sn-list 模式, 则 download_episodes 装的是 sn_list.txt 里的 sn 码
+                download_episodes = list(Config.read_sn_list().keys())
+
+            else:
+                for i in arg.episodes.split(','):
+                    if re.match(r'^\d+-\d+$', i):
+                        episodes_range_start = int(i.split('-')[0])
+                        episodes_range_end = int(i.split('-')[1])
+                        if episodes_range_start > episodes_range_end:  # 如果有zz从大到小写
+                            episodes_range_start, episodes_range_end = episodes_range_end, episodes_range_start
+                        download_episodes.extend(list(range(episodes_range_start, episodes_range_end + 1)))
+                    if re.match(r'^\d+$', i):
+                        download_episodes.append(int(i))
+                download_mode = 'range'  # 如果带 -e 参数没有指定 multi 模式, 则默认为 range 模式
+
             download_episodes = list(set(download_episodes))  # 去重复
             download_episodes.sort()  # 排序, 任务将会按集数顺序下载
-            download_episodes = list(map(lambda x: str(x), download_episodes))
             # 转为 str, 方便作为 Anime.get_episode_list() 的 key
-            download_mode = 'range'
+            download_episodes = list(map(lambda x: str(x), download_episodes))
 
         if not arg.resolution:
             resolution = settings['download_resolution']
             print('未设定下载解析度, 将使用配置文件指定的清晰度: ' + resolution + 'P')
         else:
-            resolution = str(arg.resolution)
-            print('指定下载解析度: ' + resolution + 'P')
+            if arg.download_mode in ('sn-list', 'list'):
+                err_print(0,'無效參數:', 'list 及 sn-list 模式無法通過命令行指定清晰度', 1, no_sn=True, display_time=False)
+                resolution = settings['download_resolution']
+                print('将使用配置文件指定的清晰度: ' + resolution + 'P')
+            else:
+                resolution = str(arg.resolution)
+                print('指定下载解析度: ' + resolution + 'P')
 
         if arg.information_only:
             # 为避免排版混乱, 仅显示信息时强制为单线程
@@ -709,7 +767,7 @@ if __name__ == '__main__':
         if arg.user_command:
             user_command = True
         else:
-            user_command =False
+            user_command = False
 
         Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,

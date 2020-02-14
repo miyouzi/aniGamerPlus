@@ -335,10 +335,10 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v15
+當前aniGamerPlus版本: v18
 usage: aniGamerPlus.py [-h] [--sn SN]
                        [--resolution {360,480,540,576,720,1080}]
-                       [--download_mode {single,latest,largest-sn,all,range,list}]
+                       [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
                        [--information_only] [--user_command]
@@ -348,7 +348,7 @@ optional arguments:
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,576,720,1080}, -r {360,480,540,576,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,largest-sn,all,range,list}, -m {single,latest,largest-sn,all,range,list}
+  --download_mode {single,latest,largest-sn,multi,all,range,list,sn-list}, -m {single,latest,largest-sn,multi,all,range,list,sn-list}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
@@ -358,7 +358,7 @@ optional arguments:
   --no_classify, -n     不建立番劇資料夾
   --information_only, -i
                         僅查詢資訊
-  --user_command, -u    所有下載完成后執行使用者命令
+  --user_command, -u    所有下載完成后執行用戶命令
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -368,6 +368,8 @@ optional arguments:
  - **-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻
  
     - **single** 下載此 sn 單集(默認)
+    
+    - **multi** 下載多個sn, 啓用此模式時, 通過```-e```傳入多個sn, sn之間使用英文```,```分割
  
     - **all** 下載此番劇所有劇集
     
@@ -377,7 +379,9 @@ optional arguments:
     
     - **range** 下載此番指定的劇集
     
-    - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載
+    - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法通過```-r```參數指定解析度**
+    
+    - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法通過```-r```參數指定解析度**
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
  
@@ -385,34 +389,40 @@ optional arguments:
  
  - **-n** 不建立番劇資料夾
  
- - **-i** 僅顯示影片資訊
+ - **-i** 僅顯示影片資訊, 當爲```list```模式時, 會獲取 sn_list 中的單個 sn 的資訊.
  
  - **-u** 所有任務完成后執行使用者命令 (配置在```config.json```的```user_command```中),  用於實現下載完成后關機等操作
 
- - **-e** 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集
+ - **-e** 
+    - **在 ```range``` 模式下, 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集**
     
-    - -e 參數優先于 -m 參數, 使用 -e 參數時, 强制為 range 模式
+    - **在 ```multi``` 模式下, 用於指定多個sn** 
     
-    - 若使用 -m range 則必須使用 -e 指定需要下載的劇集
+    - ```-e``` 參數優先于 ```-m``` 參數, 若使用 ```-e``` 參數時不指定模式, 則默認為 ```range``` 模式
     
-    - 若指定了不存在的劇集會警告並跳過, 僅下載存在的劇集
+    - 若使用 ```-m range``` 則必須使用 ```-e``` 指定需要下載的劇集
     
-    - 指定不連續劇集請用英文逗號","分隔, 中間無空格
+    - 在 ```range``` 模式下, 若指定了不存在的劇集會警告並跳過, 僅下載存在的劇集
     
-    - 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
+    - 指定不連續劇集或sn時, 請用英文逗號```,```分隔, 中間無空格
     
-    - 將會按劇集順序下載
+    - 在 ```range``` 模式下, 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
+    
+    - 將會按sn順序下載
 
     - 舉例:
     
-        - 想下載第1,2,3集
+        - 想下載某番劇第1,2,3集
         ```python3 aniGamerPlus.py -s 10218 -e 1,2,3```
         
-        - 想下載第5到8集
+        - 想下載某番劇第5到8集
         ```python3 aniGamerPlus.py -s 10218 -e 5-8```
         
-        - 想下載第2集, 第5到8集, 第12集
+        - 想下載某番劇第2集, 第5到8集, 第12集
         ```python3 aniGamerPlus.py -s 10218 -e 2,5-8,12```
+        
+        - 想下載sn為 14479,14518,14511 的動畫
+        ```aniGamerPlus.py -m multi -e 14479,14518,14511```
     
     - 截圖:
     

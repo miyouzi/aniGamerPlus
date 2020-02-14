@@ -7,7 +7,7 @@ import ftplib
 import shutil
 import Config
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random, sys
+import re, time, os, platform, subprocess, requests, random, sys, datetime
 from ColorPrint import err_print
 from ftplib import FTP, FTP_TLS
 import socket
@@ -438,7 +438,6 @@ class Anime():
         failed_flag = False
 
         def download_chunk(uri):
-            limiter.acquire()
             chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名
             chunk_local_path = os.path.join(temp_dir, chunk_name)  # chunk 路径
             nonlocal failed_flag
@@ -482,6 +481,7 @@ class Anime():
             task = threading.Thread(target=download_chunk, args=(chunk_uri,))
             chunk_tasks_list.append(task)
             task.setDaemon(True)
+            limiter.acquire()
             task.start()
 
         for task in chunk_tasks_list:  # 等待所有任务完成

@@ -68,6 +68,13 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
     if no_sn:
         msg = msg + err_msg + ' ' + detail
     else:
+        try:
+            int(sn) #確認sn是數字
+            sn = str(sn) #預先變成str
+        except Exception as e:
+            raise 'sn 需為數字'
+        while len(str(sn))<6: #確認後補足空白以對齊
+            sn += " "
         msg = msg + err_msg + ': sn=' + str(sn) + ' ' + detail
 
     if display:

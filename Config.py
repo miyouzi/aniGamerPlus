@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v18.1'
+aniGamerPlus_version = 'v18.2'
 latest_config_version = 10.0
 latest_database_version = 2.0
 cookie = None
@@ -500,7 +500,7 @@ def read_sn_list():
                         rename = re.findall(r'<.*>', i)[0][1:-1]
                 else:  # 没有指定下载模式则使用默认设定
                     sn_dict[int(a[0])] = {'mode': settings['default_download_mode']}
-                bangumi_tag = re.sub(r" $","",bangumi_tag)
+                bangumi_tag = re.sub(r"( )+$","",bangumi_tag)
                 sn_dict[int(a[0])]['tag'] = bangumi_tag
                 sn_dict[int(a[0])]['rename'] = rename
         return sn_dict

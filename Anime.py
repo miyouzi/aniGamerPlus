@@ -115,10 +115,16 @@ class Anime():
 
     def __get_bangumi_name(self):
         self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '').strip()  # 提取番剧名（去掉集数后缀）
+        self._bangumi_name = re.sub(r'\s+', ' ', self._bangumi_name)  # 去除重复空格
 
     def __get_episode(self):  # 提取集数
-        self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
-        self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
+        # 20200320 发现多版本标签后置导致原集数提取方法失效
+        # https://github.com/miyouzi/aniGamerPlus/issues/36
+        # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+        # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
+        soup = self._src
+        self._episode = soup.find('li', 'playing').a.string
+        self._episode = str(self._episode)
 
     def __get_episode_list(self):
         try:

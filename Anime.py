@@ -655,9 +655,16 @@ class Anime():
             self._bangumi_dir = save_dir  # 用于 cui 用户指定下载在当前目录
 
         if rename:
+            bangumi_name = self._bangumi_name
+            # 适配多版本的番剧
+            version = re.findall(r'\[.+?\]', self._bangumi_name)  # 在番剧名中寻找是否存在多版本标记
+            if version:  # 如果这个番剧是多版本的
+                version = str(version[-1])  # 提取番剧版本名称
+                bangumi_name = bangumi_name.replace(version, '').strip()  # 没有版本名称的 bangumi_name, 且头尾无空格
             # 如果设定重命名了番剧
-            self._title = self._title.replace(self._bangumi_name, rename)
-            self._bangumi_name = rename
+            # 将其中的番剧名换成用户设定的, 且不影响版本号后缀(如果有)
+            self._title = self._title.replace(bangumi_name, rename)
+            self._bangumi_name = self._bangumi_name.replace(bangumi_name, rename)
 
         try:
             self.__get_m3u8_dict()  # 获取 m3u8 列表

@@ -97,6 +97,9 @@ class Anime():
     def get_title(self):
         return self._title
 
+    def get_filename(self):
+        return self.__get_filename(self._settings['download_resolution'])
+
     def __get_src(self):
         host = 'ani.gamer.com.tw'
         req = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
@@ -123,7 +126,14 @@ class Anime():
         # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
         # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
         soup = self._src
-        self._episode = soup.find('li', 'playing').a.string
+        try:
+            #  适用于存在剧集列表
+            self._episode = soup.find('li', 'playing').a.string
+        except AttributeError:
+            # 如果这个sn就一集, 不存在剧集列表的情况
+            # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
+            self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+            self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
         self._episode = str(self._episode)
 
     def __get_episode_list(self):
@@ -1021,6 +1031,7 @@ class Anime():
         err_print(0, '                    影片標題:', '\"'+self.get_title()+'\"', no_sn=True, display_time=False)
         err_print(0, '                    番劇名稱:', '\"'+self.get_bangumi_name()+'\"', no_sn=True, display_time=False)
         err_print(0, '                    劇集標題:', '\"'+self.get_episode()+'\"', no_sn=True, display_time=False)
+        err_print(0, '                    参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 
 

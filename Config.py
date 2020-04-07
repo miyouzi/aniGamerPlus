@@ -14,8 +14,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v18.4'
-latest_config_version = 10.0
+aniGamerPlus_version = 'v19'
+latest_config_version = 11.0
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -228,6 +228,10 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'video_filename_extension' not in new_settings.keys():
         # v17 新增用户自定义视频扩展名
         new_settings['video_filename_extension'] = 'mp4'
+
+    if 'audio_language_jpn' not in new_settings.keys():
+        # v19 添加音轨日语标签  #37
+        new_settings['audio_language_jpn'] = False
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

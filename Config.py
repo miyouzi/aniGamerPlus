@@ -110,6 +110,7 @@ def __init_settings():
                     }
                 },
                 'faststart_movflags': False,
+                'audio_language_jpn': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,

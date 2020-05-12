@@ -328,7 +328,7 @@ class Anime():
                 sys.exit(1)
 
         def parse_playlist():
-            req = 'https:' + self._playlist['src']
+            req =  self._playlist['src']
             f = self.__request(req, no_cookies=True)
             url_prefix = re.sub(r'playlist.+', '', self._playlist['src'])  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
@@ -337,7 +337,7 @@ class Anime():
                 key = re.findall(r'=\d+x\d+', i)[0]  # 提取分辨率
                 key = re.findall(r'x\d+', key)[0][1:]  # 提取纵向像素数，作为 key
                 value = re.findall(r'chunklist.+', i)[0]  # 提取 m3u8 文件
-                value = 'https:' + url_prefix + value  # 组成完整的 m3u8 URL
+                value = url_prefix + value  # 组成完整的 m3u8 URL
                 m3u8_dict[key] = value
             self._m3u8_dict = m3u8_dict
 
@@ -360,7 +360,7 @@ class Anime():
             # 如果用户不是 VIP, 那么等待广告(8s)
             err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待8s廣告時間')
             start_ad()
-            time.sleep(8)
+            time.sleep(20)
             skip_ad()
         else:
             err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP賬戶, 立即下載')

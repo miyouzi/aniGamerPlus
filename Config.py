@@ -14,7 +14,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v19'
+aniGamerPlus_version = 'v19.1'
 latest_config_version = 11.0
 latest_database_version = 2.0
 cookie = None
@@ -476,6 +476,11 @@ def read_sn_list():
 
     if not os.path.exists(sn_list_path):
         return {}
+
+    if not os.path.getsize(sn_list_path):
+        # 如果文件是空的, https://github.com/miyouzi/aniGamerPlus/issues/38
+        return {}
+
     # del_bom(sn_list_path)  # 去除 BOM
     check_encoding(sn_list_path)
     with open(sn_list_path, 'r', encoding='utf-8') as f:

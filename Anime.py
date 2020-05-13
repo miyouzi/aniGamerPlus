@@ -357,8 +357,9 @@ class Anime():
             sys.exit(1)
 
         if not user_info['vip']:
-            # 如果用户不是 VIP, 那么等待广告(8s)
-            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待8s廣告時間')
+            # 如果用户不是 VIP, 那么等待广告(20s)
+            # 20200513 网站更新，最低广告更新时间从8s增加到20s https://github.com/miyouzi/aniGamerPlus/issues/41
+            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待20s廣告時間')
             start_ad()
             time.sleep(20)
             skip_ad()

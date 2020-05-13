@@ -147,12 +147,13 @@ python3 aniGamerPlus.py
         }
     },
     "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
+    "audio_language_jpn": false,  # 是否添加日語音軌標簽
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
     "save_logs": true,  # 是否記錄日志, 一天一個日志
     "quantity_of_logs": 7,  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
-    "config_version": 7.0,  # 配置文件版本
+    "config_version": 11.0,  # 配置文件版本
     "database_version": 2.0  # 資料庫版本
 }
 ```

@@ -17,7 +17,7 @@
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
 
-**ffmpeg的20200513版本存在問題，請避免使用20200513版本！ #44**
+**ffmpeg的20200513版本存在問題，請避免使用20200513版本！ [#44](https://github.com/miyouzi/aniGamerPlus/issues/44)**
 
 ## EXE 檔案運行(對於不熟悉Python的使用者)
 

@@ -48,7 +48,7 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
     def succeed_or_failed_print():
         check_tty = subprocess.Popen('tty', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         check_tty_return_str = check_tty.stdout.read().decode("utf-8")[0:-1]
-        if 'Windows' in platform.system() and (check_tty_return_str == '/dev/cons0' or check_tty.stderr.read()):
+        if 'Windows' in platform.system() and check_tty_return_str in ('/dev/cons0', ''):
             clr = Color()
             if green:
                 clr.print_green_text(msg)

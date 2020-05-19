@@ -328,7 +328,7 @@ class Anime():
                 sys.exit(1)
 
         def parse_playlist():
-            req =  self._playlist['src']
+            req = self._playlist['src']
             f = self.__request(req, no_cookies=True)
             url_prefix = re.sub(r'playlist.+', '', self._playlist['src'])  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
@@ -336,7 +336,7 @@ class Anime():
             for i in m3u8_list:
                 key = re.findall(r'=\d+x\d+', i)[0]  # 提取分辨率
                 key = re.findall(r'x\d+', key)[0][1:]  # 提取纵向像素数，作为 key
-                value = re.findall(r'chunklist.+', i)[0]  # 提取 m3u8 文件
+                value = re.findall(r'.*chunklist.+', i)[0]  # 提取 m3u8 文件
                 value = url_prefix + value  # 组成完整的 m3u8 URL
                 m3u8_dict[key] = value
             self._m3u8_dict = m3u8_dict
@@ -442,12 +442,18 @@ class Anime():
             pass
         key_uri = re.search(r'.+URI=.+m3u8key.+', m3u8_text).group()  # 找到包含 key 的行
         key_uri = re.sub(r'.+URI="', '', key_uri)[0:-1]  # 把 key 的链接提取出来
+        original_key_uri = key_uri
+
+        if not re.match(r'http.+', key_uri):
+            # https://github.com/miyouzi/aniGamerPlus/issues/46
+            # 如果不是完整的URI
+            key_uri = url_path + '/' + key_uri  # 组成完成的 URI
 
         m3u8_key_path = os.path.join(temp_dir, 'key.m3u8key')  # key 的存放位置
         with open(m3u8_key_path, 'wb') as f:  # 保存 key
             f.write(self.__request(key_uri, no_cookies=True).content)
 
-        chunk_list = re.findall(r'media_b.+ts.+', m3u8_text)  # chunk
+        chunk_list = re.findall(r'media_b.+ts.*', m3u8_text)  # chunk
 
         limiter = threading.Semaphore(self._settings['multi_downloading_segment'])  # chunk 并发下载限制器
         total_chunk_num = len(chunk_list)
@@ -514,7 +520,7 @@ class Anime():
 
         # m3u8 本地化
         # replace('\\', '\\\\') 为转义win路径
-        m3u8_text_local_version = m3u8_text.replace(key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\', '\\\\')
+        m3u8_text_local_version = m3u8_text.replace(original_key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\', '\\\\')
         for chunk in chunk_list:
             chunk_filename = re.findall(r'media_b.+ts', chunk)[0]  # chunk 文件名
             chunk_path = os.path.join(temp_dir, chunk_filename).replace('\\', '\\\\')  # chunk 本地路径

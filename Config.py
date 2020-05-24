@@ -110,7 +110,7 @@ def __init_settings():
                     }
                 },
                 'faststart_movflags': False,
-                'audio_language_jpn': False,
+                'audio_language': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -230,9 +230,9 @@ def __update_settings(old_settings):  # 升级配置文件
         # v17 新增用户自定义视频扩展名
         new_settings['video_filename_extension'] = 'mp4'
 
-    if 'audio_language_jpn' not in new_settings.keys():
+    if 'audio_language' not in new_settings.keys():
         # v19 添加音轨日语标签  #37
-        new_settings['audio_language_jpn'] = False
+        new_settings['audio_language'] = False
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

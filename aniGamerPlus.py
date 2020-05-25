@@ -578,7 +578,7 @@ def user_exit(signum, frame):
     sys.exit(255)
 
 
-def check_new_version():
+def check_new_version(settings):
     # 检查GitHub上是否有新版
     remote_version = Config.read_latest_version_on_github()
     if float(settings['aniGamerPlus_version'][1:]) < float(remote_version['tag_name'][1:]):

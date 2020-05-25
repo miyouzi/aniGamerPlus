@@ -48,7 +48,7 @@
         }
     },
     "faststart_movflags": false,
-    "audio_language_jpn": false,
+    "audio_language": false,
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,

@@ -545,8 +545,11 @@ class Anime():
             # 此功能可以更快的在线播放视频
             ffmpeg_cmd[7:7] = iter(['-movflags', 'faststart'])
 
-        if self._settings['audio_language_jpn']:
-            ffmpeg_cmd[7:7] = iter(['-metadata:s:a:0', 'language=jpn'])
+        if self._settings['audio_language']:
+            if self._title.find('中文') == -1:
+                ffmpeg_cmd[7:7] = iter(['-metadata:s:a:0', 'language=jpn'])
+            else:
+                ffmpeg_cmd[7:7] = iter(['-metadata:s:a:0', 'language=chi'])
 
         # 执行 ffmpeg
         run_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

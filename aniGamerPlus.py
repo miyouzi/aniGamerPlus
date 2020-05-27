@@ -642,7 +642,7 @@ if __name__ == '__main__':
     sn_dict = Config.read_sn_list()
 
     if settings['check_latest_version']:
-        check_new_version()  # 检查新版
+        check_new_version(settings)  # 检查新版
     version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
     print(version_msg)
 

@@ -14,31 +14,43 @@ import Config
 import language
 from aniGamerPlus import check_new_version
 
+def __init_settings(gui_path):
+    if os.path.exists(gui_path):
+        os.remove(gui_path)
+    settings = {
+                'ver': 0,
+                'gui_lang': '繁體中文 台灣 (zhTW)',
+                'ava_lang_for_GUI': [
+                    '简体中文 (zhCN)',
+                    '繁體中文 台灣 (zhTW)'
+                ],
+                'gui_theme': 'DarkTeal10',
+                'set_lang': '繁體中文 台灣 (zhTW)'
+                }
+    with open(gui_path, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, ensure_ascii=False, indent=4)
+    
+# load GUI setting from gui_settings.json
 def load_gui_settings(gui_setting_file_name = 'gui_settings.json'):
-    try:
-        # open json file and read
-        with open(gui_setting_file_name, 'r', encoding="utf-8") as setting:
-            my_setting = json.loads(setting.read())
-    except FileNotFoundError:
-        MessageBox(None, gui_setting_file_name + ' ' + lang.msg_box_file_not_exist, lang.msg_box_file_op_title, 0)
-    else:
-        return my_setting
-    finally:
-        setting.close()
+    # open json file and read
+    gui_setting_exist = True
+    if not os.path.exists(gui_setting_file_name):
+        __init_settings(gui_setting_file_name)
+        gui_setting_exist = False
+    with open(gui_setting_file_name, 'r', encoding="utf-8") as setting:
+        my_setting = json.loads(setting.read())
+    return my_setting, gui_setting_exist
 
 # load langage from lang.json
 def loadLang(lang_code='繁體中文 台灣 (zhTW)'):
     lang_file_name = 'lang_' + lang_code[-5:-1] + '.json'
-    try:
-        # open json file and read
+    # open json file and read
+    if os.path.exists(lang_file_name):
         with open(lang_file_name, 'r', encoding="utf-8") as lang:
             lang_setting = json.loads(lang.read())
-    except FileNotFoundError:
-        MessageBox(None, lang_file_name + ' ' + lang.msg_box_file_not_exist, lang.msg_box_file_op_title, 0)
-    else:
         return language.Lang(lang_setting)
-    finally:
-        lang.close()
+    else:
+        MessageBox(None, lang_file_name + ' ' + '檔案不存在!', '檔案操作', 0)
 
 def save_settings(config_path, settings):
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -50,29 +62,27 @@ def save_gui_settings(gui_path, gui_settings):
 
 if __name__ == '__main__':
     working_dir = os.path.dirname(os.path.realpath(__file__))
+    MessageBox = ctypes.windll.user32.MessageBoxW  
 
     # get gui configuration
     gui_path = os.path.join(working_dir, 'gui_settings.json')
-    gui_settings = load_gui_settings(gui_path)
+    gui_settings, gui_setting_exist = load_gui_settings(gui_path)
     gui_lang = gui_settings['gui_lang']
     ava_lang_for_GUI = gui_settings['ava_lang_for_GUI']
     gui_theme = gui_settings['gui_theme']    
 
-    MessageBox = ctypes.windll.user32.MessageBoxW  
-
     config_path = os.path.join(working_dir, 'config.json')
     settings = Config.read_settings()
-    # download_mode_list_text = ['最後一集','全部','最近上傳的一集']
     default_download_mode_list = ['latest','all','latest-sn']
-    # bangumi_dir = settings['bangumi_dir']
-    # temp_dir = settings['temp_dir']
-    # classify_bangumi = settings['classify_bangumi']
     
     render_windows = True
     while render_windows:
         # GUI layout
         sg.change_look_and_feel(gui_theme)  # windows colorful
         lang = loadLang(gui_lang)
+        if gui_setting_exist == False:
+            MessageBox(None, lang.msg_box_file_not_exist, lang.msg_box_file_op_title, 0)
+            gui_setting_exist = True
         layout = [
             [sg.Button(lang.st_check_update, key='check update'), sg.Button(lang.st_website, key='website')],
             [sg.Text('_' * 100, size=(55, 1))],
@@ -125,8 +135,6 @@ if __name__ == '__main__':
             event, values = window.Read()
             print('event: ', event, '\nvalues:', values)  # debug message
             if event == 'Apply':
-                gui_settings['set_lang'] = values['set_lang']
-                gui_settings['gui_theme'] = values['gui_theme']
                 settings['check_latest_version'] = values['check_latest_version']
                 settings['check_frequency'] = values['check_frequency']
                 settings['read_sn_list_when_checking_update'] = values['read_sn_list_when_checking_update']
@@ -151,7 +159,6 @@ if __name__ == '__main__':
                 settings['audio_language_jpn'] = values['audio_language_jpn']
                 # save configuration
                 save_settings(config_path, settings)
-                save_gui_settings(gui_path, gui_settings)
             elif event == 'check update':
                 if settings['check_latest_version']:
                     check_new_version(settings)  # 检查新版

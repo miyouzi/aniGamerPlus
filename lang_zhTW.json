@@ -29,7 +29,7 @@
     },
     "msg_box": {
         "file_op_title": "檔案操作",
-        "file_not_exist": "檔案不存在!",
+        "file_not_exist": "設定檔案不存在，已自動重新建立!",
         "settings_file_not_change": "設定檔並無改變!",
         "date_fmt_wrong_title": "日期格式錯誤",
         "format_wrong": "格式錯誤",

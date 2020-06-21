@@ -17,6 +17,7 @@ import subprocess
 import platform
 import random
 import socket
+import traceback
 
 import Config
 from Anime import Anime, TryTooManyTimeError
@@ -56,6 +57,7 @@ def build_anime(sn):
         err_print(sn, '抓取失敗', '影片信息抓取失敗!', status=1)
     except BaseException as e:
         err_print(sn, '抓取失敗', '抓取影片信息時發生未知錯誤: '+str(e), status=1)
+        err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1)
     return anime
 
 
@@ -201,7 +203,8 @@ def worker(sn, sn_info, realtime_show_file_size=False):
                 err_print(sn, '任務完成', status=2)
         except BaseException as e:
             err_msg_detail = 'title=\"' + anime.get_title() + '\" 發生未知錯誤, 等待下次更新重試: ' + str(e)
-            err_print(sn, '上传失敗', err_msg_detail, 1)
+            err_print(sn, '上傳失敗', '異常詳情:\n'+traceback.format_exc(), status=1)
+            err_print(sn, '上傳失敗', err_msg_detail, 1)
 
         upload_quit()
 
@@ -224,6 +227,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
     except BaseException as e:
         # 兜一下各种奇奇怪怪的错误
         err_print(sn, '下載異常', '發生未知錯誤: '+str(e), status=1)
+        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
         anime.video_size = 0
 
     if anime.video_size < 10:
@@ -247,7 +251,8 @@ def worker(sn, sn_info, realtime_show_file_size=False):
             anime.upload(bangumi_tag)  # 上传至服务器
         except BaseException as e:
             # 兜一下各种奇奇怪怪的错误
-            err_print(sn, '上传異常', '發生未知錯誤, 從任務列隊中移除, 等待下次更新重試: ' + str(e), status=1)
+            err_print(sn, '上傳異常', '發生未知錯誤, 從任務列隊中移除, 等待下次更新重試: ' + str(e), status=1)
+            err_print(sn, '上傳異常', '異常詳情:\n'+traceback.format_exc(), status=1)
             upload_quit()
 
         update_db(anime)  # 上传完成后, 更新数据库
@@ -335,6 +340,7 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
             anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
     except BaseException as e:
         err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
+        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
         anime.video_size = 0
 
     while anime.video_size < 10:
@@ -355,6 +361,7 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
                     anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
             except BaseException as e:
                 err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
+                err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
                 anime.video_size = 0
 
     thread_limiter.release()

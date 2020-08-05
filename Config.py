@@ -350,13 +350,15 @@ def del_bom(path, display=True):
                 break
 
 
-def read_settings():
+def read_settings(config=''):
+    if config=='':
+        if not os.path.exists(config_path):
+            __init_settings()
 
-
-    if not os.path.exists(config_path):
-        __init_settings()
-
-    settings = __read_settings_file()
+        settings = __read_settings_file()
+    else:
+        # 用于检查 web 控制台回传的配置是否正确
+        settings = config
 
     if 'database_version' in settings.keys():
         if settings['database_version'] < latest_database_version:
@@ -642,6 +644,14 @@ def __remove_superfluous_logs(max_num):
                 log_path = os.path.join(logs_dir, log)
                 os.remove(log_path)
                 __color_print(0, '刪除過期日志: ' + log, no_sn=True, display=False)
+
+
+def write_settings(settings):
+    settings = read_settings(settings)  # 正规化配置
+
+    # 配置写入磁盘
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':

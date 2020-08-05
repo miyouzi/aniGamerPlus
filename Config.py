@@ -15,7 +15,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v19.4'
-latest_config_version = 12.0
+latest_config_version = 13.0
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -83,10 +83,7 @@ def __init_settings():
                 # cookie的自动刷新对 UA 有检查
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
                 'use_proxy': False,
-                'proxies': {  # 代理功能
-                    1: 'socks5://127.0.0.1:1080',
-                    2: 'http://user:passwd@example.com:1000'
-                },
+                'proxy': 'http://user:passwd@example.com:1000',   # 代理功能, config_version v13.0 删除链式代理
                 'upload_to_server': False,
                 'ftp': {  # 将文件上传至远程服务器
                     'server': '',
@@ -234,6 +231,15 @@ def __update_settings(old_settings):  # 升级配置文件
         # v19 添加音轨日语标签  #37
         new_settings['audio_language'] = False
 
+    if 'proxy' not in new_settings.keys() or 'proxies' in new_settings.keys():
+        # v20 删除链式代理功能
+        if new_settings['proxies']["1"]:
+            # 转移用户原有配置
+            new_settings['proxy'] = new_settings['proxies']["1"]
+        else:
+            new_settings['proxy'] = 'http://user:passwd@example.com:1000'
+        del new_settings['proxies']
+
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
@@ -351,7 +357,7 @@ def del_bom(path, display=True):
 
 
 def read_settings(config=''):
-    if config=='':
+    if config == '':
         if not os.path.exists(config_path):
             __init_settings()
 
@@ -408,23 +414,15 @@ def read_settings(config=''):
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version
 
-    # 修正 proxies 字典, 使 key 为 int, 方便用于链式代理
-    new_proxies = {}
     use_gost = False
-    for key, value in settings['proxies'].items():
-        if value:
-            if not (re.match(r'^http://', value.lower())
-                    or re.match(r'^https://', value.lower())
-                    or re.match(r'^socks5://', value.lower())  # v12开始原生支持 socks5 代理
-                    or re.match(r'^socks5h://', value.lower())):  # socks5h 远程解析域名
-                #  如果出现非自身支持的协议
-                use_gost = True
-            new_proxies[int(key)] = value
-    if len(new_proxies.keys()) > 1:  # 如果代理配置大于 1 , 即使用链式代理, 则同样需要 gost
-        use_gost = True
-    settings['proxies'] = new_proxies
+    if not (re.match(r'^http://', settings['proxy'].lower())
+            or re.match(r'^https://', settings['proxy'].lower())
+            or re.match(r'^socks5://', settings['proxy'].lower())  # v12开始原生支持 socks5 代理
+            or re.match(r'^socks5h://', settings['proxy'].lower())):  # socks5h 远程解析域名
+        #  如果出现非自身支持的协议
+        use_gost = True  # 则启用gost
     settings['use_gost'] = use_gost
-    if not new_proxies:
+    if not settings['proxy']:
         settings['use_proxy'] = False
 
     if settings['multi-thread'] > max_multi_thread:

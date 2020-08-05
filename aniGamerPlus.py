@@ -599,7 +599,7 @@ def __init_proxy():
         # 需要使用 gost 的情况
         # 寻找 gost
         check_gost = subprocess.Popen('gost -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if check_gost.stderr.readlines():  # 查找 ffmpeg 是否已放入系统 path
+        if check_gost.stderr.readlines():  # 查找 gost 是否已放入系统 path
             gost_path = 'gost'
         else:
             # print('没有在系统PATH中发现gost，尝试在所在目录寻找')
@@ -611,11 +611,7 @@ def __init_proxy():
                 err_print(0, '當前代理使用擴展協議, 需要使用gost, 但是gost未找到', status=1, no_sn=True)
                 raise FileNotFoundError  # 如果本地目录下也没有找到 gost 则丢出异常
         # 构造 gost 命令
-        gost_cmd = [gost_path, '-L=:'+str(gost_port)]  # 本地监听端口 34173
-        proxies_keys = list(settings['proxies'].keys())
-        proxies_keys.sort()  # 排序, 确保链式结构正确
-        for key in proxies_keys:
-            gost_cmd.append('-F=' + settings['proxies'][key])  # 构建(链式)代理
+        gost_cmd = [gost_path, '-L=:'+str(gost_port), '-F=' + settings['proxy']]  # 本地监听端口 34173
 
         def run_gost():
             # gost 线程

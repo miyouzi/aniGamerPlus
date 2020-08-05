@@ -65,9 +65,8 @@ class Anime():
             os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:' + self._gost_port
         else:
             # 无需 gost 的情况
-            key = list(self._settings['proxies'].keys())[0]
-            os.environ['HTTP_PROXY'] = self._settings['proxies'][key]
-            os.environ['HTTPS_PROXY'] = self._settings['proxies'][key]
+            os.environ['HTTP_PROXY'] = self._settings['proxy']
+            os.environ['HTTPS_PROXY'] = self._settings['proxy']
 
     def renew(self):
         self.__get_src()

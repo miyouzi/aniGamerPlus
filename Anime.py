@@ -310,19 +310,30 @@ class Anime():
             req = "https://ani.gamer.com.tw/ajax/videoStart.php?sn=" + str(self._sn)
             f = self.__request(req)
 
-        def check_no_ad():
+        def check_no_ad(error_count=10):
+            if error_count == 0:
+                err_print(self._sn, '廣告去除失敗! 請向開發者提交 issue!', status=1)
+                sys.exit(1)
+
             req = "https://ani.gamer.com.tw/ajax/token.php?sn=" + str(
                 self._sn) + "&device=" + self._device_id + "&hash=" + random_string(12)
             f = self.__request(req)
             resp = f.json()
             if 'time' in resp.keys():
-                if resp['time'] == 1:
-                    # print('check_no_ad: Adaway!')
-                    pass
+                if not resp['time'] == 1:
+                    err_print(self._sn, '廣告似乎還沒去除, 追加等待2秒, 剩餘重試次數 ' + str(error_count), status=1)
+                    time.sleep(2)
+                    skip_ad()
+                    video_start()
+                    check_no_ad(error_count=error_count - 1)
                 else:
-                    err_print(self._sn, 'check_no_ad: Ads not away?', status=1)
+                    # 通过广告检查
+                    if error_count != 10:
+                        ads_time = (10-error_count)*2 + 20 + 2
+                        err_print(self._sn, '通过廣告時間' + str(ads_time) + '秒, 記錄到配置檔案', status=2)
+                        self._settings['ads_time'] = ads_time
+                        Config.write_settings(self._settings)  # 保存到配置文件
             else:
-                # print('check_no_ad: Not in right area.')
                 err_print(self._sn, '遭到動畫瘋地區限制, 你的IP可能不被動畫瘋認可!', status=1)
                 sys.exit(1)
 
@@ -358,9 +369,11 @@ class Anime():
         if not user_info['vip']:
             # 如果用户不是 VIP, 那么等待广告(20s)
             # 20200513 网站更新，最低广告更新时间从8s增加到20s https://github.com/miyouzi/aniGamerPlus/issues/41
-            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待20s廣告時間')
+            # 20200806 网站更新，最低广告更新时间从20s增加到25s https://github.com/miyouzi/aniGamerPlus/issues/55
+            ad_time = self._settings['ads_time']
+            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待'+str(ad_time)+'s廣告時間')
             start_ad()
-            time.sleep(20)
+            time.sleep(ad_time)
             skip_ad()
         else:
             err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP賬戶, 立即下載')
@@ -410,7 +423,8 @@ class Anime():
             return filename  # 截止至清晰度的文件名, 用于 __get_temp_filename()
 
         # 添加用户后缀及扩展名
-        filename = filename + self._settings['customized_video_filename_suffix'] + '.' + self._settings['video_filename_extension']
+        filename = filename + self._settings['customized_video_filename_suffix'] \
+                   + '.' + self._settings['video_filename_extension']
         legal_filename = Config.legalize_filename(filename)  # 去除非法字符
         filename = legal_filename
         return filename
@@ -418,7 +432,8 @@ class Anime():
     def __get_temp_filename(self, resolution, temp_suffix):
         filename = self.__get_filename(resolution, without_suffix=True)
         # temp_filename 为临时文件名，下载完成后更名正式文件名
-        temp_filename = filename + self._settings['customized_video_filename_suffix'] + '.' + temp_suffix + '.' + self._settings['video_filename_extension']
+        temp_filename = filename + self._settings['customized_video_filename_suffix'] + '.' + temp_suffix \
+                        + '.' + self._settings['video_filename_extension']
         temp_filename = Config.legalize_filename(temp_filename)
         return temp_filename
 
@@ -1040,9 +1055,9 @@ class Anime():
 
     def get_info(self):
         err_print(self._sn, '顯示資訊')
-        err_print(0, '                    影片標題:', '\"'+self.get_title()+'\"', no_sn=True, display_time=False)
-        err_print(0, '                    番劇名稱:', '\"'+self.get_bangumi_name()+'\"', no_sn=True, display_time=False)
-        err_print(0, '                    劇集標題:', '\"'+self.get_episode()+'\"', no_sn=True, display_time=False)
+        err_print(0, '                    影片標題:', '\"' + self.get_title() + '\"', no_sn=True, display_time=False)
+        err_print(0, '                    番劇名稱:', '\"' + self.get_bangumi_name() + '\"', no_sn=True, display_time=False)
+        err_print(0, '                    劇集標題:', '\"' + self.get_episode() + '\"', no_sn=True, display_time=False)
         err_print(0, '                    参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 

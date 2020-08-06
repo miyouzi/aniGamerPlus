@@ -5,19 +5,13 @@
 # @File    : aniGamerPlus.py
 # @Software: PyCharm
 
-import os
+import os, sys, time, re, random, traceback, argparse
 import signal
 import sqlite3
-import sys
 import threading
-import time
-import argparse
-import re
 import subprocess
 import platform
-import random
 import socket
-import traceback
 
 import Config
 from Anime import Anime, TryTooManyTimeError

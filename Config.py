@@ -15,7 +15,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v19.4'
-latest_config_version = 13.0
+latest_config_version = 14.0
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -83,7 +83,7 @@ def __init_settings():
                 # cookie的自动刷新对 UA 有检查
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
                 'use_proxy': False,
-                'proxy': 'http://user:passwd@example.com:1000',   # 代理功能, config_version v13.0 删除链式代理
+                'proxy': 'http://user:passwd@example.com:1000',  # 代理功能, config_version v13.0 删除链式代理
                 'upload_to_server': False,
                 'ftp': {  # 将文件上传至远程服务器
                     'server': '',
@@ -111,6 +111,16 @@ def __init_settings():
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
+                'ads_time': 25,
+                'use_dashboard': True,
+                'dashboard': {
+                    'host': '127.0.0.1',
+                    'port': 6666,
+                    'SSL': False,
+                    'BasicAuth': False,
+                    'username': 'admin',
+                    'password': 'admin'
+                },
                 'save_logs': True,
                 'quantity_of_logs': 7,
                 'config_version': latest_config_version,
@@ -151,12 +161,6 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'add_bangumi_name_to_video_filename' not in new_settings.keys():  # v3.0 新增开关, 文件名可以单纯用剧集命名
         new_settings['add_bangumi_name_to_video_filename'] = True
-
-    if 'proxies' not in new_settings.keys():  # v3.0 新增代理功能
-        new_settings['proxies'] = {1: '', 2: ''}
-
-    if 'proxy' in new_settings.keys():  # v3.0 去掉旧的代理配置
-        new_settings.pop('proxy')
 
     if 'segment_download_mode' not in new_settings.keys():  # v3.1 新增分段下载模式开关
         new_settings['segment_download_mode'] = True
@@ -240,10 +244,20 @@ def __update_settings(old_settings):  # 升级配置文件
             new_settings['proxy'] = 'http://user:passwd@example.com:1000'
         del new_settings['proxies']
 
+    if 'dashboard' not in new_settings.keys():
+        new_settings['dashboard'] = {
+            'host': '127.0.0.1',
+            'port': 6666,
+            'SSL': False,
+            'BasicAuth': False,
+            'username': 'admin',
+            'password': 'admin'
+        }
+
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
-    msg = '配置文件從 v'+str(old_settings['config_version'])+' 升級到 v'+str(latest_config_version)+' 你的有效配置不會丟失!'
+    msg = '配置文件從 v' + str(old_settings['config_version']) + ' 升級到 v' + str(latest_config_version) + ' 你的有效配置不會丟失!'
     __color_print(0, msg, status=2, no_sn=True)
 
 
@@ -296,7 +310,7 @@ def __update_database(old_version):
     cursor.close()
     conn.commit()
     conn.close()
-    msg = '資料庫從 v'+str(old_version)+' 升級到 v'+str(latest_database_version)+' 内部資料不會丟失'
+    msg = '資料庫從 v' + str(old_version) + ' 升級到 v' + str(latest_database_version) + ' 内部資料不會丟失'
     __color_print(0, msg, status=2, no_sn=True)
 
 
@@ -319,7 +333,7 @@ def __read_settings_file():
             with open(config_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
     except BaseException as e:
-        __color_print(0, '讀取配置發生異常, 將重置配置! '+str(e), status=1, no_sn=True)
+        __color_print(0, '讀取配置發生異常, 將重置配置! ' + str(e), status=1, no_sn=True)
         __init_settings()
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -336,7 +350,7 @@ def del_bom(path, display=True):
     if have_bom:
         filename = os.path.split(path)[1]
         if display:
-            __color_print(0, '發現 '+filename+' 帶有BOM頭, 將移除后保存', no_sn=True)
+            __color_print(0, '發現 ' + filename + ' 帶有BOM頭, 將移除后保存', no_sn=True)
         try_counter = 0
         while True:
             try:
@@ -345,14 +359,14 @@ def del_bom(path, display=True):
             except BaseException as e:
                 if try_counter > 3:
                     if display:
-                        __color_print(0, '無BOM '+filename+' 保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
+                        __color_print(0, '無BOM ' + filename + ' 保存失敗! 发生异常: ' + str(e), status=1, no_sn=True)
                     raise e
                 random_wait_time = random.uniform(2, 5)
                 time.sleep(random_wait_time)
                 try_counter = try_counter + 1
             else:
                 if display:
-                    __color_print(0, '無BOM '+filename+' 保存成功', status=2, no_sn=True)
+                    __color_print(0, '無BOM ' + filename + ' 保存成功', status=2, no_sn=True)
                 break
 
 
@@ -459,7 +473,7 @@ def check_encoding(file_path):
         else:
             # 如果为其他编码, 则转为 UTF-8 编码, 包含處理 BOM 頭
             with open(file_path, 'wb') as f2:
-                __color_print(0, '檔案讀取', file_path+' 編碼為 '+file_encoding+' 將轉碼為 UTF-8', no_sn=True, status=1)
+                __color_print(0, '檔案讀取', file_path + ' 編碼為 ' + file_encoding + ' 將轉碼為 UTF-8', no_sn=True, status=1)
                 data = data.decode(file_encoding)  # 解码
                 data = data.encode('utf-8')  # 编码
                 f2.write(data)  # 写入文件
@@ -510,7 +524,7 @@ def read_sn_list():
                         rename = re.findall(r'<.*>', i)[0][1:-1]
                 else:  # 没有指定下载模式则使用默认设定
                     sn_dict[int(a[0])] = {'mode': settings['default_download_mode']}
-                bangumi_tag = re.sub(r"( )+$","",bangumi_tag)
+                bangumi_tag = re.sub(r"( )+$", "", bangumi_tag)
                 sn_dict[int(a[0])]['tag'] = bangumi_tag
                 sn_dict[int(a[0])]['rename'] = rename
         return sn_dict
@@ -572,7 +586,7 @@ def invalid_cookie():
                 os.remove(invalid_cookie_path)
             os.rename(cookie_path, invalid_cookie_path)
         except BaseException as e:
-            __color_print(0, 'cookie狀態', '嘗試標記失效cookie時遇到未知錯誤: '+str(e), no_sn=True, status=1)
+            __color_print(0, 'cookie狀態', '嘗試標記失效cookie時遇到未知錯誤: ' + str(e), no_sn=True, status=1)
         else:
             __color_print(0, 'cookie狀態', '已成功標記失效cookie', no_sn=True, display=False)
 
@@ -581,7 +595,7 @@ def time_stamp_to_time(timestamp):
     # 把时间戳转化为时间: 1479264792 to 2016-11-16 10:53:12
     # 代码来自: https://www.cnblogs.com/shaosks/p/5614630.html
     timeStruct = time.localtime(timestamp)
-    return time.strftime('%Y-%m-%d %H:%M:%S',timeStruct)
+    return time.strftime('%Y-%m-%d %H:%M:%S', timeStruct)
 
 
 def get_cookie_time():
@@ -605,7 +619,7 @@ def renew_cookies(new_cookie, log=True):
                 f.write(new_cookie_str)
         except BaseException as e:
             if try_counter > 3:
-                __color_print(0, '新cookie保存失敗! 发生异常: '+str(e), status=1, no_sn=True)
+                __color_print(0, '新cookie保存失敗! 发生异常: ' + str(e), status=1, no_sn=True)
                 break
             random_wait_time = random.uniform(2, 5)
             time.sleep(random_wait_time)
@@ -637,19 +651,28 @@ def __remove_superfluous_logs(max_num):
         logs_list = os.listdir(logs_dir)
         if len(logs_list) > max_num:
             logs_list.sort()
-            logs_need_remove = logs_list[0:len(logs_list)-max_num]
+            logs_need_remove = logs_list[0:len(logs_list) - max_num]
             for log in logs_need_remove:
                 log_path = os.path.join(logs_dir, log)
                 os.remove(log_path)
                 __color_print(0, '刪除過期日志: ' + log, no_sn=True, display=False)
 
 
-def write_settings(settings):
-    settings = read_settings(settings)  # 正规化配置
+def write_settings(web_config):
+    web_config = read_settings(web_config)  # 正规化配置
+
+    # 还原配置
+    a = os.path.join(working_dir, 'bangumi')  # 默认番剧目录
+    b = os.path.join(working_dir, 'temp')  # 默认缓存目录
+    if os.path.normcase(web_config['bangumi_dir']) == os.path.normcase(a):
+        web_config["bangumi_dir"] = ''
+    if os.path.normcase(web_config['temp_dir']) == os.path.normcase(b):
+        web_config['temp_dir'] = ''
+    del web_config['working_dir']
 
     # 配置写入磁盘
     with open(config_path, 'w', encoding='utf-8') as f:
-        json.dump(settings, f, ensure_ascii=False, indent=4)
+        json.dump(web_config, f, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':

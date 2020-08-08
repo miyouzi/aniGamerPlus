@@ -7,6 +7,7 @@
 
 import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
+import socket
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
 # working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
@@ -14,7 +15,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v19.4'
+aniGamerPlus_version = 'v20'
 latest_config_version = 14.0
 latest_database_version = 2.0
 cookie = None
@@ -235,6 +236,9 @@ def __update_settings(old_settings):  # 升级配置文件
         # v19 添加音轨日语标签  #37
         new_settings['audio_language'] = False
 
+    if 'audio_language_jpn' in new_settings.keys():
+        del new_settings['audio_language_jpn']
+
     if 'proxy' not in new_settings.keys() or 'proxies' in new_settings.keys():
         # v20 删除链式代理功能
         if new_settings['proxies']["1"]:
@@ -243,6 +247,9 @@ def __update_settings(old_settings):  # 升级配置文件
         else:
             new_settings['proxy'] = 'http://user:passwd@example.com:1000'
         del new_settings['proxies']
+
+    if 'use_dashboard' not in new_settings.keys():
+        new_settings['use_dashboard'] = True
 
     if 'dashboard' not in new_settings.keys():
         new_settings['dashboard'] = {
@@ -669,10 +676,22 @@ def write_settings(web_config):
     if os.path.normcase(web_config['temp_dir']) == os.path.normcase(b):
         web_config['temp_dir'] = ''
     del web_config['working_dir']
+    del web_config['aniGamerPlus_version']
+    del web_config['use_gost']
 
     # 配置写入磁盘
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(web_config, f, ensure_ascii=False, indent=4)
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        local_ip = s.getsockname()[0]
+    except:
+        local_ip.close()
+    return local_ip
 
 
 if __name__ == '__main__':

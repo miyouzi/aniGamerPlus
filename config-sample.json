@@ -21,10 +21,7 @@
     "zerofill": 1,
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",
     "use_proxy": false,
-    "proxies": {
-        "1": "socks5://127.0.0.1:1080",
-        "2": "http://user:passwd@example.com:1000"
-    },
+    "proxy": "http://user:passwd@example.com:1000",
     "upload_to_server": false,
     "ftp": {
         "server": "",
@@ -52,8 +49,18 @@
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,
+    "ads_time": 25,
+    "use_dashboard": true,
+    "dashboard": {
+        "host": "127.0.0.1",
+        "port": 5000,
+        "SSL": false,
+        "BasicAuth": false,
+        "username": "admin",
+        "password": "admin"
+    },
     "save_logs": true,
     "quantity_of_logs": 7,
-    "config_version": 11.0,
+    "config_version": 13.0,
     "database_version": 2.0
 }

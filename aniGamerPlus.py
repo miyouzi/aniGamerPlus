@@ -373,10 +373,16 @@ def __get_info_only(sn):
     thread_limiter.release()
 
 
-def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui_save_dir='', classify=True, get_info=False, user_cmd=False):
+def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
+    global thread_limiter
+    thread_limiter = threading.Semaphore(cui_thread_limit)
 
-    if cui_thread_limit == 1:
-        realtime_show_file_size = True
+    if realtime_show:
+        if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
+            realtime_show_file_size = True
+        else:
+            realtime_show_file_size = False
     else:
         realtime_show_file_size = False
 
@@ -395,7 +401,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             anime.get_info()
         else:
             # True 是实时显示文件大小, 仅一个下载任务时适用
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
@@ -423,7 +429,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             if get_info:
                 anime.get_info()
             else:
-                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
         else:
 
             anime = build_anime(bangumi_list[-1])
@@ -434,7 +440,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range, cui
             if get_info:
                 anime.get_info()
             else:
-                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
 
     elif cui_download_mode == 'all':
         if get_info:
@@ -622,22 +628,42 @@ def __init_proxy():
         print('使用代理連接動畫瘋, 使用http/https/socks5協議')
 
 
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, user_exit)
-    signal.signal(signal.SIGTERM, user_exit)
-    settings = Config.read_settings()
-    working_dir = settings['working_dir']
-    db_path = os.path.join(working_dir, 'aniGamer.db')
-    queue = {}  # 储存 sn 相关信息, {'tag': TAG, 'rename': RENAME}, rename,
-    processing_queue = []
-    thread_limiter = threading.Semaphore(settings['multi-thread'])  # 下载并发限制器
-    upload_limiter = threading.Semaphore(settings['multi_upload'])  # 并发上传限制器
-    db_locker = threading.Semaphore(1)
-    thread_tasks = []
-    gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
-    gost_port = gost_port()  # gost 端口
-    sn_dict = Config.read_sn_list()
+def run_dashboard():
+    from Dashboard.Server import run as dashboard
+    server = threading.Thread(target=dashboard)
+    server.setDaemon(True)
+    server.start()
+    if settings['dashboard']['SSL']:
+        dashboard_address = 'https://'
+    else:
+        dashboard_address = 'http://'
+    if settings['dashboard']['host'] == '0.0.0.0':
+        host = Config.get_local_ip()
+        dashboard_address = '【開放外部訪問】訪問地址: ' + dashboard_address
+    else:
+        host = settings['dashboard']['host']
+        dashboard_address = '訪問地址: ' + dashboard_address
 
+    dashboard_address = dashboard_address + host + ':' + str(settings['dashboard']['port'])
+    err_print(0, 'Web控制面板已啓動', dashboard_address, no_sn=True, status=2)
+
+
+signal.signal(signal.SIGINT, user_exit)
+signal.signal(signal.SIGTERM, user_exit)
+settings = Config.read_settings()
+working_dir = settings['working_dir']
+db_path = os.path.join(working_dir, 'aniGamer.db')
+queue = {}  # 储存 sn 相关信息, {'tag': TAG, 'rename': RENAME}, rename,
+processing_queue = []
+thread_limiter = threading.Semaphore(settings['multi-thread'])  # 下载并发限制器
+upload_limiter = threading.Semaphore(settings['multi_upload'])  # 并发上传限制器
+db_locker = threading.Semaphore(1)
+thread_tasks = []
+gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
+gost_port = gost_port()  # gost 端口
+sn_dict = Config.read_sn_list()
+
+if __name__ == '__main__':
     if settings['check_latest_version']:
         check_new_version()  # 检查新版
     version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
@@ -754,7 +780,6 @@ if __name__ == '__main__':
                     thread_limit = Config.get_max_multi_thread()
                 else:
                     thread_limit = arg.thread_limit
-                thread_limiter = threading.Semaphore(thread_limit)
             else:
                 thread_limit = settings['multi-thread']
 
@@ -775,6 +800,9 @@ if __name__ == '__main__':
 
     if settings['use_proxy']:
         __init_proxy()
+
+    if settings['use_dashboard']:
+        run_dashboard()
 
     while True:
         print()

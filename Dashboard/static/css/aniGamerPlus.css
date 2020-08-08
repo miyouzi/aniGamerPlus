@@ -1,0 +1,93 @@
+body {
+    background: #F7F7F7;
+    font-family: "Microsoft YaHei";
+}
+
+.login-content {
+    margin: 0 auto;
+    padding: 3rem 0 0;
+    text-align: center;
+}
+
+.login-wrapper {
+    margin: 5% auto 0;
+    max-width: 20rem;
+    position: relative;
+}
+
+.login-content h1:after, .login-content h1:before {
+    content: "";
+    height: 2px;
+    position: absolute;
+    margin: 0.5rem 0 0;
+    width: 20%;
+}
+
+.login-content h1:before {
+    background: #7e7e7e;
+    left: 0;
+}
+
+.login-content h1:after {
+    background: #7e7e7e;
+    right: 0;
+}
+
+.login-content h1 {
+    margin: 2rem 0 2rem;
+	text-align: center;
+	line-height: 1rem;
+	color: #73879C;
+}
+
+.login-content input ,  .login-content button {
+	margin: 1rem 0 0;
+	padding: 0.2rem 1rem;
+}
+
+.error-pw {
+	margin: 1rem 0 0;
+}
+
+.setting-wrapper {
+	margin: 1rem 1rem;
+	max-width: 60rem;
+}
+
+.setting-content {
+	margin: 1rem 1rem 0 1rem;
+}
+
+.setting-wrapper h2 {
+	margin: 1rem 1rem 0;
+	color: #73879C;
+}
+
+.my-button {
+	margin: 0 0 1rem 0;
+}
+
+.bootstrap-switch, .bootstrap-switch .bootstrap-switch-handle-on {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+	border-color: rgba(206,212,218,1);
+}
+
+.btn-gray {
+    color: #212529;
+    background-color: #eeeeee;
+    border-color: #eeeeee;
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+}
+
+.my-navbar {
+	margin-left: 3rem;
+}
+
+.upload-status {
+	padding: 2rem 0 0;
+	font-family: "Microsoft YaHei";
+	font-weight: bold;
+	font-size: larger;
+}

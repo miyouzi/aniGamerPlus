@@ -64,6 +64,7 @@ python3 aniGamerPlus.py
     * [自動下載配置 sn_list.txt](#sn_listtxt)
     * [任務狀態資料庫 aniGamer.db](#anigamerdb)
 * [命令行使用](#命令行使用)
+* [Web控制臺使用](#Dashboard)
 
 ## 特性
 
@@ -83,12 +84,12 @@ python3 aniGamerPlus.py
  - v9.0 開始自動下載支援自定義番劇名
  - v16 支援向酷Q推送下載完成訊息
  - v16 支援将影片 metadata 前置, 此功能會在綫觀看时更快播放
+ - v20 上綫Web控制面板
  
 ## 任務列表
  - [x] 下載使用代理
  - [x] 使用ftp上傳至遠程伺服器
- - [ ] 代理可用故障轉移模式
- - [ ] Web控制臺(可能永遠都不會有)
+ - [x] Web控制臺(持續完善中)
  
 ## 配置説明
 
@@ -122,10 +123,7 @@ python3 aniGamerPlus.py
     "zerofill": 1,  # 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  #  請求UA, 需要和獲取cookie的瀏覽器相同
     "use_proxy": false,  # 代理開關
-    "proxies": {
-        "1": "socks5://127.0.0.1:1080",  # 代理配置
-        "2": "http://user:passwd@example.com:1000"  # 支援鏈式代理
-    },
+    "proxy": {"http://user:passwd@example.com:1000"},  # 代理配置
     "upload_to_server": false,  # 上傳功能開關
     "ftp": {  # FTP配置
         "server": "",  # FTP Server IP
@@ -153,9 +151,19 @@ python3 aniGamerPlus.py
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
+    "ads_time": 25,  # 非VIP廣告等待時間, 如果等待時間不足, 程式會自行追加時間 (最大20秒)
+    "use_dashboard": true  # Web 控制台開關
+    "dashboard": {  # Web控制面板配置
+        "host": "127.0.0.1",  # 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
+        "port": 5000,  # 監聽端口
+        "SSL": false,  # 是否開啓SSL, 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書
+        "BasicAuth": false,  # 是否使用 BasicAuth 進行認證, 注意, 用戶密碼是明文傳輸的, 如有需要建議同時啓用 SSL
+        "username": "admin",  # BasicAuth 用戶名
+        "password": "admin"  # BasicAuth 密碼
+    },
     "save_logs": true,  # 是否記錄日志, 一天一個日志
     "quantity_of_logs": 7,  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
-    "config_version": 11.0,  # 配置文件版本
+    "config_version": 14.0,  # 配置文件版本
     "database_version": 2.0  # 資料庫版本
 }
 ```
@@ -436,3 +444,39 @@ optional arguments:
         在Android中使用 (使用Termux)
         
         ![](screenshot/cui_on_android.jpg)
+
+## Dashboard
+
+在 v20 版本首次啓用了 Web 控制臺, 相關配置在 ```config.json``` 的 ```dashboard``` 項目中.
+
+Web 控制臺默認啓用, 默認端口 5000, 支援 SSL (https), 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書.
+
+如果想開放外部訪問, 可以將 ```dashboard``` 配置中的 ```host``` 設置成 ```0.0.0.0```
+
+支援使用 BasicAuth 進行認證, **注意**:warning: **用戶密碼是明文傳輸的, 如有需要建議同時啓用 SSL**.
+
+支援在 Web 控制臺下達手動任務(即命令行模式啓動的任務), 爲了控制臺輸出工整, 控制臺不會顯示下載進度.
+
+**目前控制臺僅能配置部分主要配置, 另外Web任務進度顯示等其他擴展功能正在銳意製作中……**
+
+相關配置:
+```
+"use_dashboard": true  # Web 控制台開關
+# Web控制面板配置
+"dashboard": {
+    "host": "127.0.0.1",  # 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
+    "port": 5000,  # 監聽端口
+    "SSL": false,  # 是否開啓SSL
+    "BasicAuth": false,  # 是否使用 BasicAuth 進行認證
+    "username": "admin",  # BasicAuth 用戶名
+    "password": "admin"  # BasicAuth 密碼
+}
+```
+
+Web控制臺截圖:
+ - 主界面:
+    ![](screenshot/Dashboard_UI.png)
+ - 手動任務:
+    ![](screenshot/Dashboard_manualTask.png)
+ - 控制臺輸出:
+    ![](screenshot/Dashboard_Console.png)

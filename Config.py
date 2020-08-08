@@ -16,7 +16,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v20'
-latest_config_version = 14.0
+latest_config_version = 14.1
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -260,6 +260,9 @@ def __update_settings(old_settings):  # 升级配置文件
             'username': 'admin',
             'password': 'admin'
         }
+
+    if 'ads_time' not in new_settings.keys():
+        new_settings['ads_time'] = 25
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

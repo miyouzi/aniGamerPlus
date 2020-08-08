@@ -21,12 +21,14 @@ import mimetypes
 
 mimetypes.add_type('text/css', '.css')
 mimetypes.add_type('application/x-javascript', '.js')
-sys.path.append('../')
-app = Flask(__name__)
+template_path = os.path.join(Config.get_working_dir(), 'Dashboard', 'templates')
+static_path = os.path.join(Config.get_working_dir(), 'Dashboard', 'static')
+app = Flask(__name__, template_folder=template_path, static_folder=static_path)
 
 # 日志处理
 logger = logging.getLogger('werkzeug')
-handler = TimedRotatingFileHandler(filename='logs/web.log', when='midnight', backupCount=7, encoding='utf-8')
+web_log_path = os.path.join(Config.get_working_dir(), 'logs', 'web.log')
+handler = TimedRotatingFileHandler(filename=web_log_path, when='midnight', backupCount=7, encoding='utf-8')
 handler.suffix = '%Y-%m-%d.log'
 handler.extMatch = re.compile(r'^\d{4}-\d{2}-\d{2}.log')
 logger.addHandler(handler)

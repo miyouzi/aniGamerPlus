@@ -30,6 +30,7 @@ Python 版本 3 以上
 **使用前确认已安装好依赖**
 ```
 pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
+pip3 install Flask Flask_BasicAuth
 ```
 
 下載源碼

@@ -15,7 +15,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v20'
+aniGamerPlus_version = 'v20.1'
 latest_config_version = 14.1
 latest_database_version = 2.0
 cookie = None
@@ -469,6 +469,12 @@ def read_settings(config=''):
         # 刪除过期日志
         __remove_superfluous_logs(settings['quantity_of_logs'])
 
+    if settings['use_dashboard']:
+        # 如果启用的控制台, 那么检查是否存在Dashboard目录
+        if not os.path.exists(os.path.join(working_dir, 'Dashboard')):
+            settings['use_dashboard'] = False
+            __color_print(0, 'Web控制面板', '未發現控制面板所必須的Dashboard資料夾, 强制禁用控制面板!', no_sn=True, status=1)
+            write_settings(settings)
     return settings
 
 
@@ -658,7 +664,7 @@ def read_latest_version_on_github():
 
 def __remove_superfluous_logs(max_num):
     if os.path.exists(logs_dir):
-        logs_list = os.listdir(logs_dir)
+        logs_list = [x for x in os.listdir(logs_dir) if 'web' not in x]
         if len(logs_list) > max_num:
             logs_list.sort()
             logs_need_remove = logs_list[0:len(logs_list) - max_num]

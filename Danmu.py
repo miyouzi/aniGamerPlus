@@ -35,26 +35,28 @@ class Danmu():
                 output.write(line)
 
         j = json.loads(r.text)
+
         height = 50
         last_time = 0
         for danmu in j:
             output.write('Dialogue: ')
             output.write('0,')
 
-            time = danmu['time']
-            m, s = divmod(time, 60)
+            start_time = int(danmu['time'] / 10)
+            hundred_ms = danmu['time'] % 10
+            m, s = divmod(start_time, 60)
             h, m = divmod(m, 60)
-            output.write(f'{h:d}:{m:02d}:{s:02d}.00,')
+            output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
-            time = time + random.randint(13, 18)
-            m, s = divmod(time, 60)
+            end_time = start_time + random.randint(13, 18)
+            m, s = divmod(end_time, 60)
             h, m = divmod(m, 60)
-            output.write(f'{h:d}:{m:02d}:{s:02d}.00,')
+            output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
-            if danmu['time'] - last_time >= 5:
+            if start_time - last_time >= 5:
                 height = 50
 
-            last_time = danmu['time']
+            last_time = start_time
 
             output.write(
                 'Default,,0,0,0,,{\\move(1920,' + str(height) + ',-500,' + str(height) + ')\\1c&H4C' + danmu['color'][1:] + '}')

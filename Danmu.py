@@ -48,19 +48,35 @@ class Danmu():
             h, m = divmod(m, 60)
             output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
-            end_time = start_time + random.randint(13, 18)
-            m, s = divmod(end_time, 60)
-            h, m = divmod(m, 60)
-            output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
+            if danmu['position'] == 0: # Roll danmu
+                end_time = start_time + random.randint(8, 12)
+                m, s = divmod(end_time, 60)
+                h, m = divmod(m, 60)
+                output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
-            if start_time - last_time >= 5:
-                height = 50
+                if start_time - last_time >= 3:
+                    height = 50
+                last_time = start_time
 
-            last_time = start_time
+                output.write(
+                    'Roll,,0,0,0,,{\\move(1920,' + str(height) + ',-500,' + str(height) + ')\\1c&H4C' + danmu['color'][1:] + '}')
+                height = (height % 500) + 50
+            elif danmu['position'] == 1: # Top danmu
+                end_time = start_time + 5
+                m, s = divmod(end_time, 60)
+                h, m = divmod(m, 60)
+                output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
+                output.write(
+                    'Top,,0,0,0,,{\\1c&H4C' + danmu['color'][1:] + '}')
+            else: # Bottom danmu
+                end_time = start_time + 5
+                m, s = divmod(end_time, 60)
+                h, m = divmod(m, 60)
+                output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
+                output.write(
+                    'Bottom,,0,0,0,,{\\1c&H4C' + danmu['color'][1:] + '}')
 
-            output.write(
-                'Default,,0,0,0,,{\\move(1920,' + str(height) + ',-500,' + str(height) + ')\\1c&H4C' + danmu['color'][1:] + '}')
-            height = (height % 500) + 50
+
             output.write(danmu['text'])
             output.write('\n')
 

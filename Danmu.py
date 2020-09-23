@@ -60,7 +60,7 @@ class Danmu():
 
             output.write(
                 'Default,,0,0,0,,{\\move(1920,' + str(height) + ',-500,' + str(height) + ')\\1c&H4C' + danmu['color'][1:] + '}')
-            height = (height + 50) % 1000
+            height = (height % 500) + 50
             output.write(danmu['text'])
             output.write('\n')
 

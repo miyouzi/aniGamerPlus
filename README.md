@@ -86,12 +86,12 @@ python3 aniGamerPlus.py
  - v16 支援向酷Q推送下載完成訊息
  - v16 支援将影片 metadata 前置, 此功能會在綫觀看时更快播放
  - v20 上綫Web控制面板
- 
+
 ## 任務列表
  - [x] 下載使用代理
  - [x] 使用ftp上傳至遠程伺服器
  - [x] Web控制臺(持續完善中)
- 
+
 ## 配置説明
 
 ### config.json
@@ -247,7 +247,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
  - 按 F12 調出開發者工具, 前往動畫瘋首頁, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)
-    
+
  - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
     ![](screenshot/CookiesFormat.png)
 
@@ -258,7 +258,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
     - https://www.whatsmyua.info/
     - http://service.spiritsoft.cn/ua.html
     ![](screenshot/how_to_get_my_ua.png)
-    
+
  - 將 UA 複製粘貼到```config.json```的```ua```項目
     ![](screenshot/how_to_use_my_ua.png)
 
@@ -340,7 +340,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 支援命令行使用, 文件默認將保存在**config.json**中指定的目錄下
 
-**配置文件中的代理配置同樣適用於命令行模式!** 
+**配置文件中的代理配置同樣適用於命令行模式!**
 
 **除了使用 list 模式的情況, 命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 
@@ -379,72 +379,72 @@ optional arguments:
  - **-r** 接要下載的清晰度, 可空, 空則讀取**config.json**中的定義, 不存在則選取最近可用清晰度
 
  - **-m** 接下載模式, 可空, 空則下載傳入sn碼的視頻
- 
+
     - **single** 下載此 sn 單集(默認)
-    
+
     - **multi** 下載多個sn, 啓用此模式時, 通過```-e```傳入多個sn, sn之間使用英文```,```分割
- 
+
     - **all** 下載此番劇所有劇集
-    
+
     - **latest** 下載此番劇最後一集(即網頁上顯示排最後的一集)
-    
+
     - **largest-sn** 下載此番劇最近上傳的一集(即sn最大的一集)
-    
+
     - **range** 下載此番指定的劇集
-    
+
     - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法通過```-r```參數指定解析度**
-    
+
     - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法通過```-r```參數指定解析度**
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
- 
+
  - **-c** 開關, 指定時將會下載到當前工作路徑下
- 
+
  - **-n** 不建立番劇資料夾
- 
+
  - **-i** 僅顯示影片資訊, 當爲```list```模式時, 會獲取 sn_list 中的單個 sn 的資訊.
- 
+
  - **-u** 所有任務完成后執行使用者命令 (配置在```config.json```的```user_command```中),  用於實現下載完成后關機等操作
 
- - **-e** 
+ - **-e**
     - **在 ```range``` 模式下, 下載此番劇指定劇集, 支援範圍輸入, 支援多個不連續聚集下載, 僅支援整數命名的劇集**
-    
-    - **在 ```multi``` 模式下, 用於指定多個sn** 
-    
+
+    - **在 ```multi``` 模式下, 用於指定多個sn**
+
     - ```-e``` 參數優先于 ```-m``` 參數, 若使用 ```-e``` 參數時不指定模式, 則默認為 ```range``` 模式
-    
+
     - 若使用 ```-m range``` 則必須使用 ```-e``` 指定需要下載的劇集
-    
+
     - 在 ```range``` 模式下, 若指定了不存在的劇集會警告並跳過, 僅下載存在的劇集
-    
+
     - 指定不連續劇集或sn時, 請用英文逗號```,```分隔, 中間無空格
-    
+
     - 在 ```range``` 模式下, 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
-    
+
     - 將會按sn順序下載
 
     - 舉例:
-    
+
         - 想下載某番劇第1,2,3集
         ```python3 aniGamerPlus.py -s 10218 -e 1,2,3```
-        
+
         - 想下載某番劇第5到8集
         ```python3 aniGamerPlus.py -s 10218 -e 5-8```
-        
+
         - 想下載某番劇第2集, 第5到8集, 第12集
         ```python3 aniGamerPlus.py -s 10218 -e 2,5-8,12```
-        
+
         - 想下載sn為 14479,14518,14511 的動畫
         ```aniGamerPlus.py -m multi -e 14479,14518,14511```
-    
+
     - 截圖:
-    
+
         ![](screenshot/cui_range_mode.png)
-        
+
         ![](screenshot/cui_range_mode_err.png)
-        
+
         在Android中使用 (使用Termux)
-        
+
         ![](screenshot/cui_on_android.jpg)
 
 ## Dashboard

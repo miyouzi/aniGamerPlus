@@ -6,6 +6,7 @@
 import ftplib
 import shutil
 import Config
+from Danmu import Danmu
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys, datetime
 from ColorPrint import err_print
@@ -44,6 +45,7 @@ class Anime():
         self.video_size = 0
         self.realtime_show_file_size = False
         self.upload_succeed_flag = False
+        self._danmu = False
 
         if debug_mode:
             print('當前為debug模式')
@@ -770,6 +772,13 @@ class Anime():
         else:
             self.__ffmpeg_download_mode(resolution)
 
+        # 下載彈幕
+        if self._danmu:
+            full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
+            d = Danmu(self._sn, full_filename)
+            d.download()
+
+
         # 推送 CQ 通知
         if self._settings['coolq_notify']:
             try:
@@ -1061,6 +1070,8 @@ class Anime():
         err_print(0, '                    参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 
+    def enable_danmu(self):
+        self._danmu = True
 
 if __name__ == '__main__':
     pass

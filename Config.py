@@ -475,6 +475,10 @@ def read_settings(config=''):
             settings['use_dashboard'] = False
             __color_print(0, 'Web控制面板', '未發現控制面板所必須的Dashboard資料夾, 强制禁用控制面板!', no_sn=True, status=1)
             write_settings(settings)
+
+    # Default disable danmu
+    settings['danmu'] = False
+
     return settings
 
 

@@ -329,7 +329,7 @@ class Anime():
                 else:
                     # 通过广告检查
                     if error_count != 10:
-                        ads_time = (10-error_count)*2 + 20 + 2
+                        ads_time = (10-error_count)*2 + ad_time + 2
                         err_print(self._sn, '通过廣告時間' + str(ads_time) + '秒, 記錄到配置檔案', status=2)
                         self._settings['ads_time'] = ads_time
                         Config.write_settings(self._settings)  # 保存到配置文件

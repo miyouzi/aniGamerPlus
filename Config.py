@@ -15,8 +15,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v20.1'
-latest_config_version = 14.1
+aniGamerPlus_version = 'v20.3'
+latest_config_version = 14.2
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -109,6 +109,7 @@ def __init_settings():
                 },
                 'faststart_movflags': False,
                 'audio_language': False,
+                'use_mobile_api': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -238,6 +239,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'audio_language_jpn' in new_settings.keys():
         del new_settings['audio_language_jpn']
+
+    if 'use_mobile_api' not in new_settings.keys():
+        new_settings['use_mobile_api'] = False
 
     if 'proxy' not in new_settings.keys() or 'proxies' in new_settings.keys():
         # v20 删除链式代理功能
@@ -475,6 +479,10 @@ def read_settings(config=''):
             settings['use_dashboard'] = False
             __color_print(0, 'Web控制面板', '未發現控制面板所必須的Dashboard資料夾, 强制禁用控制面板!', no_sn=True, status=1)
             write_settings(settings)
+
+    # Default disable danmu
+    settings['danmu'] = False
+
     return settings
 
 

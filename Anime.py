@@ -6,6 +6,7 @@
 import ftplib
 import shutil
 import Config
+from Danmu import Danmu
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys, datetime
 from ColorPrint import err_print
@@ -44,6 +45,7 @@ class Anime():
         self.video_size = 0
         self.realtime_show_file_size = False
         self.upload_succeed_flag = False
+        self._danmu = False
 
         if debug_mode:
             print('當前為debug模式')
@@ -177,6 +179,12 @@ class Anime():
             "cache-control": cache_control,
             "origin": origin
         }
+        if self._settings['use_mobile_api']:
+            header.update({
+                "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
+                "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
+                "X-Bahamut-App-Version": "173"
+            })
         self._req_header = header
 
     def __request(self, req, no_cookies=False, show_fail=True, max_retry=3):
@@ -272,7 +280,10 @@ class Anime():
             return self._device_id
 
         def get_playlist():
-            req = 'https://ani.gamer.com.tw/ajax/m3u8.php?sn=' + str(self._sn) + '&device=' + self._device_id
+            if self._settings['use_mobile_api']:
+                req = f'https://api.gamer.com.tw/mobile_app/anime/v2/m3u8.php?sn={str(self._sn)}&device={self._device_id}'
+            else:
+                req = 'https://ani.gamer.com.tw/ajax/m3u8.php?sn=' + str(self._sn) + '&device=' + self._device_id
             f = self.__request(req)
             self._playlist = f.json()
 
@@ -285,8 +296,11 @@ class Anime():
             return ''.join(result)
 
         def gain_access():
-            req = 'https://ani.gamer.com.tw/ajax/token.php?adID=0&sn=' + str(
-                self._sn) + "&device=" + self._device_id + "&hash=" + random_string(12)
+            if self._settings['use_mobile_api']:
+                req = f'https://ani.gamer.com.tw/ajax/token.php?adID=0&sn={str(self._sn)}'
+            else:
+                req = 'https://ani.gamer.com.tw/ajax/token.php?adID=0&sn=' + str(
+                    self._sn) + "&device=" + self._device_id + "&hash=" + random_string(12)
             # 返回基础信息, 用于判断是不是VIP
             return self.__request(req).json()
 
@@ -299,11 +313,17 @@ class Anime():
             f = self.__request(req)
 
         def start_ad():
-            req = "https://ani.gamer.com.tw/ajax/videoCastcishu.php?sn=" + str(self._sn) + "&s=194699"
+            if self._settings['use_mobile_api']:
+                req = f"https://api.gamer.com.tw/mobile_app/anime/v1/stat_ad.php?schedule=-1&sn={str(self._sn)}"
+            else:
+                req = "https://ani.gamer.com.tw/ajax/videoCastcishu.php?sn=" + str(self._sn) + "&s=194699"
             f = self.__request(req)  # 无响应正文
 
         def skip_ad():
-            req = "https://ani.gamer.com.tw/ajax/videoCastcishu.php?sn=" + str(self._sn) + "&s=194699&ad=end"
+            if self._settings['use_mobile_api']:
+                req = f"https://api.gamer.com.tw/mobile_app/anime/v1/stat_ad.php?schedule=-1&ad=end&sn={str(self._sn)}"
+            else:
+                req = "https://ani.gamer.com.tw/ajax/videoCastcishu.php?sn=" + str(self._sn) + "&s=194699&ad=end"
             f = self.__request(req)  # 无响应正文
 
         def video_start():
@@ -353,10 +373,11 @@ class Anime():
 
         get_device_id()
         user_info = gain_access()
-        unlock()
-        check_lock()
-        unlock()
-        unlock()
+        if not self._settings['use_mobile_api']:
+            unlock()
+            check_lock()
+            unlock()
+            unlock()
 
         # 收到錯誤反饋
         # 可能是限制級動畫要求登陸
@@ -378,8 +399,9 @@ class Anime():
         else:
             err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP賬戶, 立即下載')
 
-        video_start()
-        check_no_ad()
+        if not self._settings['use_mobile_api']:
+            video_start()
+            check_no_ad()
         get_playlist()
         parse_playlist()
 
@@ -770,6 +792,13 @@ class Anime():
         else:
             self.__ffmpeg_download_mode(resolution)
 
+        # 下載彈幕
+        if self._danmu:
+            full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
+            d = Danmu(self._sn, full_filename)
+            d.download()
+
+
         # 推送 CQ 通知
         if self._settings['coolq_notify']:
             try:
@@ -1061,6 +1090,8 @@ class Anime():
         err_print(0, '                    参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
         err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 
+    def enable_danmu(self):
+        self._danmu = True
 
 if __name__ == '__main__':
     pass

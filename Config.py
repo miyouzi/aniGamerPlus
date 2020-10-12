@@ -15,8 +15,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v20.3'
-latest_config_version = 14.2
+aniGamerPlus_version = 'v20.4'
+latest_config_version = 15
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -110,6 +110,7 @@ def __init_settings():
                 'faststart_movflags': False,
                 'audio_language': False,
                 'use_mobile_api': False,
+                'danmu': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -240,9 +241,6 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'audio_language_jpn' in new_settings.keys():
         del new_settings['audio_language_jpn']
 
-    if 'use_mobile_api' not in new_settings.keys():
-        new_settings['use_mobile_api'] = False
-
     if 'proxy' not in new_settings.keys() or 'proxies' in new_settings.keys():
         # v20 删除链式代理功能
         if new_settings['proxies']["1"]:
@@ -253,6 +251,7 @@ def __update_settings(old_settings):  # 升级配置文件
         del new_settings['proxies']
 
     if 'use_dashboard' not in new_settings.keys():
+        # v20 上线 Web 控制台
         new_settings['use_dashboard'] = True
 
     if 'dashboard' not in new_settings.keys():
@@ -266,7 +265,17 @@ def __update_settings(old_settings):  # 升级配置文件
         }
 
     if 'ads_time' not in new_settings.keys():
-        new_settings['ads_time'] = 25
+        new_settings['ads_time'] = 3
+
+    if 'danmu' not in new_settings.keys():
+        # 支持下载弹幕
+        # https://github.com/miyouzi/aniGamerPlus/pull/66
+        new_settings['danmu'] = False
+
+    if 'use_mobile_api' not in new_settings.keys():
+        # v21.0 新增使用APP API #69
+        new_settings['use_mobile_api'] = True
+        new_settings['ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
@@ -479,9 +488,6 @@ def read_settings(config=''):
             settings['use_dashboard'] = False
             __color_print(0, 'Web控制面板', '未發現控制面板所必須的Dashboard資料夾, 强制禁用控制面板!', no_sn=True, status=1)
             write_settings(settings)
-
-    # Default disable danmu
-    settings['danmu'] = False
 
     return settings
 

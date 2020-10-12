@@ -549,7 +549,14 @@ class Anime():
                     err_print(self._sn, '下載失败', filename, status=1)
                     self.video_size = 0
                     return
-                if task.isAlive():
+                try:
+                    a = task.isAlive()
+                except AttributeError:
+                    # Python 3.9 改名
+                    # https://github.com/miyouzi/aniGamerPlus/issues/71
+                    # https://github.com/Azure/azure-cli/pull/15446
+                    a = task.is_alive()
+                if a:
                     time.sleep(1)
                 else:
                     break
@@ -1084,11 +1091,12 @@ class Anime():
 
     def get_info(self):
         err_print(self._sn, '顯示資訊')
-        err_print(0, '                    影片標題:', '\"' + self.get_title() + '\"', no_sn=True, display_time=False)
-        err_print(0, '                    番劇名稱:', '\"' + self.get_bangumi_name() + '\"', no_sn=True, display_time=False)
-        err_print(0, '                    劇集標題:', '\"' + self.get_episode() + '\"', no_sn=True, display_time=False)
-        err_print(0, '                    参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
-        err_print(0, '                    可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
+        indent = '                    '
+        err_print(0, indent+'影片標題:', '\"' + self.get_title() + '\"', no_sn=True, display_time=False)
+        err_print(0, indent+'番劇名稱:', '\"' + self.get_bangumi_name() + '\"', no_sn=True, display_time=False)
+        err_print(0, indent+'劇集標題:', '\"' + self.get_episode() + '\"', no_sn=True, display_time=False)
+        err_print(0, indent+'参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
+        err_print(0, indent+'可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
 
     def enable_danmu(self):
         self._danmu = True

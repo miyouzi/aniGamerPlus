@@ -123,7 +123,7 @@ def manual_task():
         thread_limit = thread
 
     def run_cui():
-        cui(data['sn'], resolution, mode, thread_limit, [], classify=data['classify'], realtime_show=False)
+        cui(data['sn'], resolution, mode, thread_limit, [], classify=data['classify'], realtime_show=False, cui_danmu=data['danmu'])
 
     server = threading.Thread(target=run_cui)
     err_print(0, 'Dashboard', '通過 Web 控制臺下達了手動任務', no_sn=True, status=2)

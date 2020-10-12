@@ -179,6 +179,9 @@ function readManualConfig(){
 		var thread = $('#manual_thread_limit').val();
 		manualData['thread'] = thread;
 		
+		var danmu = $('#manual_danmu').is(":checked");
+		manualData['danmu'] = danmu;
+		
 		$.ajax({
 			url: '/manualTask',
 			type: 'post',

@@ -572,7 +572,7 @@ class Anime():
                     err_print(self._sn, '下載失败', filename, status=1)
                     self.video_size = 0
                     return
-                if task.isAlive():
+                if task.is_alive():
                     time.sleep(1)
                 else:
                     break

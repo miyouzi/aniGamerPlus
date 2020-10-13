@@ -221,37 +221,67 @@ class Anime():
                 if 'deleted' in f.headers.get('set-cookie'):
                     # set-cookie刷新cookie只有一次机会, 如果其他线程先收到, 则此处会返回 deleted
                     # 等待其他线程刷新了cookie, 重新读入cookie
-                    err_print(self._sn, '收到cookie重置響應', display=False)
-                    time.sleep(2)
-                    try_counter = 0
-                    succeed_flag = False
-                    while try_counter < 3:  # 尝试读三次, 不行就算了
-                        old_BAHARUNE = self._cookies['BAHARUNE']
-                        self._cookies = Config.read_cookie()
-                        err_print(self._sn, '讀取cookie',
-                                  'cookie.txt最後修改時間: ' + Config.get_cookie_time() + ' 第' + str(try_counter) + '次嘗試',
-                                  display=False)
-                        if old_BAHARUNE != self._cookies['BAHARUNE']:
-                            # 新cookie读取成功
-                            succeed_flag = True
-                            err_print(self._sn, '讀取cookie', '新cookie讀取成功', display=False)
-                            break
-                        else:
-                            err_print(self._sn, '讀取cookie', '新cookie讀取失敗', display=False)
-                            random_wait_time = random.uniform(2, 5)
-                            time.sleep(random_wait_time)
-                            try_counter = try_counter + 1
-                    if not succeed_flag:
-                        self._cookies = {}
-                        err_print(0, '用戶cookie更新失敗! 使用游客身份訪問', status=1, no_sn=True)
-                        Config.invalid_cookie()  # 将失效cookie更名
+
+                    if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' in self._req_header:
+                        # 使用移动API将无法进行 cookie 刷新, 改回 header 刷新 cookie
+                        self._refresh_cookie_under_mobile_api = False
+                        self._req_header.pop('X-Bahamut-App-InstanceId')
+                        self._req_header.pop('X-Bahamut-App-Android')
+                        self._req_header.pop('X-Bahamut-App-Version')
+                        err_print(self._sn, 'mobile_api 刷新cookie')
+                        self.__request('https://ani.gamer.com.tw/')  # 再次尝试获取新 cookie
+                    else:
+                        err_print(self._sn, '收到cookie重置響應', display=False)
+                        time.sleep(2)
+                        try_counter = 0
+                        succeed_flag = False
+                        while try_counter < 3:  # 尝试读三次, 不行就算了
+                            old_BAHARUNE = self._cookies['BAHARUNE']
+                            self._cookies = Config.read_cookie()
+                            err_print(self._sn, '讀取cookie',
+                                      'cookie.txt最後修改時間: ' + Config.get_cookie_time() + ' 第' + str(try_counter) + '次嘗試',
+                                      display=False)
+                            if old_BAHARUNE != self._cookies['BAHARUNE']:
+                                # 新cookie读取成功 (因为有可能其他线程接到了新cookie)
+                                succeed_flag = True
+                                err_print(self._sn, '讀取cookie', '新cookie讀取成功', display=False)
+                                break
+                            else:
+                                err_print(self._sn, '讀取cookie', '新cookie讀取失敗', display=False)
+                                random_wait_time = random.uniform(2, 5)
+                                time.sleep(random_wait_time)
+                                try_counter = try_counter + 1
+                        if not succeed_flag:
+                            self._cookies = {}
+                            err_print(0, '用戶cookie更新失敗! 使用游客身份訪問', status=1, no_sn=True)
+                            Config.invalid_cookie()  # 将失效cookie更名
+
+                        if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' not in self._req_header:
+                            # 即使切换 header cookie 也无法刷新, 那么恢复 header, 好歹广告只有 3s
+                            self._req_header.update({
+                                "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
+                                "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
+                                "X-Bahamut-App-Version": "173"
+                            })
+                            err_print(self._sn, 'mobile_api 刷新cookie失败恢复header')
 
                 elif '__cfduid' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # cookie 刷新两步走, 这是第二步, 追加在第一步后面
                     # 此时self._cookies已是完整新cookie,不需要再从文件载入
-                    # 20190507 发现是一步到位了, 但保不准会不会该回去, 姑且加个 and
+                    # 20190507 发现是一步到位了, 但保不准会不会改回去, 姑且加个 and
                     self._cookies['__cfduid'] = f.cookies.get_dict()['__cfduid']
                     Config.renew_cookies(self._cookies)  # 保存全新cookie
+
+                    if self._settings['use_mobile_api']:
+                        # 使用 cookie 不仅仅为了VIP, 还可用于解锁 R18, 恢复header减少广告时间
+                        # 这也是为什么不识别到 cookie 直接关闭移动 API 解析的原因, 非会员解锁R18的同时也可以享受短广告
+                        self._req_header.update({
+                            "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
+                            "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
+                            "X-Bahamut-App-Version": "173"
+                        })
+                        err_print(self._sn, 'mobile_api 刷新cookie成功 恢复header')
+
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
                 elif 'hahatoken' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):

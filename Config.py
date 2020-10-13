@@ -15,7 +15,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v20.4'
+aniGamerPlus_version = 'v21'
 latest_config_version = 15
 latest_database_version = 2.0
 cookie = None
@@ -56,6 +56,12 @@ def get_working_dir():
 
 def get_config_path():
     return config_path
+
+
+def get_sn_list_content():
+    # 返回 sn_list 所有内容, 包括注释, 提供给 Web 控制台
+    with open(sn_list_path, 'r', encoding='utf-8') as f:
+        return f.read()
 
 
 def __init_settings():
@@ -705,6 +711,11 @@ def write_settings(web_config):
     # 配置写入磁盘
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(web_config, f, ensure_ascii=False, indent=4)
+
+
+def write_sn_list(sn_list_content):
+    with open(sn_list_path, 'w', encoding='utf-8') as f:
+        f.write(sn_list_content)
 
 
 def get_local_ip():

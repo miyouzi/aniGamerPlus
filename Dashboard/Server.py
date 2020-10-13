@@ -131,6 +131,17 @@ def manual_task():
     return '{"status":"200"}'
 
 
+@app.route('/data/sn_list', methods=['GET'])
+def show_sn_list():
+    return Config.get_sn_list_content()
+
+
+@app.route('/sn_list', methods=['POST'])
+def set_sn_list():
+    data = request.get_data(as_text=True)
+    Config.write_sn_list(data)
+    return '{"status":"200"}'
+
 def run():
     settings = Config.read_settings()  # 读取配置
 

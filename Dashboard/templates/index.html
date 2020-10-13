@@ -19,7 +19,7 @@
 		<title>aniGamerPlus控制臺</title>
 	</head>
 	<body>
-		<nav class="navbar navbar-expand-md bg-dark navbar-dark">
+		<nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
 			<a class="navbar-brand" href="#">aniGamerPlus控制臺</a>
 
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
@@ -29,6 +29,9 @@
 				<ul class="navbar-nav">
 					<li class="nav-item my-navbar">
 						<a class="nav-link" href="#">自動模式設定</a>
+					</li>
+					<li class="nav-item my-navbar">
+						<a class="nav-link" href="#" data-toggle="modal" data-target="#snList">sn_list</a>
 					</li>
 					<li class="nav-item my-navbar">
 						<button class="btn btn-success" type="button" data-toggle="modal" data-target="#manualTasks">添加手動任務</button>
@@ -88,10 +91,11 @@
 							<div class="row input-group setting-content">
 								<div class="input-group-prepend">
 									<span class="input-group-text">建立番劇資料夾</span>
-									<input id="manual_classify" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" checked />
+									<input id="manual_classify" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal"
+									 checked />
 								</div>
 							</div>
-							
+
 							<div class="row input-group setting-content">
 								<div class="input-group-prepend">
 									<span class="input-group-text">下載彈幕　　　</span>
@@ -103,7 +107,8 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">最大并發下載數</span>
 								</div>
-								<input id="manual_thread_limit" type="number" min="1" step="1" class="form-control input-group-prepend-form-control" placeholder="正整數" />
+								<input id="manual_thread_limit" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
+								 placeholder="正整數" />
 							</div>
 
 
@@ -119,6 +124,52 @@
 			</div>
 		</div>
 
+		<!-- sn_list 模态框 -->
+		<div class="modal fade" id="snList">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+
+					<!-- 模态框头部 -->
+					<div class="modal-header">
+						<h4 class="modal-title">sn_list</h4>
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+					</div>
+
+					<!-- 模态框主体 -->
+					<div class="modal-body setting-wrapper">
+						<dl>
+							<dt>格式：</dt>
+							<dd><code>
+									@分類(可空)<br>
+									sn碼 下載模式(可空) 	&lt;重命名&gt;(可空) #注釋(可空)
+								</code></dd>
+
+							<dt>説明</dt>
+							<dd>注釋 <kbd>#</kbd> 後面的所有字符程序均不會讀取, 可以用於標記番劇名</dd>
+							<dd>在一排番劇列表的上方 <kbd>@</kbd> 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的資料夾下</dd>
+							<dd>若單獨 <kbd>@</kbd> 表示不分類</dd>
+							<dd>用 <kbd>&lt;</kbd> 與 <kbd>&gt;</kbd> 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名</dd>
+						</dl>
+
+						<form>
+							<div class="input-group mb-3 input-group-lg">
+								<textarea class="form-control" rows="5" id="sn_list"></textarea>
+							</div>
+						</form>
+						
+					</div>
+
+					<!-- 模态框底部 -->
+					<div class="modal-footer">
+						<button type="button" class="btn btn-success" onclick="postSnList()">提交</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+
 		<!-- 提交请求模态框 -->
 		<div class="modal fade" id="uploadStatus">
 			<div class="modal-dialog modal-sm" role="document">
@@ -129,7 +180,7 @@
 						<h4 class="modal-title">提交結果</h4>
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
 					</div>
-					
+
 					<!-- 模态框主体 -->
 					<div class="modal-body setting-wrapper">
 						<center>
@@ -137,17 +188,17 @@
 								<i class="far fa-check-circle fa-4x" style="color: #28A745;"></i>
 								<p class="upload-status">配置已成功提交</p>
 							</div>
-							
+
 							<div id="uploadFailed" style="display: block;">
 								<i class="fas fa-exclamation-circle fa-4x" style="color: #DC3545;"></i>
 								<p class="upload-status">配置提交失敗</p>
 							</div>
-							
-							
+
+
 						</center>
-						
+
 					</div>
-					
+
 					<!-- 模态框底部 -->
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
@@ -156,9 +207,9 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<!-- 自动模式配置界面主体 -->
-		<div class="setting-wrapper mx-auto">
+		<div class="setting-wrapper mx-auto" style="padding-top: 70px;">
 			<form>
 				<div class="row">
 					<h2 class="col">路徑設定</h2>
@@ -219,15 +270,13 @@
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
 							<span class="input-group-text">模擬手機端解析</span>
-							<input id="use_mobile_api" type="checkbox" data-toggle="switch" data-on-color="success"
-							 　data-size="normal" />
+							<input id="use_mobile_api" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
 							<span class="input-group-text">下載彈幕　　　</span>
-							<input id="danmu" type="checkbox" data-toggle="switch" data-on-color="success"
-							 　data-size="normal" />
+							<input id="danmu" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">

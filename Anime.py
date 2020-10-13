@@ -8,7 +8,7 @@ import shutil
 import Config
 from Danmu import Danmu
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random, sys, datetime
+import re, time, os, platform, subprocess, requests, random, sys
 from ColorPrint import err_print
 from ftplib import FTP, FTP_TLS
 import socket

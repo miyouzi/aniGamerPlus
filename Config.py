@@ -281,7 +281,7 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'use_mobile_api' not in new_settings.keys():
         # v21.0 新增使用APP API #69
-        new_settings['use_mobile_api'] = True
+        new_settings['use_mobile_api'] = False
 
     if 'mobile_ads_time' not in new_settings.keys():
         new_settings['mobile_ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s

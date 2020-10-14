@@ -47,6 +47,11 @@ class Anime():
         self.upload_succeed_flag = False
         self._danmu = False
 
+        if self._settings['use_mobile_api']:
+            err_print(sn, '解析模式', 'APP解析',display=False)
+        else:
+            err_print(sn, '解析模式', 'Web解析', display=False)
+
         if debug_mode:
             print('當前為debug模式')
         else:
@@ -161,7 +166,7 @@ class Anime():
             self._episode_list[self._episode] = self._sn
 
     def __init_header(self):
-        # 伪装为Chrome
+        # 伪装为浏览器
         host = 'ani.gamer.com.tw'
         origin = 'https://' + host
         ua = self._settings['ua']  # cookie 自动刷新需要 UA 一致
@@ -224,11 +229,9 @@ class Anime():
 
                     if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' in self._req_header:
                         # 使用移动API将无法进行 cookie 刷新, 改回 header 刷新 cookie
-                        self._refresh_cookie_under_mobile_api = False
                         self._req_header.pop('X-Bahamut-App-InstanceId')
                         self._req_header.pop('X-Bahamut-App-Android')
                         self._req_header.pop('X-Bahamut-App-Version')
-                        err_print(self._sn, 'mobile_api 刷新cookie')
                         self.__request('https://ani.gamer.com.tw/')  # 再次尝试获取新 cookie
                     else:
                         err_print(self._sn, '收到cookie重置響應', display=False)
@@ -263,7 +266,6 @@ class Anime():
                                 "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
                                 "X-Bahamut-App-Version": "173"
                             })
-                            err_print(self._sn, 'mobile_api 刷新cookie失败恢复header')
 
                 elif '__cfduid' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # cookie 刷新两步走, 这是第二步, 追加在第一步后面
@@ -280,7 +282,6 @@ class Anime():
                             "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
                             "X-Bahamut-App-Version": "173"
                         })
-                        err_print(self._sn, 'mobile_api 刷新cookie成功 恢复header')
 
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 

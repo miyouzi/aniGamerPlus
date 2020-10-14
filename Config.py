@@ -121,6 +121,7 @@ def __init_settings():
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
                 'ads_time': 25,
+                "mobile_ads_time": 3,
                 'use_dashboard': True,
                 'dashboard': {
                     'host': '127.0.0.1',
@@ -271,7 +272,7 @@ def __update_settings(old_settings):  # 升级配置文件
         }
 
     if 'ads_time' not in new_settings.keys():
-        new_settings['ads_time'] = 3
+        new_settings['ads_time'] = 25
 
     if 'danmu' not in new_settings.keys():
         # 支持下载弹幕
@@ -281,7 +282,9 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'use_mobile_api' not in new_settings.keys():
         # v21.0 新增使用APP API #69
         new_settings['use_mobile_api'] = True
-        new_settings['ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s
+
+    if 'mobile_ads_time' not in new_settings.keys():
+        new_settings['mobile_ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

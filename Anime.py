@@ -405,7 +405,10 @@ class Anime():
                     if error_count != 10:
                         ads_time = (10-error_count)*2 + ad_time + 2
                         err_print(self._sn, '通过廣告時間' + str(ads_time) + '秒, 記錄到配置檔案', status=2)
-                        self._settings['ads_time'] = ads_time
+                        if self._settings['use_mobile_api']:
+                            self._settings['mobile_ads_time'] = ads_time
+                        else:
+                            self._settings['ads_time'] = ads_time
                         Config.write_settings(self._settings)  # 保存到配置文件
             else:
                 err_print(self._sn, '遭到動畫瘋地區限制, 你的IP可能不被動畫瘋認可!', status=1)
@@ -445,7 +448,12 @@ class Anime():
             # 如果用户不是 VIP, 那么等待广告(20s)
             # 20200513 网站更新，最低广告更新时间从8s增加到20s https://github.com/miyouzi/aniGamerPlus/issues/41
             # 20200806 网站更新，最低广告更新时间从20s增加到25s https://github.com/miyouzi/aniGamerPlus/issues/55
-            ad_time = self._settings['ads_time']
+
+            if self._settings['use_mobile_api']:
+                ad_time = self._settings['mobile_ads_time']  # APP解析廣告解析時間不同
+            else:
+                ad_time = self._settings['ads_time']
+
             err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待'+str(ad_time)+'s廣告時間')
             start_ad()
             time.sleep(ad_time)

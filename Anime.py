@@ -860,7 +860,6 @@ class Anime():
             d = Danmu(self._sn, full_filename)
             d.download()
 
-
         # 推送 CQ 通知
         if self._settings['coolq_notify']:
             try:

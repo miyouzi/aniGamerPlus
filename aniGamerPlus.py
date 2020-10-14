@@ -507,6 +507,38 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 err_print(0, '《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!', status=1, no_sn=True)
         print('所有任務已添加至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
+    elif cui_download_mode == 'sn-range':
+        if get_info:
+            print('當前模式: 查詢本番劇指定sn範圍資訊\n')
+        else:
+            print('當前下載模式: 下載本番劇指定sn範圍劇集\n')
+
+        anime = build_anime(sn)
+        if anime['failed']:
+            sys.exit(1)
+        anime = anime['anime']
+
+        # 剧集列表 key value 互换, {'sn', '剧集名'}
+        episode_dict = {value:key for key,value in anime.get_episode_list().items()}
+        ep_sn_list = list(episode_dict.keys())  # 本番剧集sn列表
+        tasks_counter = 0  # 任务计数器
+        for sn in ep_sn_list:
+            if sn in ep_range:
+                # 如果该 sn 在用户指定的 sn 范围里
+                if get_info:
+                    a = threading.Thread(target=__get_info_only, args=(sn,))
+                else:
+                    a = threading.Thread(target=__download_only, args=(sn, cui_resolution, cui_save_dir, realtime_show_file_size))
+                a.setDaemon(True)
+                thread_tasks.append(a)
+                a.start()
+                tasks_counter = tasks_counter + 1
+                if get_info:
+                    print('添加查詢列隊: sn=' + str(sn) + ' 《' + anime.get_bangumi_name() + '》 第 ' + episode_dict[sn] + ' 集')
+                else:
+                    print('添加任务列隊: sn='+str(sn)+' 《'+anime.get_bangumi_name()+'》 第 ' + episode_dict[sn] + ' 集')
+        print('所有任務已添加至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
+
     elif cui_download_mode == 'multi':
         if get_info:
             print('當前模式: 查詢指定sn資訊\n')
@@ -696,7 +728,7 @@ if __name__ == '__main__':
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 576, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'largest-sn', 'multi', 'all', 'range', 'list', 'sn-list'])
+                            choices=['single', 'latest', 'largest-sn', 'multi', 'all', 'range', 'list', 'sn-list', 'sn-range'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
@@ -755,7 +787,8 @@ if __name__ == '__main__':
                         download_episodes.extend(list(range(episodes_range_start, episodes_range_end + 1)))
                     if re.match(r'^\d+$', i):
                         download_episodes.append(int(i))
-                download_mode = 'range'  # 如果带 -e 参数没有指定 multi 模式, 则默认为 range 模式
+                if arg.download_mode != 'sn-range':
+                    download_mode = 'range'  # 如果带 -e 参数没有指定 multi 模式, 则默认为 range 模式
 
             download_episodes = list(set(download_episodes))  # 去重复
             download_episodes.sort()  # 排序, 任务将会按集数顺序下载

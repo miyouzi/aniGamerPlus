@@ -350,10 +350,10 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v18
+當前aniGamerPlus版本: v21.0
 usage: aniGamerPlus.py [-h] [--sn SN]
                        [--resolution {360,480,540,576,720,1080}]
-                       [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list}]
+                       [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
                        [--information_only] [--user_command] [--danmu]
@@ -363,7 +363,7 @@ optional arguments:
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,576,720,1080}, -r {360,480,540,576,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,largest-sn,multi,all,range,list,sn-list}, -m {single,latest,largest-sn,multi,all,range,list,sn-list}
+  --download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}, -m {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
@@ -398,6 +398,8 @@ optional arguments:
     - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法通過```-r```參數指定解析度**
 
     - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法通過```-r```參數指定解析度**
+    
+    - **sn-range** 下載此番据指定sn範圍的劇集, 對於劇集名稱不是正整數的番劇, 可以用此模式
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
 
@@ -425,6 +427,8 @@ optional arguments:
     - 指定不連續劇集或sn時, 請用英文逗號```,```分隔, 中間無空格
 
     - 在 ```range``` 模式下, 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
+    
+    - 在 ```sn-range``` 模式下, 格式同 ```range``` 模式, 不過將劇集改成 sn 碼
 
     - 將會按sn順序下載
 
@@ -438,6 +442,9 @@ optional arguments:
 
         - 想下載某番劇第2集, 第5到8集, 第12集
         ```python3 aniGamerPlus.py -s 10218 -e 2,5-8,12```
+        
+        - 想下載某番劇sn範圍 14440 到 14459 的劇集, 外加 sn 為 14670 和 14746 的兩集
+        ```python3 aniGamerPlus.py -s 14440 -m sn-range -e 14670,14746,14440-14459```
 
         - 想下載sn為 14479,14518,14511 的動畫
         ```aniGamerPlus.py -m multi -e 14479,14518,14511```
@@ -485,5 +492,7 @@ Web控制臺截圖:
     ![](screenshot/Dashboard_UI.png)
  - 手動任務:
     ![](screenshot/Dashboard_manualTask.png)
+ - 在綫編輯 sn_list
+    ![](screenshot/Dashboard_sn_list.png)
  - 控制臺輸出:
     ![](screenshot/Dashboard_Console.png)

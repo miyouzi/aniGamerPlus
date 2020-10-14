@@ -127,7 +127,7 @@ class Anime():
             soup = self._src
             try:
                 self._title = soup.find('div', 'anime_name').h1.string  # 提取标题（含有集数）
-            except TypeError:
+            except (TypeError, AttributeError):
                 # 该sn下没有动画
                 err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
                 self._episode_list = {}

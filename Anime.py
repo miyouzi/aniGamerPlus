@@ -8,7 +8,7 @@ import shutil
 import Config
 from Danmu import Danmu
 from bs4 import BeautifulSoup
-import re, time, os, platform, subprocess, requests, random, sys, datetime
+import re, time, os, platform, subprocess, requests, random, sys
 from ColorPrint import err_print
 from ftplib import FTP, FTP_TLS
 import socket
@@ -107,20 +107,31 @@ class Anime():
         return self.__get_filename(self._settings['download_resolution'])
 
     def __get_src(self):
-        host = 'ani.gamer.com.tw'
-        req = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
-        f = self.__request(req)
-        self._src = BeautifulSoup(f.content, "lxml")
+        if self._settings['use_mobile_api']:
+            self._src = self.__request(f'https://api.gamer.com.tw/mobile_app/anime/v1/video.php?sn={self._sn}').json()
+        else:
+            host = 'ani.gamer.com.tw'
+            req = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
+            f = self.__request(req)
+            self._src = BeautifulSoup(f.content, "lxml")
 
     def __get_title(self):
-        soup = self._src
-        try:
-            self._title = soup.find('div', 'anime_name').h1.string  # 提取标题（含有集数）
-        except TypeError:
-            # 该sn下没有动画
-            err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
-            self._episode_list = {}
-            sys.exit(1)
+        if self._settings['use_mobile_api']:
+            try:
+                self._title = self._src['anime']['title']
+            except KeyError:
+                err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
+                self._episode_list = {}
+                sys.exit(1)
+        else:
+            soup = self._src
+            try:
+                self._title = soup.find('div', 'anime_name').h1.string  # 提取标题（含有集数）
+            except TypeError:
+                # 该sn下没有动画
+                err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
+                self._episode_list = {}
+                sys.exit(1)
 
     def __get_bangumi_name(self):
         self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '').strip()  # 提取番剧名（去掉集数后缀）
@@ -131,39 +142,51 @@ class Anime():
         # https://github.com/miyouzi/aniGamerPlus/issues/36
         # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
         # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
-        soup = self._src
-        try:
-            #  适用于存在剧集列表
-            self._episode = soup.find('li', 'playing').a.string
-        except AttributeError:
-            # 如果这个sn就一集, 不存在剧集列表的情况
-            # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
-            self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
-            self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
-        self._episode = str(self._episode)
+        if self._settings['use_mobile_api']:
+            self._episode = str(re.findall(r'\[.+?\]', self._title)[0][1:-1])
+        else:
+            soup = self._src
+            try:
+                #  适用于存在剧集列表
+                self._episode = str(soup.find('li', 'playing').a.string)
+            except AttributeError:
+                # 如果这个sn就一集, 不存在剧集列表的情况
+                # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
+                self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+                self._episode = str(self._episode[0][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
 
     def __get_episode_list(self):
-        try:
-            a = self._src.find('section', 'season').find_all('a')
-            p = self._src.find('section', 'season').find_all('p')
-            # https://github.com/miyouzi/aniGamerPlus/issues/9
-            # 样本 https://ani.gamer.com.tw/animeVideo.php?sn=10210
-            # 20190413 动画疯将特别篇分离
-            index_counter = {}  # 记录剧集数字重复次数, 用作列表类型的索引 ('本篇', '特別篇')
-            if len(p) > 0:
-                p = list(map(lambda x: x.contents[0], p))
-            for i in a:
-                sn = int(i['href'].replace('?sn=', ''))
-                ep = str(i.string)
-                if ep not in index_counter.keys():
-                    index_counter[ep] = 0
-                if ep in self._episode_list.keys():
-                    index_counter[ep] = index_counter[ep] + 1
-                    ep = p[index_counter[ep]] + ep
-                self._episode_list[ep] = sn
-        except AttributeError:
-            # 当只有一集时，不存在剧集列表，self._episode_list 只有本身
-            self._episode_list[self._episode] = self._sn
+        if self._settings['use_mobile_api']:
+            for _type in self._src['anime']['volumes']:
+                for _sn in self._src['anime']['volumes'][_type]:
+                    if _type == '0':
+                        self._episode_list[_sn['volume']] = str(_sn["video_sn"])
+                    elif _type == '1' or _type == '4':
+                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = str(_sn["video_sn"])
+                    else:
+                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = str(_sn["video_sn"])
+        else:
+            try:
+                a = self._src.find('section', 'season').find_all('a')
+                p = self._src.find('section', 'season').find_all('p')
+                # https://github.com/miyouzi/aniGamerPlus/issues/9
+                # 样本 https://ani.gamer.com.tw/animeVideo.php?sn=10210
+                # 20190413 动画疯将特别篇分离
+                index_counter = {}  # 记录剧集数字重复次数, 用作列表类型的索引 ('本篇', '特別篇')
+                if len(p) > 0:
+                    p = list(map(lambda x: x.contents[0], p))
+                for i in a:
+                    sn = int(i['href'].replace('?sn=', ''))
+                    ep = str(i.string)
+                    if ep not in index_counter.keys():
+                        index_counter[ep] = 0
+                    if ep in self._episode_list.keys():
+                        index_counter[ep] = index_counter[ep] + 1
+                        ep = p[index_counter[ep]] + ep
+                    self._episode_list[ep] = sn
+            except AttributeError:
+                # 当只有一集时，不存在剧集列表，self._episode_list 只有本身
+                self._episode_list[self._episode] = self._sn
 
     def __init_header(self):
         # 伪装为浏览器
@@ -580,14 +603,7 @@ class Anime():
                     err_print(self._sn, '下載失败', filename, status=1)
                     self.video_size = 0
                     return
-                try:
-                    a = task.isAlive()
-                except AttributeError:
-                    # Python 3.9 改名
-                    # https://github.com/miyouzi/aniGamerPlus/issues/71
-                    # https://github.com/Azure/azure-cli/pull/15446
-                    a = task.is_alive()
-                if a:
+                if task.is_alive():
                     time.sleep(1)
                 else:
                     break

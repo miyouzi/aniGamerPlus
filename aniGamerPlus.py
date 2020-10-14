@@ -378,12 +378,9 @@ def __get_info_only(sn):
 
 
 def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
-          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True, cui_danmu=False):
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
     global thread_limiter
     thread_limiter = threading.Semaphore(cui_thread_limit)
-
-    global danmu
-    danmu = cui_danmu
 
     if realtime_show:
         if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
@@ -575,14 +572,7 @@ def __kill_thread_when_ctrl_c():
     # 等待所有任务完成
     for t in thread_tasks:  # 当用户 Ctrl+C 可以 kill 线程
         while True:
-            try:
-                a = t.isAlive()
-            except AttributeError:
-                # Python 3.9 改名
-                # https://github.com/miyouzi/aniGamerPlus/issues/71
-                # https://github.com/Azure/azure-cli/pull/15446
-                a = t.is_alive()
-            if a:
+            if t.is_alive():
                 time.sleep(1)
             else:
                 break
@@ -676,7 +666,7 @@ thread_tasks = []
 gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
 gost_port = gost_port()  # gost 端口
 sn_dict = Config.read_sn_list()
-danmu = settings['danmu']
+danmu = False
 
 if __name__ == '__main__':
     if settings['check_latest_version']:

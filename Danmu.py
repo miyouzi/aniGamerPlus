@@ -26,7 +26,7 @@ class Danmu():
             'https://ani.gamer.com.tw/ajax/danmuGet.php', data=data, headers=h)
 
         if r.status_code != 200:
-            err_print(self._sn, '彈幕下載失敗','status_code=' + str(status_code), status=1)
+            err_print(self._sn, '彈幕下載失敗', 'status_code=' + str(r.status_code), status=1)
             return
 
         output = open(self._full_filename, 'w', encoding='utf8')

@@ -74,6 +74,7 @@ class Anime():
             # 无需 gost 的情况
             os.environ['HTTP_PROXY'] = self._settings['proxy']
             os.environ['HTTPS_PROXY'] = self._settings['proxy']
+        os.environ['NO_PROXY'] = "127.0.0.1,localhost"
 
     def renew(self):
         self.__get_src()
@@ -864,6 +865,8 @@ class Anime():
         if self._settings['coolq_notify']:
             try:
                 msg = {'message': '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'}
+                if self._settings['coolq_settings']['user_message']:
+                    msg['message'] = msg['message']+'\n\n'+self._settings['coolq_settings']['user_message']
                 msg.update(self._settings['coolq_settings']['query'])
                 if self._settings['coolq_settings']['SSL']:
                     req = 'https://'

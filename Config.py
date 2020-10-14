@@ -229,7 +229,8 @@ def __update_settings(old_settings):  # 升级配置文件
             'api': 'send_group_msg',
             'query': {
                 'group_id': '123456789',
-            }
+            },
+            "user_message": ""
         }
 
     if 'faststart_movflags' not in new_settings.keys():
@@ -285,6 +286,10 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'mobile_ads_time' not in new_settings.keys():
         new_settings['mobile_ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s
+
+    if 'user_message' not in new_settings['coolq_settings'].keys():
+        # QQ机器人推送通知可以通过配置追加通知内容
+        new_settings['coolq_settings']['user_message'] = ""
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

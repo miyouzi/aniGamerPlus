@@ -572,7 +572,7 @@ def __kill_thread_when_ctrl_c():
     # 等待所有任务完成
     for t in thread_tasks:  # 当用户 Ctrl+C 可以 kill 线程
         while True:
-            if t.isAlive():
+            if t.is_alive():
                 time.sleep(1)
             else:
                 break

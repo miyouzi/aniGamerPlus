@@ -42,16 +42,18 @@
         "api": "send_group_msg",
         "query": {
             "group_id": "123456789"
-        }
+        },
+		"user_message": ""
     },
     "faststart_movflags": false,
     "audio_language": false,
-    "use_mobile_api": true,
+    "use_mobile_api": false,
     "danmu": false,
     "check_latest_version": true,
     "read_sn_list_when_checking_update": true,
     "read_config_when_checking_update": true,
-    "ads_time": 3,
+    "ads_time": 25,
+	"mobile_ads_time": 3,
     "use_dashboard": true,
     "dashboard": {
         "host": "127.0.0.1",

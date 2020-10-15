@@ -161,7 +161,7 @@ class Anime():
             for _type in self._src['anime']['volumes']:
                 for _sn in self._src['anime']['volumes'][_type]:
                     if _type == '0':
-                        self._episode_list[_sn['volume']] = str(_sn["video_sn"])
+                        self._episode_list[str(_sn['volume'])] = str(_sn["video_sn"])
                     elif _type == '1' or _type == '4':
                         self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = str(_sn["video_sn"])
                     else:

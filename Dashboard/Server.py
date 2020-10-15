@@ -140,6 +140,7 @@ def show_sn_list():
 def set_sn_list():
     data = request.get_data(as_text=True)
     Config.write_sn_list(data)
+    err_print(0, 'Dashboard', '通過 Web 控制臺更新了 sn_list', no_sn=True, status=2)
     return '{"status":"200"}'
 
 def run():

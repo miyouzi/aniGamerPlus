@@ -378,9 +378,12 @@ def __get_info_only(sn):
 
 
 def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
-          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True, cui_danmu=False):
     global thread_limiter
     thread_limiter = threading.Semaphore(cui_thread_limit)
+
+    global danmu
+    danmu = cui_danmu
 
     if realtime_show:
         if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
@@ -698,7 +701,7 @@ thread_tasks = []
 gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束时 kill gost
 gost_port = gost_port()  # gost 端口
 sn_dict = Config.read_sn_list()
-danmu = False
+danmu = settings['danmu']
 
 if __name__ == '__main__':
     if settings['check_latest_version']:

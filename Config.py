@@ -60,6 +60,8 @@ def get_config_path():
 
 def get_sn_list_content():
     # 返回 sn_list 所有内容, 包括注释, 提供给 Web 控制台
+    if not os.path.exists(sn_list_path):
+        return ""
     with open(sn_list_path, 'r', encoding='utf-8') as f:
         return f.read()
 

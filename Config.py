@@ -111,7 +111,8 @@ def __init_settings():
                     'api': 'send_group_msg',
                     'query': {
                         'group_id': '123456789',
-                    }
+                    },
+                    "user_message": ""
                 },
                 'faststart_movflags': False,
                 'audio_language': False,

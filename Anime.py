@@ -13,7 +13,7 @@ from ColorPrint import err_print
 from ftplib import FTP, FTP_TLS
 import socket
 import threading
-from urllib.parse import urlencode
+from urllib.parse import quote
 
 
 class TryTooManyTimeError(BaseException):
@@ -864,18 +864,18 @@ class Anime():
         # 推送 CQ 通知
         if self._settings['coolq_notify']:
             try:
-                msg = {'message': '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'}
-                if self._settings['coolq_settings']['user_message']:
-                    msg['message'] = msg['message']+'\n\n'+self._settings['coolq_settings']['user_message']
-                msg.update(self._settings['coolq_settings']['query'])
-                if self._settings['coolq_settings']['SSL']:
-                    req = 'https://'
-                else:
-                    req = 'http://'
-                req = req + self._settings['coolq_settings']['host'] + ':' + self._settings['coolq_settings']['port'] + '/' \
-                      + self._settings['coolq_settings']['api'] + '?' \
-                      + urlencode(msg)
-                self.__request(req, no_cookies=True)
+                msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'
+                if self._settings['coolq_settings']['message_suffix']:
+                    # 追加用户信息
+                    msg = msg + '\n\n' + self._settings['coolq_settings']['message_suffix']
+
+                for query in self._settings['coolq_settings']['query']:
+                    if '?' not in query:
+                        query = query + '?'
+                    else:
+                        query = query + '&'
+                    req = query + self._settings['coolq_settings']['msg_argument_name'] + '=' + quote(msg)
+                    self.__request(req, no_cookies=True)
             except BaseException as e:
                 err_print(self._sn, 'CQ NOTIFY ERROR', 'Exception: ' + str(e), status=1)
 

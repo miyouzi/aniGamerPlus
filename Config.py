@@ -8,6 +8,7 @@
 import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
 import socket
+from urllib.parse import urlencode
 
 working_dir = os.path.dirname(os.path.realpath(__file__))
 # working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
@@ -15,8 +16,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v21.0'
-latest_config_version = 15
+aniGamerPlus_version = 'v21.1'
+latest_config_version = 15.1
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -107,14 +108,12 @@ def __init_settings():
                 'user_command': 'shutdown -s -t 60',
                 'coolq_notify': False,
                 'coolq_settings': {
-                    'host': '127.0.0.1',
-                    'port': '5700',
-                    'SSL': False,
-                    'api': 'send_group_msg',
-                    'query': {
-                        'group_id': '123456789',
-                    },
-                    "user_message": ""
+                    'msg_argument_name': 'message',
+                    'message_suffix': '追加的資訊',
+                    'query': [
+                        'http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=12345678',
+                        'http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321'
+                    ]
                 },
                 'faststart_movflags': False,
                 'audio_language': False,
@@ -290,9 +289,33 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'mobile_ads_time' not in new_settings.keys():
         new_settings['mobile_ads_time'] = 3  # 使用APP API非会员广告等待时间可低至 3s
 
-    if 'user_message' not in new_settings['coolq_settings'].keys():
+    if 'message_suffix' not in new_settings['coolq_settings'].keys():
+        # v21.1 新增
+        new_settings['coolq_settings']['message_suffix'] = "追加的資訊"
+
+    if 'user_message' in new_settings['coolq_settings'].keys():
         # QQ机器人推送通知可以通过配置追加通知内容
-        new_settings['coolq_settings']['user_message'] = ""
+        new_settings['coolq_settings']['message_suffix'] = new_settings['coolq_settings']['user_message']
+        del new_settings['coolq_settings']['user_message']
+
+    if 'msg_argument_name' not in new_settings['coolq_settings'].keys():
+        # v21.1 让用户自行构造QQ机器人 URL
+        new_settings['coolq_settings']['msg_argument_name'] = "message"
+
+    if 'SSL' in new_settings['coolq_settings'].keys():
+        # 继承用户配置
+        if new_settings['coolq_settings']['SSL']:
+            req = 'https://'
+        else:
+            req = 'http://'
+        req = req + new_settings['coolq_settings']['host'] + ':' + new_settings['coolq_settings']['port'] + '/' \
+              + new_settings['coolq_settings']['api'] + '?' + urlencode(new_settings['coolq_settings']['query'])
+
+        new_settings['coolq_settings']['query'] = [req]
+        del new_settings['coolq_settings']['host']
+        del new_settings['coolq_settings']['port']
+        del new_settings['coolq_settings']['api']
+        del new_settings['coolq_settings']['SSL']
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

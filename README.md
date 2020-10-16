@@ -15,9 +15,7 @@
 
 **本專案依賴ffmpeg, 請事先將ffmpeg放入系統PATH或者本程序目錄下!**
 
-ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.zeranoe.com/builds/). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
-
-**ffmpeg的20200515版本存在問題，請避免使用20200515及其往後的版本！ [#44](https://github.com/miyouzi/aniGamerPlus/issues/44)**
+ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.org/download.html). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
 
 ## EXE 檔案運行(對於不熟悉Python的使用者)
 
@@ -140,13 +138,12 @@ python3 aniGamerPlus.py
     "user_command": "shutdown -s -t 60"  # 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
     "coolq_notify": false,  # 是否向酷Q推送下載完成訊息
     "coolq_settings": {
-        "host": "127.0.0.1",  # 酷Q HTTP API 地址
-        "port": "5700",  # 酷Q HTTP API Port
-        "SSL": false,  # 是否是 https
-        "api": "send_group_msg",  # 所使用的 API
-        "query": {  # 使用 GET 方法, 這裏配置 query 字段
-            "group_id": "123456789"
-        }
+        "msg_argument_name": "message",
+        "message_suffix": "追加的資訊",
+        "query": [
+            "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=12345678",
+            "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321"
+        ]
     },
     "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
     "audio_language": false,  # 是否添加音軌標簽

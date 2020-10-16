@@ -36,14 +36,12 @@
     "user_command": "shutdown -s -t 60",
     "coolq_notify": false,
     "coolq_settings": {
-        "host": "127.0.0.1",
-        "port": "5700",
-        "SSL": false,
-        "api": "send_group_msg",
-        "query": {
-            "group_id": "123456789"
-        },
-		"user_message": ""
+        "msg_argument_name": "message",
+        "message_suffix": "追加的資訊",
+        "query": [
+            "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=12345678",
+            "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321"
+        ]
     },
     "faststart_movflags": false,
     "audio_language": false,

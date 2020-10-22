@@ -50,6 +50,10 @@ python3 aniGamerPlus.py
 
 本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)
 
+## 第三方拓展工具
+ - [aniGamerPlus-swapHistorySnList](https://github.com/chumicat/aniGamerPlus-swapHistorySnList)
+    - 將資料庫中的番劇導出到sn_list, 可方便的與原來的sn_list相互切換, 適用於你想檢查過往番劇是否有更新時.
+
 ## 目錄
 
 * [特性](#特性)

@@ -9,7 +9,7 @@ import json, sys, os, re
 import threading, traceback
 
 from aniGamerPlus import Config
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask import render_template
 from flask_basicauth import BasicAuth
 from aniGamerPlus import __cui as cui
@@ -82,7 +82,7 @@ def config():
     for id in id_list:
         web_settings[id] = settings[id]  # 仅返回 web 需要的配置
 
-    return json.dumps(web_settings)
+    return jsonify(web_settings)
 
 
 @app.route('/uploadConfig', methods=['POST'])
@@ -134,6 +134,11 @@ def manual_task():
 @app.route('/data/sn_list', methods=['GET'])
 def show_sn_list():
     return Config.get_sn_list_content()
+
+
+@app.route('/data/tasks_progress', methods=['GET'])
+def tasks_progress_rate():
+    return jsonify(Config.tasks_progress_rate)
 
 
 @app.route('/sn_list', methods=['POST'])

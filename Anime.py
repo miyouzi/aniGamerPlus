@@ -558,6 +558,7 @@ class Anime():
         total_chunk_num = len(chunk_list)
         finished_chunk_counter = 0
         failed_flag = False
+        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': filename, 'status': '正在下載'}
 
         def download_chunk(uri):
             chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名
@@ -580,12 +581,14 @@ class Anime():
                 limiter.release()
                 sys.exit(1)
 
+            # 显示完成百分比
+            nonlocal finished_chunk_counter
+            finished_chunk_counter = finished_chunk_counter + 1
+            progress_rate = float(finished_chunk_counter / total_chunk_num * 100)
+            progress_rate = round(progress_rate, 2)
+            Config.tasks_progress_rate[int(self._sn)]['rate'] = progress_rate
+
             if self.realtime_show_file_size:
-                # 显示完成百分比
-                nonlocal finished_chunk_counter
-                finished_chunk_counter = finished_chunk_counter + 1
-                progress_rate = float(finished_chunk_counter / total_chunk_num * 100)
-                progress_rate = round(progress_rate, 2)
                 sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + ' ' + str(progress_rate) + '%  ')
                 sys.stdout.flush()
             limiter.release()
@@ -631,6 +634,7 @@ class Anime():
             sys.stdout.write('\n')
             sys.stdout.flush()
         err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合并……')
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在解密合并'
 
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
@@ -657,6 +661,7 @@ class Anime():
         self.video_size = int(os.path.getsize(merging_file) / float(1024 * 1024))
         # 重命名
         err_print(self._sn, '下載狀態', filename + ' 解密合并完成, 本集 ' + str(self.video_size) + 'MB, 正在移至番劇目錄……')
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在移至番劇目錄'
         if os.path.exists(output_file):
             os.remove(output_file)
 
@@ -673,6 +678,7 @@ class Anime():
         self._video_filename = filename  # 记录文件名, FTP上传用
 
         err_print(self._sn, '下載完成', filename, status=2)
+        del Config.tasks_progress_rate[int(self._sn)]  # 任务完成, 从任务进度表中删除
 
     def __ffmpeg_download_mode(self, resolution=''):
         # 设定文件存放路径

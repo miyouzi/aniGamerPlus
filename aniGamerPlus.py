@@ -47,6 +47,8 @@ def build_anime(sn):
         else:
             anime['anime'] = Anime(sn)
         anime['failed'] = False
+        # anime创建成功, 开始记录任务进度
+        Config.tasks_progress_rate[int(sn)] = {'rate': 0, 'filename': anime['anime'].get_filename(), 'status': '等待下載'}
 
         if danmu:
             anime['anime'].enable_danmu()
@@ -117,7 +119,7 @@ def update_db(anime):
     db_locker.acquire()
     # 更新数据库 status, resolution, file_size 资料
     anime_dict = {}
-    if anime.video_size > 10:
+    if anime.video_size > 5:
         anime_dict['status'] = 1
     else:
         # 下载失败
@@ -235,6 +237,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         thread_limiter.release()
         err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.'
         err_print(sn, '任务失敗', err_msg_detail, status=1)
+        del Config.tasks_progress_rate[int(sn)]  # 任务失败, 不在监控此任务进度
         sys.exit(1)
 
     update_db(anime)  # 下载完成后, 更新数据库
@@ -345,10 +348,12 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
         if err_counter >= 3:
             err_print(sn, '終止任務', 'title=' + anime.get_title()+' 任務失敗達三次! 終止任務!', status=1)
             thread_limiter.release()
+            del Config.tasks_progress_rate[int(sn)]
             return
         else:
             err_print(sn, '任務失敗', 'title=' + anime.get_title() + ' 10s后自動重啓,最多重試三次', status=1)
             err_counter = err_counter + 1
+            Config.tasks_progress_rate[int(sn)]['status'] = '任務失敗, 等待重啓'
             time.sleep(10)
             anime.renew()
 

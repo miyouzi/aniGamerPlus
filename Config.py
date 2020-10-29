@@ -16,12 +16,15 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v21.1'
+aniGamerPlus_version = 'v21.2'
 latest_config_version = 15.1
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
 max_multi_downloading_segment = 5
+tasks_progress_rate = {}  # 储存任务进度, 供面板使用,
+# 格式: {sn: {'rate': 任务进度百分比(float), 'status': 任务状态, 'filename': 文件名} }
+# 任务状态有:  '正在下載' '正在解密合并' '正在移至番劇目錄' '任務失敗, 等待重啓' '等待下載'
 
 
 def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):

@@ -348,6 +348,8 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 **除了使用 list 模式的情況, 命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
 
+**EXE 檔的 aniGamerPlus.exe 也是支援命令行使用的, 將下方演示的 ```python3 aniGamerPlus.py``` 換成 ```aniGamerPlus``` 就行**
+
 參數:
 ```
 >python3 aniGamerPlus.py -h

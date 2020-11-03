@@ -5,6 +5,10 @@
 # @File    : aniGamerPlus.py
 # @Software: PyCharm
 
+# 非阻塞 (Web)
+from gevent import monkey
+monkey.patch_all()
+
 import os, sys, time, re, random, traceback, argparse
 import signal
 import sqlite3

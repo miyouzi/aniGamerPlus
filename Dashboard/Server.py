@@ -5,8 +5,13 @@
 # @File    : Server.py
 # @Software: PyCharm
 
-import json, sys, os, re
+# 非阻塞
+from gevent import monkey; monkey.patch_all()
+from gevent import spawn
+
+import json, sys, os, re, time
 import threading, traceback
+import random, string
 
 from aniGamerPlus import Config
 from flask import Flask, request, jsonify
@@ -17,21 +22,34 @@ import logging, termcolor
 from ColorPrint import err_print
 from logging.handlers import TimedRotatingFileHandler
 import mimetypes
-
+# ws 支持
+import ssl
+from flask_sockets import Sockets
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.exceptions import WebSocketError
+from geventwebsocket.handler import WebSocketHandler
 
 mimetypes.add_type('text/css', '.css')
 mimetypes.add_type('application/x-javascript', '.js')
 template_path = os.path.join(Config.get_working_dir(), 'Dashboard', 'templates')
 static_path = os.path.join(Config.get_working_dir(), 'Dashboard', 'static')
 app = Flask(__name__, template_folder=template_path, static_folder=static_path)
+app.debug = False
+sockets = Sockets(app)
 
 # 日志处理
-logger = logging.getLogger('werkzeug')
+# logger = logging.getLogger('werkzeug')
+logger = logging.getLogger('geventwebsocket')
+logging.basicConfig(level=logging.INFO)  # 记录访问
 web_log_path = os.path.join(Config.get_working_dir(), 'logs', 'web.log')
 handler = TimedRotatingFileHandler(filename=web_log_path, when='midnight', backupCount=7, encoding='utf-8')
 handler.suffix = '%Y-%m-%d.log'
 handler.extMatch = re.compile(r'^\d{4}-\d{2}-\d{2}.log')
 logger.addHandler(handler)
+logger.propagate = False  # 不在控制台上输出
+
+# websocket鉴权需要的 token, 随机一个 32 位初始 token
+websocket_token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
 
 
 # 处理 Flask 写日志到文件带有颜色控制符的问题
@@ -136,9 +154,37 @@ def show_sn_list():
     return Config.get_sn_list_content()
 
 
-@app.route('/data/tasks_progress', methods=['GET'])
-def tasks_progress_rate():
-    return jsonify(Config.tasks_progress_rate)
+@app.route('/data/get_token', methods=['GET'])
+def get_token():
+    global websocket_token
+    # 生成 32 位随机字符串作为token
+    websocket_token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
+    return websocket_token, '200 ok'
+
+
+@sockets.route('/data/tasks_progress')
+def tasks_progress(ws):
+    # 鉴权
+    global websocket_token
+    token = request.args.get('token')
+    if token != websocket_token:
+        ws.send('Unauthorized')
+        ws.close()
+    else:
+        # 一次性 token
+        websocket_token = ''
+
+    # 推送任务进度数据
+    # https://blog.csdn.net/sinat_32651363/article/details/87912701
+    while not ws.closed:
+        msg = json.dumps(Config.tasks_progress_rate)
+        try:
+            ws.send(msg)
+            time.sleep(1)
+        except WebSocketError:
+            # 连接中断
+            ws.close()
+            break
 
 
 @app.route('/sn_list', methods=['POST'])
@@ -147,6 +193,7 @@ def set_sn_list():
     Config.write_sn_list(data)
     err_print(0, 'Dashboard', '通過 Web 控制臺更新了 sn_list', no_sn=True, status=2)
     return '{"status":"200"}'
+
 
 def run():
     settings = Config.read_settings()  # 读取配置
@@ -166,11 +213,41 @@ def run():
         ssl_path = os.path.join(Config.get_working_dir(), 'Dashboard', 'sslkey')
         ssl_crt = os.path.join(ssl_path, 'server.crt')
         ssl_key = os.path.join(ssl_path, 'server.key')
-        ssl_keys = (ssl_crt, ssl_key)
-        app.run(debug=False, use_reloader=False, port=port, host=host, ssl_context=ssl_keys)
+        # ssl_keys = (ssl_crt, ssl_key)
+        # app.run(use_reloader=False, port=port, host=host, ssl_context=ssl_keys)
+        server = WSGIServer((host, port), app, handler_class=WebSocketHandler, certfile=ssl_crt, keyfile=ssl_key)
+
+        wrap_socket = server.wrap_socket
+        wrap_socket_and_handle = server.wrap_socket_and_handle
+
+        # 处理一些浏览器(比如Chrome)尝试 SSL v3 访问时报错
+        def my_wrap_socket(sock, **_kwargs):
+            try:
+                # print('my_wrap_socket')
+                return wrap_socket(sock, **_kwargs)
+            except ssl.SSLError:
+                # print('my_wrap_socket ssl.SSLError')
+                pass
+
+        # 此方法依赖上面的返回值, 因此当尝试访问 SSL v3 时, 这个也会出错
+        def my_wrap_socket_and_handle(client_socket, address):
+            try:
+                # print('my_wrap_socket_and_handle')
+                return wrap_socket_and_handle(client_socket, address)
+            except AttributeError:
+                # print('my_wrap_socket_and_handle AttributeError')
+                pass
+
+        server.wrap_socket = my_wrap_socket
+        server.wrap_socket_and_handle = my_wrap_socket_and_handle
+
     else:
-        app.run(debug=False, use_reloader=False, port=port, host=host)
+        # app.run(use_reloader=False, port=port, host=host)
+        server = WSGIServer((host, port), app, handler_class=WebSocketHandler)
+
+    server.serve_forever()
 
 
 if __name__ == '__main__':
+    run()
     pass

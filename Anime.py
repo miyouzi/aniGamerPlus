@@ -527,6 +527,9 @@ class Anime():
         filename = self.__get_filename(resolution)
         merging_filename = self.__get_temp_filename(resolution, temp_suffix='MERGING')
 
+        # 下载任务开始
+        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': filename, 'status': '正在下載'}
+
         output_file = os.path.join(self._bangumi_dir, filename)  # 完整输出路径
         merging_file = os.path.join(self._temp_dir, merging_filename)
 
@@ -558,7 +561,6 @@ class Anime():
         total_chunk_num = len(chunk_list)
         finished_chunk_counter = 0
         failed_flag = False
-        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': filename, 'status': '正在下載'}
 
         def download_chunk(uri):
             chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名

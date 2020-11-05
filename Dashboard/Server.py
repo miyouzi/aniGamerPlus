@@ -93,6 +93,11 @@ def home():
     return render_template('index.html')
 
 
+@app.route('/monitor')
+def monitor():
+    return render_template('monitor.html')
+
+
 @app.route('/data/config.json', methods=['GET'])
 def config():
     settings = Config.read_settings()

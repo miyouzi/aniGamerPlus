@@ -161,11 +161,11 @@ class Anime():
             for _type in self._src['anime']['volumes']:
                 for _sn in self._src['anime']['volumes'][_type]:
                     if _type == '0':
-                        self._episode_list[str(_sn['volume'])] = str(_sn["video_sn"])
+                        self._episode_list[str(_sn['volume'])] = int(_sn["video_sn"])
                     elif _type == '1' or _type == '4':
-                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = str(_sn["video_sn"])
+                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = int(_sn["video_sn"])
                     else:
-                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = str(_sn["video_sn"])
+                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = int(_sn["video_sn"])
         else:
             try:
                 a = self._src.find('section', 'season').find_all('a')
@@ -634,7 +634,7 @@ class Anime():
             sys.stdout.write('\n')
             sys.stdout.flush()
         err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合并……')
-        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在解密合并'
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '下載完成'
 
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
@@ -661,7 +661,6 @@ class Anime():
         self.video_size = int(os.path.getsize(merging_file) / float(1024 * 1024))
         # 重命名
         err_print(self._sn, '下載狀態', filename + ' 解密合并完成, 本集 ' + str(self.video_size) + 'MB, 正在移至番劇目錄……')
-        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在移至番劇目錄'
         if os.path.exists(output_file):
             os.remove(output_file)
 
@@ -1163,6 +1162,7 @@ class Anime():
 
     def enable_danmu(self):
         self._danmu = True
+
 
 if __name__ == '__main__':
     pass

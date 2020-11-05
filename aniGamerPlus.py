@@ -534,6 +534,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         episode_dict = {value:key for key,value in anime.get_episode_list().items()}
         ep_sn_list = list(episode_dict.keys())  # 本番剧集sn列表
         tasks_counter = 0  # 任务计数器
+        ep_range = list(map(lambda x: int(x), ep_range))
         for sn in ep_sn_list:
             if sn in ep_range:
                 # 如果该 sn 在用户指定的 sn 范围里

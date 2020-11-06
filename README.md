@@ -50,6 +50,10 @@ python3 aniGamerPlus.py
 
 本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)
 
+## 第三方拓展工具
+ - [aniGamerPlus-swapHistorySnList](https://github.com/chumicat/aniGamerPlus-swapHistorySnList)
+    - 將資料庫中的番劇導出到sn_list, 可方便的與原來的sn_list相互切換, 適用於你想檢查過往番劇是否有更新時.
+
 ## 目錄
 
 * [特性](#特性)
@@ -343,6 +347,8 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 **配置文件中的代理配置同樣適用於命令行模式!**
 
 **除了使用 list 模式的情況, 命令行模式將不會和資料庫進行交互, 將會無視數據庫中下載狀態標記强制下載**
+
+**EXE 檔的 aniGamerPlus.exe 也是支援命令行使用的, 將下方演示的 ```python3 aniGamerPlus.py``` 換成 ```aniGamerPlus``` 就行**
 
 參數:
 ```

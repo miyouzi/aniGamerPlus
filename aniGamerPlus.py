@@ -849,7 +849,7 @@ if __name__ == '__main__':
 
         Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,
-              get_info=arg.information_only, user_cmd=user_command)
+              get_info=arg.information_only, user_cmd=user_command, cui_danmu=danmu)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

@@ -527,9 +527,6 @@ class Anime():
         filename = self.__get_filename(resolution)
         merging_filename = self.__get_temp_filename(resolution, temp_suffix='MERGING')
 
-        # 下载任务开始
-        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': filename, 'status': '正在下載'}
-
         output_file = os.path.join(self._bangumi_dir, filename)  # 完整输出路径
         merging_file = os.path.join(self._temp_dir, merging_filename)
 
@@ -679,7 +676,6 @@ class Anime():
         self._video_filename = filename  # 记录文件名, FTP上传用
 
         err_print(self._sn, '下載完成', filename, status=2)
-        del Config.tasks_progress_rate[int(self._sn)]  # 任务完成, 从任务进度表中删除
 
     def __ffmpeg_download_mode(self, resolution=''):
         # 设定文件存放路径
@@ -795,6 +791,9 @@ class Anime():
             self._title = self._title.replace(bangumi_name, rename)
             self._bangumi_name = self._bangumi_name.replace(bangumi_name, rename)
 
+        # 下载任务开始
+        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': self.get_filename(), 'status': '正在解析'}
+
         try:
             self.__get_m3u8_dict()  # 获取 m3u8 列表
         except TryTooManyTimeError:
@@ -857,10 +856,16 @@ class Anime():
             err_print(self._sn, '任務狀態', err_msg_detail, status=1)
         self.video_resolution = int(resolution)
 
+        # 解析完成, 开始下载
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在下載'
+
         if self._settings['segment_download_mode']:
             self.__segment_download_mode(resolution)
         else:
             self.__ffmpeg_download_mode(resolution)
+
+        # 任务完成, 从任务进度表中删除
+        del Config.tasks_progress_rate[int(self._sn)]
 
         # 下載彈幕
         if self._danmu:

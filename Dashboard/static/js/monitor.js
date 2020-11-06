@@ -27,7 +27,7 @@ layui.use('element', function(){
 						// 如果该任务卡片不存在
 						let task_item_templates = `
 							<div class="layui-col-xs12 layui-card" id=${sn}>
-								<div class="layui-card-header">${data[sn]["filename"]}</div>
+								<div class="layui-card-header" style="height:auto !important;">${data[sn]["filename"]}</div>
 								<div class="layui-card-body layui-row">
 									<div class="layui-col-xs3" style="text-align: center;" id=${"status"+sn}>${data[sn]["status"]}</div>
 									<div class="layui-col-xs9" style="padding: 3px;">

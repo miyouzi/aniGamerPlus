@@ -8,7 +8,6 @@ layui.use('element', function(){
 	// 获取token
 	$.get('data/get_token', function(token){
 		tasks_progress_url += token;
-		console.log(tasks_progress_url);
 		
 		let ws = new WebSocket(tasks_progress_url);
 		ws.onmessage = function(evt){
@@ -22,12 +21,13 @@ layui.use('element', function(){
 					if ($('#'+sn).length > 0) {
 						// 如果该任务卡片已存在
 						$("#status"+sn).html(data[sn]["status"]);
+						$("#header"+sn).html(data[sn]["filename"]);						
 						element.progress(sn, Math.round(data[sn]["rate"])+'%');
 					} else {
 						// 如果该任务卡片不存在
 						let task_item_templates = `
 							<div class="layui-col-xs12 layui-card" id=${sn}>
-								<div class="layui-card-header" style="height:auto !important;">${data[sn]["filename"]}</div>
+								<div class="layui-card-header" style="height:auto !important;" id=${"header"+sn}>${data[sn]["filename"]}</div>
 								<div class="layui-card-body layui-row">
 									<div class="layui-col-xs3" style="text-align: center;" id=${"status"+sn}>${data[sn]["status"]}</div>
 									<div class="layui-col-xs9" style="padding: 3px;">

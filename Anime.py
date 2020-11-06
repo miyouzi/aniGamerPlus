@@ -792,7 +792,7 @@ class Anime():
             self._bangumi_name = self._bangumi_name.replace(bangumi_name, rename)
 
         # 下载任务开始
-        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': self.get_filename(), 'status': '正在解析'}
+        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': '《'+self.get_title()+'》', 'status': '正在解析'}
 
         try:
             self.__get_m3u8_dict()  # 获取 m3u8 列表
@@ -858,6 +858,7 @@ class Anime():
 
         # 解析完成, 开始下载
         Config.tasks_progress_rate[int(self._sn)]['status'] = '正在下載'
+        Config.tasks_progress_rate[int(self._sn)]['filename'] = self.get_filename()
 
         if self._settings['segment_download_mode']:
             self.__segment_download_mode(resolution)

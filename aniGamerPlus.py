@@ -679,6 +679,11 @@ def __init_proxy():
 
 
 def run_dashboard():
+    # 检测端口是否占用
+    if not port_is_available(settings['dashboard']['port']):
+        err_print(0, 'Web控制面板啓動失敗', 'Port已被占用! 請到配置文件更換', status=1, no_sn=True)
+        return
+
     from Dashboard.Server import run as dashboard
     server = threading.Thread(target=dashboard)
     server.setDaemon(True)

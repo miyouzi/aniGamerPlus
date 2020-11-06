@@ -105,7 +105,10 @@ class Anime():
         return self._title
 
     def get_filename(self):
-        return self.__get_filename(self._settings['download_resolution'])
+        if self.video_resolution == 0:
+            return self.__get_filename(self._settings['download_resolution'])
+        else:
+            return self.__get_filename(str(self.video_resolution))
 
     def __get_src(self):
         if self._settings['use_mobile_api']:

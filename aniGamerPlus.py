@@ -20,6 +20,7 @@ import socket
 import Config
 from Anime import Anime, TryTooManyTimeError
 from ColorPrint import err_print
+from Danmu import Danmu
 
 
 def port_is_available(port):
@@ -382,18 +383,21 @@ def __get_info_only(sn):
     if anime['failed']:
         sys.exit(1)
     anime = anime['anime']
+    anime.set_resolution(resolution)
     anime.get_info()
+
+    if danmu:
+        full_filename = os.path.join(settings['bangumi_dir'], anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
+        d = Danmu(sn, full_filename)
+        d.download()
 
     thread_limiter.release()
 
 
 def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
-          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True, cui_danmu=False):
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
     global thread_limiter
     thread_limiter = threading.Semaphore(cui_thread_limit)
-
-    global danmu
-    danmu = cui_danmu
 
     if realtime_show:
         if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
@@ -735,8 +739,8 @@ if __name__ == '__main__':
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
         parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
-        parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊')
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
+        parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊，可搭配 -d 更新彈幕')
         parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕(beta)')
         arg = parser.parse_args()
 
@@ -837,7 +841,7 @@ if __name__ == '__main__':
 
         Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,
-              get_info=arg.information_only, user_cmd=user_command, cui_danmu=danmu)
+              get_info=arg.information_only, user_cmd=user_command)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

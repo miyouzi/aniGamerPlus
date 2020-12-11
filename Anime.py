@@ -1203,5 +1203,8 @@ class Anime():
     def enable_danmu(self):
         self._danmu = True
 
+    def set_resolution(self, resolution):
+        self.video_resolution = int(resolution)
+
 if __name__ == '__main__':
     pass

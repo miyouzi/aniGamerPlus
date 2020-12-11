@@ -385,9 +385,12 @@ def __get_info_only(sn):
     anime = anime['anime']
     anime.set_resolution(resolution)
     anime.get_info()
+    download_dir = settings['bangumi_dir']
+    if classify:  # 控制是否建立番剧文件夹
+        download_dir = os.path.join(download_dir, Config.legalize_filename(anime.get_bangumi_name()))
 
     if danmu:
-        full_filename = os.path.join(settings['bangumi_dir'], anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
+        full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
         d = Danmu(sn, full_filename)
         d.download()
 

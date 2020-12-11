@@ -51,6 +51,9 @@ def build_anime(sn):
         if danmu:
             anime['anime'].enable_danmu()
 
+        if skip_video:
+            anime['anime'].skip_video()
+
     except TryTooManyTimeError:
         err_print(sn, '抓取失敗', '影片信息抓取失敗!', status=1)
     except BaseException as e:
@@ -378,12 +381,9 @@ def __get_info_only(sn):
 
 
 def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
-          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True, cui_danmu=False):
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
     global thread_limiter
     thread_limiter = threading.Semaphore(cui_thread_limit)
-
-    global danmu
-    danmu = cui_danmu
 
     if realtime_show:
         if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
@@ -702,6 +702,7 @@ gost_subprocess = None  # 存放 gost 的 subprocess.Popen 对象, 用于结束�
 gost_port = gost_port()  # gost 端口
 sn_dict = Config.read_sn_list()
 danmu = settings['danmu']
+skip_video = settings['skip_video']
 
 if __name__ == '__main__':
     if settings['check_latest_version']:
@@ -739,6 +740,7 @@ if __name__ == '__main__':
         parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊')
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
         parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕(beta)')
+        parser.add_argument('--skip_video', '-sk', action='store_true', help='不下載影片，可搭配 -d 更新彈幕(beta)')
         arg = parser.parse_args()
 
         if (arg.download_mode not in ('list', 'multi', 'sn-list')) and arg.sn is None:
@@ -836,9 +838,12 @@ if __name__ == '__main__':
         if arg.danmu:
             danmu = True
 
+        if arg.skip_video:
+            skip_video = True
+
         Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,
-              get_info=arg.information_only, user_cmd=user_command, cui_danmu=danmu)
+              get_info=arg.information_only, user_cmd=user_command)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

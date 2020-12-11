@@ -47,7 +47,6 @@ class Anime():
         self.realtime_show_file_size = False
         self.upload_succeed_flag = False
         self._danmu = False
-        self._skip_video = False
 
         if self._settings['use_mobile_api']:
             err_print(sn, '解析模式', 'APP解析',display=False)
@@ -861,14 +860,11 @@ class Anime():
             err_print(self._sn, '任務狀態', err_msg_detail, status=1)
         self.video_resolution = int(resolution)
 
-
         # 解析完成, 开始下载
         Config.tasks_progress_rate[int(self._sn)]['status'] = '正在下載'
         Config.tasks_progress_rate[int(self._sn)]['filename'] = self.get_filename()
 
-        if self._skip_video:
-            err_print(self._sn, '跳過影片下載', status=2)
-        elif self._settings['segment_download_mode']:
+        if self._settings['segment_download_mode']:
             self.__segment_download_mode(resolution)
         else:
             self.__ffmpeg_download_mode(resolution)
@@ -1206,9 +1202,6 @@ class Anime():
 
     def enable_danmu(self):
         self._danmu = True
-
-    def skip_video(self):
-        self._skip_video = True
 
 if __name__ == '__main__':
     pass

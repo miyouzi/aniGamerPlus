@@ -17,7 +17,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v22.0'
-latest_config_version = 15.3
+latest_config_version = 15.2
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -124,7 +124,6 @@ def __init_settings():
                 'audio_language': False,
                 'use_mobile_api': False,
                 'danmu': False,
-                'skip_video': False,
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -292,11 +291,6 @@ def __update_settings(old_settings):  # 升级配置文件
         # 支持下载弹幕
         # https://github.com/miyouzi/aniGamerPlus/pull/66
         new_settings['danmu'] = False
-
-    if 'skip_video' not in new_settings.keys():
-        # 支援跳過下載影片
-        # https://github.com/a20034294
-        new_settings['skip_video'] = False
 
     if 'use_mobile_api' not in new_settings.keys():
         # v21.0 新增使用APP API #69

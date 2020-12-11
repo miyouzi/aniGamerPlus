@@ -28,7 +28,7 @@ Python 版本 3 以上
 **使用前确认已安装好依赖**
 ```
 pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
-pip3 install Flask Flask_BasicAuth
+pip3 install Flask Flask_BasicAuth Flask_Sockets gevent gevent_websocket
 ```
 
 下載源碼

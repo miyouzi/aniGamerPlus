@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<script src="../static/js/jquery-3.4.0.min.js"></script>
+		<script src="../static/js/bootstrap.min.js"></script>
+		<script src="../static/layui/layui.js"></script>
+		<script src="../static/js/monitor.js"></script>
+		<link rel="stylesheet" href="../static/css/bootstrap.rfs.min.css">
+		<link rel="stylesheet" href="../static/layui/css/layui.css">
+		<link rel="stylesheet" href="../static/css/aniGamerPlus.css" />
+		<link rel="shortcut icon" href="../static/img/aniGamerPlus.ico" type="image/x-icon" />
+		<title>aniGamerPlus任務監控中心</title>
+	</head>
+	<body>
+		<nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
+			<a class="navbar-brand" href="#">aniGamerPlus控制臺</a>
+		
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="collapsibleNavbar">
+				<ul class="navbar-nav">
+					<li class="nav-item my-navbar">
+						<a class="nav-link" href=".">自動模式設定</a>
+					</li>
+					<li class="nav-item my-navbar">
+						<a class="nav-link" href="#" data-toggle="modal" data-target="#monitor">任務監控中心</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		
+		
+		<div class="layui-container" style="padding-top: 70px; background-color: #F2F2F2;">
+
+			<div class="layui-card" style="display: block;" id="no_task">
+				<div class="layui-card-header"  style="text-align: center;">【當前無任務】</div>
+				<div class="layui-card-body">
+					<div style="text-align: center;">當前任務列隊為空</div>
+				</div>
+			</div>
+			
+			<div class="layui-row" id="task_info_panel">
+			</div>
+		</div>
+		
+	</body>
+</html>

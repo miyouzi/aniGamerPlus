@@ -5,6 +5,10 @@
 # @File    : aniGamerPlus.py
 # @Software: PyCharm
 
+# 非阻塞 (Web)
+from gevent import monkey
+monkey.patch_all()
+
 import os, sys, time, re, random, traceback, argparse
 import signal
 import sqlite3
@@ -58,7 +62,7 @@ def build_anime(sn):
         err_print(sn, '抓取失敗', '影片信息抓取失敗!', status=1)
     except BaseException as e:
         err_print(sn, '抓取失敗', '抓取影片信息時發生未知錯誤: '+str(e), status=1)
-        err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1)
+        err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
     return anime
 
 
@@ -120,7 +124,7 @@ def update_db(anime):
     db_locker.acquire()
     # 更新数据库 status, resolution, file_size 资料
     anime_dict = {}
-    if anime.video_size > 10:
+    if anime.video_size > 5:
         anime_dict['status'] = 1
     else:
         # 下载失败
@@ -204,7 +208,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
                 err_print(sn, '任務完成', status=2)
         except BaseException as e:
             err_msg_detail = 'title=\"' + anime.get_title() + '\" 發生未知錯誤, 等待下次更新重試: ' + str(e)
-            err_print(sn, '上傳失敗', '異常詳情:\n'+traceback.format_exc(), status=1)
+            err_print(sn, '上傳失敗', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
             err_print(sn, '上傳失敗', err_msg_detail, 1)
 
         upload_quit()
@@ -228,16 +232,18 @@ def worker(sn, sn_info, realtime_show_file_size=False):
     except BaseException as e:
         # 兜一下各种奇奇怪怪的错误
         err_print(sn, '下載異常', '發生未知錯誤: '+str(e), status=1)
-        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
+        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
         anime.video_size = 0
 
-    if anime.video_size < 10:
+    if anime.video_size < 5:
         # 下载失败
         queue.pop(sn)
         processing_queue.remove(sn)
         thread_limiter.release()
         err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.'
         err_print(sn, '任务失敗', err_msg_detail, status=1)
+        if int(sn) in Config.tasks_progress_rate.keys():
+            del Config.tasks_progress_rate[int(sn)]  # 任务失败, 不在监控此任务进度
         sys.exit(1)
 
     update_db(anime)  # 下载完成后, 更新数据库
@@ -253,7 +259,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         except BaseException as e:
             # 兜一下各种奇奇怪怪的错误
             err_print(sn, '上傳異常', '發生未知錯誤, 從任務列隊中移除, 等待下次更新重試: ' + str(e), status=1)
-            err_print(sn, '上傳異常', '異常詳情:\n'+traceback.format_exc(), status=1)
+            err_print(sn, '上傳異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
             upload_quit()
 
         update_db(anime)  # 上传完成后, 更新数据库
@@ -341,17 +347,21 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
             anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
     except BaseException as e:
         err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
-        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
+        err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
         anime.video_size = 0
 
-    while anime.video_size < 10:
+    while anime.video_size < 5:
         if err_counter >= 3:
             err_print(sn, '終止任務', 'title=' + anime.get_title()+' 任務失敗達三次! 終止任務!', status=1)
             thread_limiter.release()
+            if int(sn) in Config.tasks_progress_rate.keys():
+                del Config.tasks_progress_rate[int(sn)]
             return
         else:
             err_print(sn, '任務失敗', 'title=' + anime.get_title() + ' 10s后自動重啓,最多重試三次', status=1)
             err_counter = err_counter + 1
+            if int(sn) in Config.tasks_progress_rate.keys():
+                Config.tasks_progress_rate[int(sn)]['status'] = '失敗! 重啓中'
             time.sleep(10)
             anime.renew()
 
@@ -362,7 +372,7 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
                     anime.download(settings['download_resolution'], dl_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
             except BaseException as e:
                 err_print(sn, '下載異常', '發生未知異常: ' + str(e), status=1)
-                err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1)
+                err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
                 anime.video_size = 0
 
     thread_limiter.release()
@@ -399,16 +409,10 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         else:
             print('當前下載模式: 僅下載本集\n')
 
-        anime = build_anime(sn)
-        if anime['failed']:
-            sys.exit(1)
-        anime = anime['anime']
-
         if get_info:
-            anime.get_info()
+            __get_info_only(sn)
         else:
-            # True 是实时显示文件大小, 仅一个下载任务时适用
-            anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
+            __download_only(sn, cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
 
     elif cui_download_mode == 'latest' or cui_download_mode == 'largest-sn':
         if cui_download_mode == 'latest':
@@ -432,22 +436,10 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         if cui_download_mode == 'largest-sn':
             bangumi_list.sort()
 
-        if bangumi_list[-1] == sn:
-            if get_info:
-                anime.get_info()
-            else:
-                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
+        if get_info:
+            __get_info_only(bangumi_list[-1])
         else:
-
-            anime = build_anime(bangumi_list[-1])
-            if anime['failed']:
-                sys.exit(1)
-            anime = anime['anime']
-
-            if get_info:
-                anime.get_info()
-            else:
-                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
+            __download_only(bangumi_list[-1], cui_resolution, cui_save_dir, realtime_show_file_size=realtime_show_file_size, classify=classify)
 
     elif cui_download_mode == 'all':
         if get_info:
@@ -525,6 +517,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         episode_dict = {value:key for key,value in anime.get_episode_list().items()}
         ep_sn_list = list(episode_dict.keys())  # 本番剧集sn列表
         tasks_counter = 0  # 任务计数器
+        ep_range = list(map(lambda x: int(x), ep_range))
         for sn in ep_sn_list:
             if sn in ep_range:
                 # 如果该 sn 在用户指定的 sn 范围里
@@ -548,17 +541,18 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         else:
             print('當前下載模式: 下載指定sn劇集\n')
 
-        for i in ep_range:
-            anime = build_anime(i)
-            if anime['failed']:
-                sys.exit(1)
-            anime = anime['anime']
-
+        tasks_counter = 0
+        for sn in ep_range:
             if get_info:
-                anime.get_info()
+                a = threading.Thread(target=__get_info_only, args=(sn,))
             else:
-                # True 是实时显示文件大小, 仅一个下载任务时适用
-                anime.download(cui_resolution, cui_save_dir, realtime_show_file_size=True, classify=classify)
+                a = threading.Thread(target=__download_only,args=(sn, cui_resolution, cui_save_dir, realtime_show_file_size))
+            a.setDaemon(True)
+            thread_tasks.append(a)
+            a.start()
+            tasks_counter = tasks_counter + 1
+
+        print('所有任務已添加至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode in ('list', 'sn-list'):
         if get_info:
@@ -668,6 +662,11 @@ def __init_proxy():
 
 
 def run_dashboard():
+    # 检测端口是否占用
+    if not port_is_available(settings['dashboard']['port']):
+        err_print(0, 'Web控制面板啓動失敗', 'Port已被占用! 請到配置文件更換', status=1, no_sn=True)
+        return
+
     from Dashboard.Server import run as dashboard
     server = threading.Thread(target=dashboard)
     server.setDaemon(True)

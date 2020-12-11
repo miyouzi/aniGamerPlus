@@ -16,12 +16,15 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v21.1'
-latest_config_version = 15.2
+aniGamerPlus_version = 'v22.0'
+latest_config_version = 15.3
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
 max_multi_downloading_segment = 5
+tasks_progress_rate = {}  # 储存任务进度, 供面板使用,
+# 格式: {sn: {'rate': 任务进度百分比(float), 'status': 任务状态, 'filename': 文件名} }
+# 任务状态有:  '正在下載' '正在解密合并' '正在移至番劇目錄' '任務失敗, 等待重啓' '等待下載'
 
 
 def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
@@ -115,6 +118,8 @@ def __init_settings():
                         'http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321'
                     ]
                 },
+                'telebot_notify': False,
+                'telebot_token': "",
                 'faststart_movflags': False,
                 'audio_language': False,
                 'use_mobile_api': False,
@@ -235,6 +240,11 @@ def __update_settings(old_settings):  # 升级配置文件
             },
             "user_message": ""
         }
+
+    if 'telebot_notify' not in new_settings.keys():
+        # 新增推送通知到TG的功能
+        new_settings['telebot_notify'] = False
+        new_settings['telebot_token'] = ""
 
     if 'faststart_movflags' not in new_settings.keys():
         # v9.0 新增功能: 将 metadata 移至视频文件头部

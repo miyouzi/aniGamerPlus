@@ -14,6 +14,7 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 from urllib.parse import quote
+import json
 
 
 class TryTooManyTimeError(BaseException):
@@ -106,7 +107,10 @@ class Anime():
         return self._title
 
     def get_filename(self):
-        return self.__get_filename(self._settings['download_resolution'])
+        if self.video_resolution == 0:
+            return self.__get_filename(self._settings['download_resolution'])
+        else:
+            return self.__get_filename(str(self.video_resolution))
 
     def __get_src(self):
         if self._settings['use_mobile_api']:
@@ -162,11 +166,11 @@ class Anime():
             for _type in self._src['anime']['volumes']:
                 for _sn in self._src['anime']['volumes'][_type]:
                     if _type == '0':
-                        self._episode_list[str(_sn['volume'])] = str(_sn["video_sn"])
+                        self._episode_list[str(_sn['volume'])] = int(_sn["video_sn"])
                     elif _type == '1' or _type == '4':
-                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = str(_sn["video_sn"])
+                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = int(_sn["video_sn"])
                     else:
-                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = str(_sn["video_sn"])
+                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = int(_sn["video_sn"])
         else:
             try:
                 a = self._src.find('section', 'season').find_all('a')
@@ -581,12 +585,14 @@ class Anime():
                 limiter.release()
                 sys.exit(1)
 
+            # 显示完成百分比
+            nonlocal finished_chunk_counter
+            finished_chunk_counter = finished_chunk_counter + 1
+            progress_rate = float(finished_chunk_counter / total_chunk_num * 100)
+            progress_rate = round(progress_rate, 2)
+            Config.tasks_progress_rate[int(self._sn)]['rate'] = progress_rate
+
             if self.realtime_show_file_size:
-                # 显示完成百分比
-                nonlocal finished_chunk_counter
-                finished_chunk_counter = finished_chunk_counter + 1
-                progress_rate = float(finished_chunk_counter / total_chunk_num * 100)
-                progress_rate = round(progress_rate, 2)
                 sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + ' ' + str(progress_rate) + '%  ')
                 sys.stdout.flush()
             limiter.release()
@@ -632,6 +638,7 @@ class Anime():
             sys.stdout.write('\n')
             sys.stdout.flush()
         err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合并……')
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '下載完成'
 
         # 构造 ffmpeg 命令
         ffmpeg_cmd = [self._ffmpeg_path,
@@ -789,6 +796,9 @@ class Anime():
             self._title = self._title.replace(bangumi_name, rename)
             self._bangumi_name = self._bangumi_name.replace(bangumi_name, rename)
 
+        # 下载任务开始
+        Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': '《'+self.get_title()+'》', 'status': '正在解析'}
+
         try:
             self.__get_m3u8_dict()  # 获取 m3u8 列表
         except TryTooManyTimeError:
@@ -851,12 +861,20 @@ class Anime():
             err_print(self._sn, '任務狀態', err_msg_detail, status=1)
         self.video_resolution = int(resolution)
 
+
+        # 解析完成, 开始下载
+        Config.tasks_progress_rate[int(self._sn)]['status'] = '正在下載'
+        Config.tasks_progress_rate[int(self._sn)]['filename'] = self.get_filename()
+
         if self._skip_video:
             err_print(self._sn, '跳過影片下載', status=2)
         elif self._settings['segment_download_mode']:
             self.__segment_download_mode(resolution)
         else:
             self.__ffmpeg_download_mode(resolution)
+
+        # 任务完成, 从任务进度表中删除
+        del Config.tasks_progress_rate[int(self._sn)]
 
         # 下載彈幕
         if self._danmu:
@@ -881,6 +899,34 @@ class Anime():
                     self.__request(req, no_cookies=True)
             except BaseException as e:
                 err_print(self._sn, 'CQ NOTIFY ERROR', 'Exception: ' + str(e), status=1)
+                
+        # 推送 TG 通知
+        if self._settings['telebot_notify']:
+            try:
+                msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'
+                vApiTokenTelegram = self._settings['telebot_token']
+                apiMethod = "getUpdates"
+                api_url = "https://api.telegram.org/bot" + vApiTokenTelegram + "/" + apiMethod # Telegram bot api url
+                try:
+                    response = self.__request(api_url).json()
+                    chat_id = response["result"][0]["message"]["chat"]["id"] # Get chat id
+                    try:
+                        api_method = "sendMessage"
+                        req = "https://api.telegram.org/bot" \
+                                + vApiTokenTelegram \
+                                + "/" \
+                                + api_method \
+                                + "?chat_id=" \
+                                + str(chat_id) \
+                                + "&text=" \
+                                + str(msg)
+                        self.__request(req, no_cookies=True) # Send msg to telegram bot
+                    except:
+                        err_print(self._sn, 'TG NOTIFY ERROR', "Exception: Send msg error\nReq: " + req, status=1) # Send mag error
+                except:
+                    err_print(self._sn, 'TG NOTIFY ERROR', "Exception: Invalid access token\nToken: " + vApiTokenTelegram, status=1) # Cannot find chat id
+            except BaseException as e:
+                err_print(self._sn, 'TG NOTIFY ERROR', 'Exception: ' + str(e), status=1)
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录

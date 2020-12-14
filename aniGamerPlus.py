@@ -398,9 +398,12 @@ def __get_info_only(sn):
 
 
 def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
-          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True):
+          cui_save_dir='', classify=True, get_info=False, user_cmd=False, realtime_show=True, cui_danmu=False):
     global thread_limiter
     thread_limiter = threading.Semaphore(cui_thread_limit)
+
+    global danmu
+    danmu = cui_danmu
 
     if realtime_show:
         if cui_thread_limit == 1 or cui_download_mode in ('single', 'latest', 'largest-sn'):
@@ -844,7 +847,7 @@ if __name__ == '__main__':
 
         Config.test_cookie()  # 测试cookie
         __cui(arg.sn, resolution, download_mode, thread_limit, download_episodes, save_dir, classify,
-              get_info=arg.information_only, user_cmd=user_command)
+              get_info=arg.information_only, user_cmd=user_command, cui_danmu=danmu)
 
     err_print(0, '自動模式啓動aniGamerPlus '+version_msg, no_sn=True, display=False)
     err_print(0, '工作目錄: ' + working_dir, no_sn=True, display=False)

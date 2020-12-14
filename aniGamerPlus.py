@@ -866,6 +866,7 @@ if __name__ == '__main__':
             sn_dict = Config.read_sn_list()
         if settings['read_config_when_checking_update']:
             settings = Config.read_settings()
+        danmu = settings['danmu'] # 避免手動加入工作時，global 覆寫掉 config 的 danmu 設定
         check_tasks()  # 检查更新，生成任务列队
         new_tasks_counter = 0  # 新增任务计数器
         if queue:

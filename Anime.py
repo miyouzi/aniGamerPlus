@@ -202,22 +202,27 @@ class Anime():
         accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
         accept_encoding = 'gzip, deflate'
         cache_control = 'max-age=0'
-        header = {
-            "user-agent": ua,
-            "referer": ref,
-            "accept-language": lang,
-            "accept": accept,
-            "accept-encoding": accept_encoding,
-            "cache-control": cache_control,
-            "origin": origin
+        self._mobile_header = {
+            "User-Agent": "Bahadroid (https://www.gamer.com.tw/)",
+            "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
+            "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
+            "X-Bahamut-App-Version": "177",
+            "Accept-Encoding": "gzip",
+            "Connection": "Keep-Alive"
         }
+        self._web_header = {
+                "user-agent": ua,
+                "referer": ref,
+                "accept-language": lang,
+                "accept": accept,
+                "accept-encoding": accept_encoding,
+                "cache-control": cache_control,
+                "origin": origin
+            }
         if self._settings['use_mobile_api']:
-            header.update({
-                "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
-                "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
-                "X-Bahamut-App-Version": "173"
-            })
-        self._req_header = header
+            self._req_header = self._mobile_header
+        else:
+            self._req_header = self._web_header
 
     def __request(self, req, no_cookies=False, show_fail=True, max_retry=3):
         # 获取页面
@@ -256,9 +261,7 @@ class Anime():
 
                     if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' in self._req_header:
                         # 使用移动API将无法进行 cookie 刷新, 改回 header 刷新 cookie
-                        self._req_header.pop('X-Bahamut-App-InstanceId')
-                        self._req_header.pop('X-Bahamut-App-Android')
-                        self._req_header.pop('X-Bahamut-App-Version')
+                        self._req_header = self._web_header
                         self.__request('https://ani.gamer.com.tw/')  # 再次尝试获取新 cookie
                     else:
                         err_print(self._sn, '收到cookie重置響應', display=False)
@@ -288,11 +291,7 @@ class Anime():
 
                         if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' not in self._req_header:
                             # 即使切换 header cookie 也无法刷新, 那么恢复 header, 好歹广告只有 3s
-                            self._req_header.update({
-                                "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
-                                "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
-                                "X-Bahamut-App-Version": "173"
-                            })
+                            self._req_header = self._mobile_header
 
                 elif '__cfduid' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # cookie 刷新两步走, 这是第二步, 追加在第一步后面
@@ -304,11 +303,7 @@ class Anime():
                     if self._settings['use_mobile_api']:
                         # 使用 cookie 不仅仅为了VIP, 还可用于解锁 R18, 恢复header减少广告时间
                         # 这也是为什么不识别到 cookie 直接关闭移动 API 解析的原因, 非会员解锁R18的同时也可以享受短广告
-                        self._req_header.update({
-                            "X-Bahamut-App-InstanceId": "cAJB-HprGUg",
-                            "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
-                            "X-Bahamut-App-Version": "173"
-                        })
+                        self._req_header = self._mobile_header
 
                     err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 

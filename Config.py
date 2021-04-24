@@ -17,7 +17,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v22.0'
-latest_config_version = 15.1
+latest_config_version = 15.2
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -118,6 +118,8 @@ def __init_settings():
                         'http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321'
                     ]
                 },
+                'telebot_notify': False,
+                'telebot_token': "",
                 'faststart_movflags': False,
                 'audio_language': False,
                 'use_mobile_api': False,
@@ -237,6 +239,11 @@ def __update_settings(old_settings):  # 升级配置文件
             },
             "user_message": ""
         }
+
+    if 'telebot_notify' not in new_settings.keys():
+        # 新增推送通知到TG的功能
+        new_settings['telebot_notify'] = False
+        new_settings['telebot_token'] = ""
 
     if 'faststart_movflags' not in new_settings.keys():
         # v9.0 新增功能: 将 metadata 移至视频文件头部

@@ -14,6 +14,7 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 from urllib.parse import quote
+import json
 
 
 class TryTooManyTimeError(BaseException):
@@ -889,6 +890,34 @@ class Anime():
                     self.__request(req, no_cookies=True)
             except BaseException as e:
                 err_print(self._sn, 'CQ NOTIFY ERROR', 'Exception: ' + str(e), status=1)
+                
+        # 推送 TG 通知
+        if self._settings['telebot_notify']:
+            try:
+                msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'
+                vApiTokenTelegram = self._settings['telebot_token']
+                apiMethod = "getUpdates"
+                api_url = "https://api.telegram.org/bot" + vApiTokenTelegram + "/" + apiMethod # Telegram bot api url
+                try:
+                    response = self.__request(api_url).json()
+                    chat_id = response["result"][0]["message"]["chat"]["id"] # Get chat id
+                    try:
+                        api_method = "sendMessage"
+                        req = "https://api.telegram.org/bot" \
+                                + vApiTokenTelegram \
+                                + "/" \
+                                + api_method \
+                                + "?chat_id=" \
+                                + str(chat_id) \
+                                + "&text=" \
+                                + str(msg)
+                        self.__request(req, no_cookies=True) # Send msg to telegram bot
+                    except:
+                        err_print(self._sn, 'TG NOTIFY ERROR', "Exception: Send msg error\nReq: " + req, status=1) # Send mag error
+                except:
+                    err_print(self._sn, 'TG NOTIFY ERROR', "Exception: Invalid access token\nToken: " + vApiTokenTelegram, status=1) # Cannot find chat id
+            except BaseException as e:
+                err_print(self._sn, 'TG NOTIFY ERROR', 'Exception: ' + str(e), status=1)
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
@@ -1169,6 +1198,8 @@ class Anime():
     def enable_danmu(self):
         self._danmu = True
 
+    def set_resolution(self, resolution):
+        self.video_resolution = int(resolution)
 
 if __name__ == '__main__':
     pass

@@ -20,6 +20,7 @@ import socket
 import Config
 from Anime import Anime, TryTooManyTimeError
 from ColorPrint import err_print
+from Danmu import Danmu
 
 
 def port_is_available(port):
@@ -382,7 +383,16 @@ def __get_info_only(sn):
     if anime['failed']:
         sys.exit(1)
     anime = anime['anime']
+    anime.set_resolution(resolution)
     anime.get_info()
+    download_dir = settings['bangumi_dir']
+    if classify:  # 控制是否建立番剧文件夹
+        download_dir = os.path.join(download_dir, Config.legalize_filename(anime.get_bangumi_name()))
+
+    if danmu:
+        full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
+        d = Danmu(sn, full_filename)
+        d.download()
 
     thread_limiter.release()
 
@@ -735,8 +745,8 @@ if __name__ == '__main__':
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
         parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
-        parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊')
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
+        parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊，可搭配 -d 更新彈幕')
         parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕(beta)')
         arg = parser.parse_args()
 
@@ -856,6 +866,7 @@ if __name__ == '__main__':
             sn_dict = Config.read_sn_list()
         if settings['read_config_when_checking_update']:
             settings = Config.read_settings()
+        danmu = settings['danmu'] # 避免手動加入工作時，global 覆寫掉 config 的 danmu 設定
         check_tasks()  # 检查更新，生成任务列队
         new_tasks_counter = 0  # 新增任务计数器
         if queue:

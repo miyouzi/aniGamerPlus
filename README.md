@@ -69,7 +69,7 @@ docker build -t anigamerplus .
 
 使用：
 ```
-docker run -d --name anigamerplus \
+docker run -td --name anigamerplus \
     -v /path/to/config.json:/app/config.json \
     -v /path/to/download:/app/bangumi \
     -p 5000:5000 \

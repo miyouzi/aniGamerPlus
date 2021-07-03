@@ -46,6 +46,38 @@ git pull https://github.com/miyouzi/aniGamerPlus.git
 python3 aniGamerPlus.py
 ```
 
+## Docker 運行
+
+目前沒有提供官方 Docker image，可自行下載原始碼並 Build Docker image。
+
+下載原始碼
+```
+git clone https://github.com/miyouzi/aniGamerPlus.git
+```
+
+Build Image
+```
+docker build -t anigamerplus .
+```
+
+使用前需在本地先創建好 config.json，並綁定 config.json 和下載目錄至 Container 內。
+
+注意：
+1. confg.json 中的 Dashboard Host 請設定成 `0.0.0.0`，切勿設定 `127.0.0.1`.
+2. config.json 勿設定下載目錄 `bangumi_dir: ""`，請保持為空，以目錄綁定失敗。
+3. 可綁定 cookies.txt 至 `/app/cookies.txt`
+
+使用：
+```
+docker run -d --name anigamerplus \
+    -v /path/to/config.json:/app/config.json \
+    -v /path/to/download:/app/bangumi \
+    -p 5000:5000 \
+    anigamerplus
+```
+
+啟動後可至 `localhost:5000` 使用 [Dashboard](#dashboard)。
+
 ## 鳴謝
 
 本專案m3u8获取模塊參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)

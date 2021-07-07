@@ -113,11 +113,10 @@ class Anime():
 
     def __get_src(self):
         if self._settings['use_mobile_api']:
-            self._src = self.__request(f'https://api.gamer.com.tw/mobile_app/anime/v1/video.php?sn={self._sn}').json()
+            self._src = self.__request(f'https://api.gamer.com.tw/mobile_app/anime/v1/video.php?sn={self._sn}', no_cookies=True).json()
         else:
-            host = 'ani.gamer.com.tw'
-            req = 'https://' + host + '/animeVideo.php?sn=' + str(self._sn)
-            f = self.__request(req)
+            req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
+            f = self.__request(req, no_cookies=True)
             self._src = BeautifulSoup(f.content, "lxml")
 
     def __get_title(self):

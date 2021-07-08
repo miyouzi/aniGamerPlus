@@ -645,6 +645,12 @@ class Anime():
             # 此功能可以更快的在线播放视频
             ffmpeg_cmd[7:7] = iter(['-movflags', 'faststart'])
 
+        if self._settings['add_bangumi_name_to_video_meta']:
+            # 将檔案名寫入 metadata
+            variable = 'album=' + self._bangumi_name
+            variable2 = 'title=' + self._bangumi_name
+            ffmpeg_cmd[7:7] = iter(['-metadata', variable])
+            ffmpeg_cmd[7:7] = iter(['-metadata', variable2])
         if self._settings['audio_language']:
             if self._title.find('中文') == -1:
                 ffmpeg_cmd[7:7] = iter(['-metadata:s:a:0', 'language=jpn'])

@@ -5,6 +5,7 @@ var id_list = [
 	'lock_resolution', 
 	'segment_download_mode', 
 	'add_bangumi_name_to_video_filename',
+	'add_bangumi_name_to_video_meta',
 	'add_resolution_to_video_filename',
 	'download_resolution', 
 	'default_download_mode',

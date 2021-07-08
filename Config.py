@@ -87,6 +87,7 @@ def __init_settings():
                 'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数
                 'segment_max_retry': 8,  # 在分段下载模式时有效, 每个分段最大重试次数, -1 为 无限重试
                 'add_bangumi_name_to_video_filename': True,
+                'add_bangumi_name_to_video_meta': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
                 'customized_video_filename_prefix': '【動畫瘋】',  # 用户自定前缀
                 'customized_bangumi_name_suffix': '',  # 用户自定义番剧名后缀 (在剧集名之前)
@@ -178,6 +179,9 @@ def __update_settings(old_settings):  # 升级配置文件
 
     if 'add_bangumi_name_to_video_filename' not in new_settings.keys():  # v3.0 新增开关, 文件名可以单纯用剧集命名
         new_settings['add_bangumi_name_to_video_filename'] = True
+
+    if 'add_bangumi_name_to_video_meta' not in new_settings.keys(): #v.ANi.Edition 新增功能: 将 metadata 移至视频文件头部
+        new_settings['add_bangumi_name_to_video_meta'] = True 
 
     if 'segment_download_mode' not in new_settings.keys():  # v3.1 新增分段下载模式开关
         new_settings['segment_download_mode'] = True

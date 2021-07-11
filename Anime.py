@@ -4,6 +4,7 @@
 # @Author  : Miyouzi
 # @File    : Anime.py @Software: PyCharm
 import ftplib
+import urllib.request
 import shutil
 import Config
 from Danmu import Danmu
@@ -455,6 +456,7 @@ class Anime():
 
             err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待'+str(ad_time)+'s廣告時間')
             start_ad()
+            # err_print(self._sn, cover_pic)
             time.sleep(ad_time)
             skip_ad()
         else:
@@ -532,6 +534,16 @@ class Anime():
         temp_dir = os.path.join(self._temp_dir, str(self._sn) + '-downloading-by-aniGamerPlus')  # 临时目录以 sn 命令
         if not os.path.exists(temp_dir):  # 创建临时目录
             os.makedirs(temp_dir)
+
+        anime_meta = self._src.find_all('meta')
+        for m in anime_meta:
+            if m.get('name') == 'description':
+                anime_desciption = m.get('content')
+            elif m.get('name') == 'thumbnail':
+                anime_cover_link = m.get('content')
+
+        urllib.request.urlretrieve(anime_cover_link, os.path.join(temp_dir, 'cover.jpg'))
+
         m3u8_path = os.path.join(temp_dir, str(self._sn) + '.m3u8')  # m3u8 存放位置
         m3u8_text = self.__request(self._m3u8_dict[resolution], no_cookies=True).text  # 请求 m3u8 文件
         with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存 m3u8 文件在本地
@@ -637,7 +649,12 @@ class Anime():
         ffmpeg_cmd = [self._ffmpeg_path,
                       '-allowed_extensions', 'ALL',
                       '-i', m3u8_path,
-                      '-c', 'copy', merging_file,
+                      '-i', os.path.join(temp_dir, 'cover.jpg'),
+                      '-map', '1',
+                      '-map', '0',
+                      '-c', 'copy', 
+                      '-disposition:0', 'attached_pic',
+                      merging_file,
                       '-y']
 
         if self._settings['faststart_movflags']:
@@ -649,8 +666,10 @@ class Anime():
             # 将檔案名寫入 metadata
             variable = 'album=' + self._bangumi_name
             variable2 = 'title=' + self._bangumi_name
+            variable3 = 'description=' + anime_desciption
             ffmpeg_cmd[7:7] = iter(['-metadata', variable])
             ffmpeg_cmd[7:7] = iter(['-metadata', variable2])
+            ffmpeg_cmd[7:7] = iter(['-metadata', variable3])
         if self._settings['audio_language']:
             if self._title.find('中文') == -1:
                 ffmpeg_cmd[7:7] = iter(['-metadata:s:a:0', 'language=jpn'])

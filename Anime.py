@@ -139,7 +139,7 @@ class Anime():
                 sys.exit(1)
 
     def __get_bangumi_name(self):
-        self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '').strip()  # 提取番剧名（去掉集数后缀）
+        self._bangumi_name = self._title.replace('[' + self.get_episode() + ']', '').strip() # 提取番剧名（去掉集数后缀）
         self._bangumi_name = re.sub(r'\s+', ' ', self._bangumi_name)  # 去除重复空格
 
     def __get_episode(self):  # 提取集数
@@ -148,7 +148,7 @@ class Anime():
         # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
         # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
         if self._settings['use_mobile_api']:
-            self._episode = str(re.findall(r'\[.+?\]', self._title)[0][1:-1])
+            self._episode = str(re.findall(r'\[\d*\.?\d*\]', self._title)[0][1:-1])
         else:
             soup = self._src
             try:
@@ -157,7 +157,7 @@ class Anime():
             except AttributeError:
                 # 如果这个sn就一集, 不存在剧集列表的情况
                 # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
-                self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+                self._episode = re.findall(r'\[\d*\.?\d*\]', self._title)  # 非贪婪匹配
                 self._episode = str(self._episode[0][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
 
     def __get_episode_list(self):

@@ -148,7 +148,15 @@ class Anime():
         # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
         # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
         if self._settings['use_mobile_api']:
-            self._episode = str(re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)[0][1:-1])
+            self._episode = re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)
+            if len(self._episode) > 0:
+              self._episode = str(self._episode[0][1:-1])
+            elif (len(re.findall(r'\[.+?\]', self._title)) > 0):
+              self._episode = re.findall(r'\[.+?\]', self._title)
+              self._episode = str(self._episode[0][1:-1])
+            else:
+              self._episode = "1"
+
         else:
             soup = self._src
             try:
@@ -157,8 +165,14 @@ class Anime():
             except AttributeError:
                 # 如果这个sn就一集, 不存在剧集列表的情况
                 # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
-                self._episode = str(re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)[0][1:-1])  # 非贪婪匹配
-                #self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
+                self._episode = re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)
+                if len(self._episode) > 0:
+                  self._episode = str(self._episode[0][1:-1])
+                elif (len(re.findall(r'\[.+?\]', self._title)) > 0):
+                  self._episode = re.findall(r'\[.+?\]', self._title)
+                  self._episode = str(self._episode[0][1:-1])
+                else:
+                  self._episode = "1"
 
     def __get_episode_list(self):
         if self._settings['use_mobile_api']:

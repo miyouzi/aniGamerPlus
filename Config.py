@@ -643,7 +643,7 @@ def read_cookie(log=False):
             for line in f.readlines():
                 if not line.isspace():  # 跳过空白行
                     cookies = line.replace('\n', '')  # 刪除换行符
-                    cookies = cookies = dict([list(map(lambda x: quote(x, safe='') if re.match(r'[\u4e00-\u9fa5]', x) else x, l.split("=", 1))) for l in cookies.split("; ")])
+                    cookies = dict([list(map(lambda x: quote(x, safe='') if re.match(r'[\u4e00-\u9fa5]', x) else x,  l.split("=", 1))) for l in cookies.split("; ")])
                     cookies.pop('ckBH_lastBoard', 404)
                     cookie = cookies
                     if log:

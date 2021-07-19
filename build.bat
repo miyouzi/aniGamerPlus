@@ -1,1 +1,1 @@
-pyinstaller --noconfirm --onefile --console --icon %~dp0aniGamerPlus_0000.ico --clean --add-data %~dp0aniGamerPlus;aniGamerPlus/  %~dp0aniGamerPlus.py
+pyinstaller --noconfirm --onefile --console --icon %~dp0aniGamerPlus_0000.ico --clean --add-data %~dp0;aniGamerPlus/  %~dp0aniGamerPlus.py

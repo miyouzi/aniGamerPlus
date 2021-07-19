@@ -48,32 +48,40 @@ python3 aniGamerPlus.py
 
 ## Docker 運行
 
-目前沒有提供官方 Docker image，可自行下載原始碼並 Build Docker image。
+### (可選) 建構自己的 Image
 
 下載原始碼
-```
+
+```bash
 git clone https://github.com/miyouzi/aniGamerPlus.git
 ```
 
 Build Image
-```
+
+```bash
 docker build -t anigamerplus .
 ```
+
+## 下載官方 Image
+
+目前官方 Image 放在 `tonypepe/anigamerplus`
 
 使用前需在本地先創建好 config.json，並綁定 config.json 和下載目錄至 Container 內。
 
 注意：
+
 1. confg.json 中的 Dashboard Host 請設定成 `0.0.0.0`，切勿設定 `127.0.0.1`.
-2. config.json 勿設定下載目錄 `bangumi_dir: ""`，請保持為空，以目錄綁定失敗。
-3. 可綁定 cookies.txt 至 `/app/cookies.txt`
+2. config.json 勿設定下載目錄 `bangumi_dir: ""`，請保持為空，以免目錄綁定失敗。
+3. 可綁定 cookie.txt 至 `/app/cookie.txt`
 
 使用：
-```
+
+```bash
 docker run -td --name anigamerplus \
     -v /path/to/config.json:/app/config.json \
     -v /path/to/download:/app/bangumi \
     -p 5000:5000 \
-    anigamerplus
+    tonypepe/anigamerplus
 ```
 
 啟動後可至 `localhost:5000` 使用 [Dashboard](#dashboard)。

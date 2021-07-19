@@ -331,6 +331,12 @@ class Anime():
                     self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
                     Config.renew_cookies(self._cookies, log=False)
 
+                elif 'ANIME_SIGN' in f.headers.get('set-cookie'):
+                    # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
+                    # https://github.com/miyouzi/aniGamerPlus/issues/110
+                    self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
+                    Config.renew_cookies(self._cookies, log=False)
+
                 else:  # 这是第一步
                     # 本线程收到了新cookie
                     err_print(self._sn, '收到新cookie', display=False)
@@ -1239,6 +1245,7 @@ class Anime():
 
     def set_resolution(self, resolution):
         self.video_resolution = int(resolution)
+
 
 if __name__ == '__main__':
     pass

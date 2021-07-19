@@ -8,6 +8,7 @@
 import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
 import socket
+from urllib.parse import quote
 from urllib.parse import urlencode
 
 # working_dir = os.path.dirname(os.path.realpath(__file__))

@@ -80,6 +80,7 @@ docker build -t anigamerplus .
 docker run -td --name anigamerplus \
     -v /path/to/config.json:/app/config.json \
     -v /path/to/download:/app/bangumi \
+    -v /path/to/aniGamer.db:/app/aniGamer.db \
     -p 5000:5000 \
     tonypepe/anigamerplus
 ```

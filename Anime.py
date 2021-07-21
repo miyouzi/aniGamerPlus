@@ -143,20 +143,26 @@ class Anime():
         self._bangumi_name = re.sub(r'\s+', ' ', self._bangumi_name)  # 去除重复空格
 
     def __get_episode(self):  # 提取集数
+
+        def get_ep():
+            # 20210719 动画疯的版本位置又瞎蹦跶
+            # https://github.com/miyouzi/aniGamerPlus/issues/109
+            # 先查看有沒有數字, 如果沒有再查看有沒有中括號, 如果都沒有直接放棄, 把集數填作 1
+            self._episode = re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*(?:電影)?\]', self._title)
+            if len(self._episode) > 0:
+                self._episode = str(self._episode[0][1:-1])
+            elif len(re.findall(r'\[.+?\]', self._title)) > 0:
+                self._episode = re.findall(r'\[.+?\]', self._title)
+                self._episode = str(self._episode[0][1:-1])
+            else:
+                self._episode = "1"
+
         # 20200320 发现多版本标签后置导致原集数提取方法失效
         # https://github.com/miyouzi/aniGamerPlus/issues/36
         # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
         # self._episode = str(self._episode[-1][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
         if self._settings['use_mobile_api']:
-            self._episode = re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)
-            if len(self._episode) > 0:
-              self._episode = str(self._episode[0][1:-1])
-            elif (len(re.findall(r'\[.+?\]', self._title)) > 0):
-              self._episode = re.findall(r'\[.+?\]', self._title)
-              self._episode = str(self._episode[0][1:-1])
-            else:
-              self._episode = "1"
-
+            get_ep()
         else:
             soup = self._src
             try:
@@ -165,14 +171,9 @@ class Anime():
             except AttributeError:
                 # 如果这个sn就一集, 不存在剧集列表的情况
                 # https://github.com/miyouzi/aniGamerPlus/issues/36#issuecomment-605065988
-                self._episode = re.findall(r'\[\d*\.?\d* *\.?[A-Z,a-z]*\]', self._title)
-                if len(self._episode) > 0:
-                  self._episode = str(self._episode[0][1:-1])
-                elif (len(re.findall(r'\[.+?\]', self._title)) > 0):
-                  self._episode = re.findall(r'\[.+?\]', self._title)
-                  self._episode = str(self._episode[0][1:-1])
-                else:
-                  self._episode = "1"
+                # self._episode = re.findall(r'\[.+?\]', self._title)  # 非贪婪匹配
+                # self._episode = str(self._episode[0][1:-1])  # 考虑到 .5 集和 sp、ova 等存在，以str储存
+                get_ep()
 
     def __get_episode_list(self):
         if self._settings['use_mobile_api']:
@@ -328,6 +329,12 @@ class Anime():
                     # 每次请求都会返回一个token, token生命周期 3000s (即50min)
                     # 这一点都不节能啊! (
                     self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
+                    Config.renew_cookies(self._cookies, log=False)
+
+                elif 'ANIME_SIGN' in f.headers.get('set-cookie'):
+                    # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
+                    # https://github.com/miyouzi/aniGamerPlus/issues/110
+                    self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
                     Config.renew_cookies(self._cookies, log=False)
 
                 else:  # 这是第一步
@@ -1238,6 +1245,7 @@ class Anime():
 
     def set_resolution(self, resolution):
         self.video_resolution = int(resolution)
+
 
 if __name__ == '__main__':
     pass

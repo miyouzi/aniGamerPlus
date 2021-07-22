@@ -559,7 +559,9 @@ class Anime():
         anime_meta = self._src.find_all('meta')
         for m in anime_meta:
             if m.get('name') == 'description':
-                anime_desciption = m.get('content')
+                raw_anime_desciption = m.get('content')
+                process_anime_desciption = raw_anime_desciption.split("線上看!", 1)
+                anime_desciption = process_anime_desciption[1]
             elif m.get('name') == 'thumbnail':
                 anime_cover_link = m.get('content')
 

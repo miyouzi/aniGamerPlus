@@ -331,7 +331,7 @@ class Anime():
                     self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
                     Config.renew_cookies(self._cookies, log=False)
 
-                elif 'ANIME_SIGN' in f.headers.get('set-cookie'):
+                elif 'ANIME_SIGN' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
                     # https://github.com/miyouzi/aniGamerPlus/issues/110
                     self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']

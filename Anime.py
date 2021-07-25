@@ -481,6 +481,10 @@ class Anime():
             # 20200513 网站更新，最低广告更新时间从8s增加到20s https://github.com/miyouzi/aniGamerPlus/issues/41
             # 20200806 网站更新，最低广告更新时间从20s增加到25s https://github.com/miyouzi/aniGamerPlus/issues/55
 
+            if self._settings['only_use_vip']:
+                 err_print(self._sn, '非VIP','因為已設定只使用VIP下載，故強制停止', status=1, no_sn=True)
+                 os._exit(0)
+
             if self._settings['use_mobile_api']:
                 ad_time = self._settings['mobile_ads_time']  # APP解析廣告解析時間不同
             else:
@@ -948,7 +952,7 @@ class Anime():
                     self.__request(req, no_cookies=True)
             except BaseException as e:
                 err_print(self._sn, 'CQ NOTIFY ERROR', 'Exception: ' + str(e), status=1)
-                
+
         # 推送 TG 通知
         if self._settings['telebot_notify']:
             try:

@@ -152,6 +152,7 @@ docker run -td --name anigamerplus \
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
+    "only_use_vip": false,  # 锁定 VIP 账号下载
     "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "use_copyfile_method": false,  # 轉移影片至番劇資料夾時使用複製方法, 適用於保存到 rclone 掛載盤的情況
     "multi-thread": 1,  # 最大并發下載數, 最高為 5, 超過將重置為 5

@@ -482,7 +482,7 @@ class Anime():
 
             if self._settings['only_use_vip']:
                  err_print(self._sn, '非VIP','因為已設定只使用VIP下載，故強制停止', status=1, no_sn=True)
-                 os._exit(0)
+                 sys.exit(1)
 
             if self._settings['use_mobile_api']:
                 ad_time = self._settings['mobile_ads_time']  # APP解析廣告解析時間不同

@@ -18,7 +18,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v22.2'
-latest_config_version = 15.2
+latest_config_version = 15.3
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -327,6 +327,9 @@ def __update_settings(old_settings):  # 升级配置文件
         del new_settings['coolq_settings']['port']
         del new_settings['coolq_settings']['api']
         del new_settings['coolq_settings']['SSL']
+
+    if 'only_use_vip' not in new_settings.keys():
+        new_settings['only_use_vip'] = False
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

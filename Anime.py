@@ -327,14 +327,23 @@ class Anime():
                     # https://github.com/miyouzi/aniGamerPlus/issues/8
                     # 每次请求都会返回一个token, token生命周期 3000s (即50min)
                     # 这一点都不节能啊! (
+                    err_print(self._sn, '用戶cookie刷新hahatoken', display=False)
                     self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
                     Config.renew_cookies(self._cookies, log=False)
 
-                elif 'ANIME_SIGN' in f.headers.get('set-cookie'):
+                elif 'BAHAHASHID' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
+                    # 20210723 疑似 hahatoken 改名
+                    err_print(self._sn, '用戶cookie刷新BAHAHASHID', display=False)
+                    self._cookies['BAHAHASHID'] = f.cookies.get_dict()['BAHAHASHID']
+                    Config.renew_cookies(self._cookies, log=False)
+
+                elif 'ANIME_SIGN' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
                     # https://github.com/miyouzi/aniGamerPlus/issues/110
-                    self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
-                    Config.renew_cookies(self._cookies, log=False)
+                    if self._cookies['ANIME_SIGN'] != f.cookies.get_dict()['ANIME_SIGN']:
+                        err_print(self._sn, '用戶cookie刷新ANIME_SIGN', display=False)
+                        self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
+                        Config.renew_cookies(self._cookies, log=False)
 
                 else:  # 这是第一步
                     # 本线程收到了新cookie
@@ -342,6 +351,8 @@ class Anime():
                     Config.renew_cookies(f.cookies.get_dict())  # 保存一半新cookie
                     self._cookies = Config.read_cookie()  # 载入一半新cookie
                     self.__request('https://ani.gamer.com.tw/')  # 马上完成cookie刷新第二步, 以免正好在刚要解析m3u8时掉链子
+                    # 20210724 动画疯一步到位刷新 Cookie
+                    err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
         return f
 

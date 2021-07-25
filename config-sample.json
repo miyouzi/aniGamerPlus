@@ -5,6 +5,7 @@
     "check_frequency": 5,
     "download_resolution": "1080",
     "lock_resolution": false,
+    "only_use_vip":false,
     "default_download_mode": "latest",
     "use_copyfile_method": false,
     "multi-thread": 1,

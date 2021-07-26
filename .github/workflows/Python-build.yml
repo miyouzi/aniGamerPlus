@@ -27,7 +27,7 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     - name: Build exe
-      run: pyinstaller --noconfirm --onefile --console --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
+      run: pyinstaller --noconfirm --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
       shell: cmd
     - name: Upload exe
       uses: actions/upload-artifact@v2

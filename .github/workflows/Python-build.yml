@@ -4,8 +4,13 @@ name: aniGamerPlus Build Artifact
 
 on:
   push:
-    branches: [ master ]
-
+    branches:
+      - master
+      - commit_build
+  pull_request:
+    branches:
+      - master
+      - commit_build
 jobs:
   build:
     runs-on: windows-2019

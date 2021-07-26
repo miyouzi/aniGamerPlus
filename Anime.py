@@ -340,7 +340,7 @@ class Anime():
                 elif 'ANIME_SIGN' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
                     # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
                     # https://github.com/miyouzi/aniGamerPlus/issues/110
-                    if self._cookies['ANIME_SIGN'] != f.cookies.get_dict()['ANIME_SIGN']:
+                    if 'ANIME_SIGN' not in self._cookies.keys() or self._cookies['ANIME_SIGN'] != f.cookies.get_dict()['ANIME_SIGN']:
                         err_print(self._sn, '用戶cookie刷新ANIME_SIGN', display=False)
                         self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
                         Config.renew_cookies(self._cookies, log=False)

@@ -15,7 +15,7 @@ from urllib.parse import urlencode
 if getattr(sys, 'frozen', False):
     working_dir = os.path.dirname(sys.executable)
 elif __file__:
-    working_dir = os.path.dirname(__file__)
+    working_dir = os.path.dirname(os.path.realpath(__file__))
 
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')

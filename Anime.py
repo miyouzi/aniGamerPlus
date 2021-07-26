@@ -704,7 +704,7 @@ class Anime():
             shutil.move(merging_file, output_file)  # 此方法在遇到rclone挂载盘时会出错
 
         # 删除临时目录
-        shutil.rmtree(temp_dir)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
         self.local_video_path = output_file  # 记录保存路径, FTP上传用
         self._video_filename = filename  # 记录文件名, FTP上传用

@@ -1,0 +1,58 @@
+#anigamerplus latest release build
+
+name: aniGamerPlus Build Release
+
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  build:
+    runs-on: windows-2019
+    strategy:
+      # You can use PyPy versions in python-version.
+      # For example, pypy2 and pypy3
+      matrix:
+        python: [3.8.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+          python-version: ${{ matrix.python }}
+
+    - name: Set up ENV
+      run: |
+        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
+        echo ::set-env name=RELEASE_TITLE::aniGamerPlus_${{ env.RELEASE_VERSION }}_windows_64bit
+        echo ::set-env name=RELEASE_FILENAME::${{ env.RELEASE_TITLE }}.zip
+    - name: Test ENV
+      run: |
+        echo $RELEASE_VERSION
+        echo ${{ env.RELEASE_VERSION }}
+        echo $RELEASE_TITLE
+        echo ${{ env.RRELEASE_TITLE }}
+        echo $RELEASE_FILENAME
+        echo ${{ env.RELEASE_FILENAME }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build exe
+      run: pyinstaller --noconfirm --distpath %cd%\ --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
+      shell: cmd
+
+    - name: Archive release
+      run: 7z a -tzip ${{ env.RELEASE_FILENAME }} aniGamerPlus.exe Dashboard DanmuTemplate.ass config-sample.json sn_list-sample.txt LICENSE README.md
+
+    - name: Create release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        title: ${{ env.RRELEASE_TITLE }}
+        files: ${{ env.RELEASE_FILENAME }}

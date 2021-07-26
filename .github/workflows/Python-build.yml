@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - master
-      - commit_build
   pull_request:
     branches:
       - master
@@ -31,10 +30,7 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     - name: Build exe
-      run: pyinstaller --noconfirm --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
-      shell: cmd
-    - name: Copy exe out
-      run: copy /V /Y dist/aniGamerPlus.exe /B .
+      run: pyinstaller --noconfirm --distpath %cd%\ --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
       shell: cmd
     - name: Upload exe
       uses: actions/upload-artifact@v2

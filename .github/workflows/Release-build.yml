@@ -25,9 +25,9 @@ jobs:
     - name: Set up ENV
       run: |
         chcp 65001
-        echo ("RELEASE_VERSION=" + $env:GITHUB_REF.replace('refs/heads/', '')) >> $env:GITHUB_ENV
-        echo ("RELEASE_TITLE=aniGamerPlus_${{ env.RELEASE_VERSION }}_windows_64bit") >> $env:RELEASE_TITLE
-        echo ("RELEASE_FILENAME=${{ env.RELEASE_TITLE }}.zip") >> $env:RELEASE_FILENAME
+        echo ("RELEASE_VERSION=" + $env:GITHUB_REF.replace('refs/tags/', '')) >> $env:GITHUB_ENV
+        echo ("RELEASE_TITLE=aniGamerPlus_" + $env:RELEASE_VERSION + "_windows_64bit") >> $env:GITHUB_ENV
+        echo ("RELEASE_FILENAME=" + $env:RELEASE_TITLE + ".zip") >> $env:GITHUB_ENV
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION

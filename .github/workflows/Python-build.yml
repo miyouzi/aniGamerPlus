@@ -1,0 +1,41 @@
+#anigamerplus latest python build
+
+name: aniGamerPlus Build Artifact
+
+on:
+  push:
+    branches:
+      - master
+      - commit_build
+  pull_request:
+    branches:
+      - master
+      - commit_build
+jobs:
+  build:
+    runs-on: windows-2019
+    strategy:
+      # You can use PyPy versions in python-version.
+      # For example, pypy2 and pypy3
+      matrix:
+        python: [3.8.x, 3.9.x]
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with: 
+          python-version: ${{ matrix.python }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    - name: Build exe
+      run: pyinstaller --noconfirm --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
+      shell: cmd
+    - name: Upload exe
+      uses: actions/upload-artifact@v2
+      with:
+       name: anigamer_artifacts_${{ matrix.python }}
+       path: dist/aniGamerPlus.exe

@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 # 你猜猜看我是 .exe 或是 .py 檔案
 if getattr(sys, 'frozen', False):
     working_dir = os.path.dirname(sys.executable)
-elif __file__:
+else:
     working_dir = os.path.dirname(os.path.realpath(__file__))
 
 config_path = os.path.join(working_dir, 'config.json')

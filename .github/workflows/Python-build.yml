@@ -10,7 +10,6 @@ on:
   pull_request:
     branches:
       - master
-      - commit_build
 jobs:
   build:
     runs-on: windows-2019
@@ -37,5 +36,12 @@ jobs:
     - name: Upload exe
       uses: actions/upload-artifact@v2
       with:
-       name: anigamer_artifacts_${{ matrix.python }}
-       path: dist/aniGamerPlus.exe
+       name: aniGamerPlus_artifacts_${{ matrix.python }}
+       path: |
+         dist/aniGamerPlus.exe
+         Dashboard/
+         LICENSE
+         README.md
+         DanmuTemplate.ass
+         sn_list-sample.txt
+         config-sample.json

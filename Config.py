@@ -11,8 +11,12 @@ import socket
 from urllib.parse import quote
 from urllib.parse import urlencode
 
-working_dir = os.path.dirname(os.path.realpath(__file__))
-# working_dir = os.path.dirname(sys.executable)  # 使用 pyinstaller 编译时，打开此项
+# 你猜猜看我是 .exe 或是 .py 檔案
+if getattr(sys, 'frozen', False):
+    working_dir = os.path.dirname(sys.executable)
+elif __file__:
+    working_dir = os.path.dirname(__file__)
+
 config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')

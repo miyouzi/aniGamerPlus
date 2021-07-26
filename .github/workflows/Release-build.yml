@@ -55,3 +55,4 @@ jobs:
         prerelease: false
         title: ${{ env.RRELEASE_TITLE }}
         files: ${{ env.RELEASE_FILENAME }}
+        automatic_release_tag: latest

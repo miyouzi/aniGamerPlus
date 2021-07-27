@@ -30,6 +30,11 @@ jobs:
         echo ("RELEASE_FILENAME=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit.zip") >> $env:GITHUB_ENV
         git fetch --tags --force
         echo ("TAG_MESSAGE=$($(git tag -l --format='%(contents)' $env:GITHUB_REF.replace('refs/tags/', '')).replace('`n', '<br>'))") >> $env:GITHUB_ENV
+    - name: Get tag message
+      id: tag_data
+      uses: ericcornelissen/git-tag-annotation-action@v1
+    - name: The tag_data output
+      run: echo ("${{ steps.tag_data.outputs.git-tag-annotation }}")
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION

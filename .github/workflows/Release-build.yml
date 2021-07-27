@@ -29,12 +29,9 @@ jobs:
         echo ("RELEASE_TITLE=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit") >> $env:GITHUB_ENV
         echo ("RELEASE_FILENAME=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit.zip") >> $env:GITHUB_ENV
         git fetch --tags --force
-        echo ("TAG_MESSAGE=$($(git tag -l --format='%(contents)' $env:GITHUB_REF.replace('refs/tags/', '')).replace('`n', '<br>'))") >> $env:GITHUB_ENV
     - name: Get tag message
       id: tag_data
       uses: ericcornelissen/git-tag-annotation-action@v1
-    - name: The tag_data output
-      run: echo ("${{ steps.tag_data.outputs.git-tag-annotation }}")
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION
@@ -44,7 +41,7 @@ jobs:
         echo $RELEASE_FILENAME
         echo ${{ env.RELEASE_FILENAME }}
         echo $TAG_MESSAGE
-        echo ("${{ env.TAG_MESSAGE }}")
+        echo ${{ steps.tag_data.outputs.git-tag-annotation }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -56,6 +53,7 @@ jobs:
 
     - name: Archive release
       run: 7z a -tzip ${{ env.RELEASE_FILENAME }} aniGamerPlus.exe Dashboard DanmuTemplate.ass config-sample.json sn_list-sample.txt LICENSE README.md
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -64,9 +62,8 @@ jobs:
       with:
         tag_name: ${{ env.RELEASE_VERSION }}
         release_name: "${{ env.RELEASE_TITLE }}"
-        body: "${{ env.TAG_MESSAGE }}"
-        draft: false
-        prerelease: true
+        body: ${{ steps.tag_data.outputs.git-tag-annotation }}
+
     - name: Upload Release Asset
       id: upload-release-asset
       uses: actions/upload-release-asset@v1

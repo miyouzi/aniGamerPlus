@@ -28,6 +28,7 @@ jobs:
         echo ("RELEASE_VERSION=" + $env:GITHUB_REF.replace('refs/tags/', '')) >> $env:GITHUB_ENV
         echo ("RELEASE_TITLE=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit") >> $env:GITHUB_ENV
         echo ("RELEASE_FILENAME=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit.zip") >> $env:GITHUB_ENV
+        echo ("TAG_MESSAGE=$(git tag -l --format='%(contents)' $env:GITHUB_REF.replace('refs/tags/', ''))") >> $env:GITHUB_ENV
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION
@@ -36,6 +37,8 @@ jobs:
         echo ${{ env.RELEASE_TITLE }}
         echo $RELEASE_FILENAME
         echo ${{ env.RELEASE_FILENAME }}
+        echo $TAG_MESSAGE
+        echo ${{ env.TAG_MESSAGE }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

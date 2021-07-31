@@ -31,7 +31,7 @@ jobs:
         git fetch --tags --force
     - name: Get tag message
       id: tag_data
-      uses: ericcornelissen/git-tag-annotation-action@v1
+      uses: ericcornelissen/git-tag-annotation-action@bug-23/quotes-with-windows
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION

@@ -41,7 +41,7 @@ jobs:
         echo $RELEASE_FILENAME
         echo ${{ env.RELEASE_FILENAME }}
         echo $TAG_MESSAGE
-        echo ${{ steps.tag_data.outputs.git-tag-annotation }}
+        echo '${{ steps.tag_data.outputs.git-tag-annotation }}'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

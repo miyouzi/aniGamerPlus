@@ -239,15 +239,23 @@ class Anime():
         else:
             self._req_header = self._web_header
 
-    def __request(self, req, no_cookies=False, show_fail=True, max_retry=3):
+    def __request(self, req, no_cookies=False, show_fail=True, max_retry=3, addition_header=None):
+        # 设置 header
+        current_header = self._req_header
+        if addition_header is None:
+            addition_header = {}
+        if len(addition_header) > 0:
+            for key in addition_header.keys():
+                current_header[key] = addition_header[key]
+
         # 获取页面
         error_cnt = 0
         while True:
             try:
                 if self._cookies and not no_cookies:
-                    f = self._session.get(req, headers=self._req_header, cookies=self._cookies, timeout=10)
+                    f = self._session.get(req, headers=current_header, cookies=self._cookies, timeout=10)
                 else:
-                    f = self._session.get(req, headers=self._req_header, cookies={}, timeout=10)
+                    f = self._session.get(req, headers=current_header, cookies={}, timeout=10)
             except requests.exceptions.RequestException as e:
                 if error_cnt >= max_retry >= 0:
                     raise TryTooManyTimeError('任務狀態: sn=' + str(self._sn) + ' 请求失败次数过多！请求链接：\n%s' % req)
@@ -447,7 +455,7 @@ class Anime():
 
         def parse_playlist():
             req = self._playlist['src']
-            f = self.__request(req, no_cookies=True)
+            f = self.__request(req, no_cookies=True, addition_header={"referer": "https://ani.gamer.com.tw/"})
             url_prefix = re.sub(r'playlist.+', '', self._playlist['src'])  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
             m3u8_dict = {}

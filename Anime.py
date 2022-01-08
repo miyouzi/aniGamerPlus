@@ -353,6 +353,13 @@ class Anime():
                         self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
                         Config.renew_cookies(self._cookies, log=False)
 
+                elif 'BAHARUNE' not in f.headers.get('set-cookie'):
+                    # 20220108 兜一下其他奇奇怪怪单独刷新的字段
+                    for key in f.cookies.get_dict().keys():
+                        err_print(self._sn, f'用戶cookie刷新{key}', display=False)
+                        self._cookies[key] = f.cookies.get_dict()[key]
+                        Config.renew_cookies(self._cookies, log=False)
+
                 else:  # 这是第一步
                     # 本线程收到了新cookie
                     err_print(self._sn, '收到新cookie', display=False)

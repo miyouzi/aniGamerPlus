@@ -316,58 +316,21 @@ class Anime():
                             # 即使切换 header cookie 也无法刷新, 那么恢复 header, 好歹广告只有 3s
                             self._req_header = self._mobile_header
 
-                elif '__cfduid' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
-                    # cookie 刷新两步走, 这是第二步, 追加在第一步后面
-                    # 此时self._cookies已是完整新cookie,不需要再从文件载入
-                    # 20190507 发现是一步到位了, 但保不准会不会改回去, 姑且加个 and
-                    self._cookies['__cfduid'] = f.cookies.get_dict()['__cfduid']
-                    Config.renew_cookies(self._cookies)  # 保存全新cookie
-
-                    if self._settings['use_mobile_api']:
-                        # 使用 cookie 不仅仅为了VIP, 还可用于解锁 R18, 恢复header减少广告时间
-                        # 这也是为什么不识别到 cookie 直接关闭移动 API 解析的原因, 非会员解锁R18的同时也可以享受短广告
-                        self._req_header = self._mobile_header
-
-                    err_print(0, '用戶cookie已更新', status=2, no_sn=True)
-
-                elif 'hahatoken' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
-                    # 巴哈cookie升级
-                    # https://github.com/miyouzi/aniGamerPlus/issues/8
-                    # 每次请求都会返回一个token, token生命周期 3000s (即50min)
-                    # 这一点都不节能啊! (
-                    err_print(self._sn, '用戶cookie刷新hahatoken', display=False)
-                    self._cookies['hahatoken'] = f.cookies.get_dict()['hahatoken']
-                    Config.renew_cookies(self._cookies, log=False)
-
-                elif 'BAHAHASHID' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
-                    # 20210723 疑似 hahatoken 改名
-                    err_print(self._sn, '用戶cookie刷新BAHAHASHID', display=False)
-                    self._cookies['BAHAHASHID'] = f.cookies.get_dict()['BAHAHASHID']
-                    Config.renew_cookies(self._cookies, log=False)
-
-                elif 'ANIME_SIGN' in f.headers.get('set-cookie') and 'BAHARUNE' not in f.headers.get('set-cookie'):
-                    # 20210719 动画疯在打开视频时 Cookie 会新增 ANIME_SIGN
-                    # https://github.com/miyouzi/aniGamerPlus/issues/110
-                    if 'ANIME_SIGN' not in self._cookies.keys() or self._cookies['ANIME_SIGN'] != f.cookies.get_dict()['ANIME_SIGN']:
-                        err_print(self._sn, '用戶cookie刷新ANIME_SIGN', display=False)
-                        self._cookies['ANIME_SIGN'] = f.cookies.get_dict()['ANIME_SIGN']
-                        Config.renew_cookies(self._cookies, log=False)
-
-                elif 'BAHARUNE' not in f.headers.get('set-cookie'):
-                    # 20220108 兜一下其他奇奇怪怪单独刷新的字段
-                    for key in f.cookies.get_dict().keys():
-                        err_print(self._sn, f'用戶cookie刷新{key}', display=False)
-                        self._cookies[key] = f.cookies.get_dict()[key]
-                        Config.renew_cookies(self._cookies, log=False)
-
-                else:  # 这是第一步
+                else:
                     # 本线程收到了新cookie
+                    # 20220115 简化 cookie 刷新逻辑
                     err_print(self._sn, '收到新cookie', display=False)
-                    Config.renew_cookies(f.cookies.get_dict())  # 保存一半新cookie
-                    self._cookies = Config.read_cookie()  # 载入一半新cookie
-                    self.__request('https://ani.gamer.com.tw/')  # 马上完成cookie刷新第二步, 以免正好在刚要解析m3u8时掉链子
+
+                    self._cookies.update(f.cookies.get_dict())
+                    Config.renew_cookies(self._cookies, log=False)
+
+                    key_list_str = ', '.join(f.cookies.get_dict().keys())
+                    err_print(self._sn, f'用戶cookie刷新 {key_list_str} ', display=False)
+
+                    self.__request('https://ani.gamer.com.tw/')
                     # 20210724 动画疯一步到位刷新 Cookie
-                    err_print(0, '用戶cookie已更新', status=2, no_sn=True)
+                    if 'BAHARUNE' in f.headers.get('set-cookie'):
+                        err_print(0, '用戶cookie已更新', status=2, no_sn=True)
 
         return f
 

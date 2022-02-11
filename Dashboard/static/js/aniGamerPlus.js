@@ -118,7 +118,7 @@ function readSettings() {
 		for (var i in a) {
 			var ip_port = dataArrays["proxy_ip"] + ':' + dataArrays["proxy_port"];
 			var protocol = dataArrays["proxy_protocol"] + '://';
-			if (dataArrays["proxy_user"].length * dataArrays["proxy_passwd"].length == 0) {
+			if (dataArrays["proxy_user"]?.length * dataArrays["proxy_passwd"]?.length == 0) {
 				// 如果没有用户密码
 				dataArrays["proxy"] = protocol + ip_port;
 			} else {

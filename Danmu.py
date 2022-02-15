@@ -2,6 +2,7 @@
 import requests
 import json
 import random
+import os
 from ColorPrint import err_print
 
 
@@ -30,7 +31,8 @@ class Danmu():
             return
 
         output = open(self._full_filename, 'w', encoding='utf8')
-        with open('DanmuTemplate.ass', 'r', encoding='utf8') as temp:
+        danmu_template_file = os.path.join(os.path.dirname(__file__), 'DanmuTemplate.ass')
+        with open(danmu_template_file, 'r', encoding='utf8') as temp:
             for line in temp.readlines():
                 output.write(line)
 

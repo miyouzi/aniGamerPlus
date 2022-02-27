@@ -11,6 +11,12 @@ class Danmu():
         self._sn = sn
         self._full_filename = full_filename
 
+    def get_BGRcolor(self, RGBcolor):
+        r = RGBcolor[0:2]
+        g = RGBcolor[2:4]
+        b = RGBcolor[4:6]
+        return f"{b}{g}{r}"
+
     def download(self):
         h = {
             'Content-Type':
@@ -42,6 +48,8 @@ class Danmu():
         roll_time = list()
 
         for danmu in j:
+            BGRcolor = self.get_BGRcolor(danmu['color'][1:])
+
             output.write('Dialogue: ')
             output.write('0,')
 
@@ -73,21 +81,21 @@ class Danmu():
                 output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
                 output.write(
-                    'Roll,,0,0,0,,{\\move(1920,' + str(height) + ',-1000,' + str(height) + ')\\1c&H4C' + danmu['color'][1:] + '}')
+                    'Roll,,0,0,0,,{\\move(1920,' + str(height) + ',-1000,' + str(height) + ')\\1c&H4C' + BGRcolor + '}')
             elif danmu['position'] == 1:  # Top danmu
                 end_time = start_time + 5
                 m, s = divmod(end_time, 60)
                 h, m = divmod(m, 60)
                 output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
                 output.write(
-                    'Top,,0,0,0,,{\\1c&H4C' + danmu['color'][1:] + '}')
+                    'Top,,0,0,0,,{\\1c&H4C' + BGRcolor + '}')
             else:  # Bottom danmu
                 end_time = start_time + 5
                 m, s = divmod(end_time, 60)
                 h, m = divmod(m, 60)
                 output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
                 output.write(
-                    'Bottom,,0,0,0,,{\\1c&H4C' + danmu['color'][1:] + '}')
+                    'Bottom,,0,0,0,,{\\1c&H4C' + BGRcolor + '}')
 
             output.write(danmu['text'])
             output.write('\n')

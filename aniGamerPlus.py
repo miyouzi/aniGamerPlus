@@ -392,7 +392,7 @@ def __get_info_only(sn):
     if danmu:
         full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
         d = Danmu(sn, full_filename)
-        d.download()
+        d.download(settings['danmu_ban_words'])
 
     thread_limiter.release()
 

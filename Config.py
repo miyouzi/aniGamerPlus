@@ -130,6 +130,7 @@ def __init_settings():
                 'audio_language': False,
                 'use_mobile_api': False,
                 'danmu': False,
+                'danmu_ban_words': [],
                 'check_latest_version': True,  # 是否检查新版本
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
@@ -297,6 +298,9 @@ def __update_settings(old_settings):  # 升级配置文件
         # 支持下载弹幕
         # https://github.com/miyouzi/aniGamerPlus/pull/66
         new_settings['danmu'] = False
+
+    if 'danmu_ban_words' not in new_settings.keys():
+        new_settings['danmu_ban_words'] = []
 
     if 'use_mobile_api' not in new_settings.keys():
         # v21.0 新增使用APP API #69

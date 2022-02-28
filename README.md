@@ -144,7 +144,7 @@ docker run -td --name anigamerplus \
 
 若不存在**config.json**, 则程序在运行时将会使用默认配置创建.
 
-```
+```json
 {
     "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分資料夾存放
     "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
@@ -194,8 +194,8 @@ docker run -td --name anigamerplus \
     "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
     "audio_language": false,  # 是否添加音軌標簽
     "use_mobile_api": false,  # 使用移動端API進行影片解析
-    "danmu": false, # 是否下載彈幕
-    "danmu_ban_words": [], # 過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
+    "danmu": false, # 是否下載彈幕(已包含動畫瘋內建的關鍵字過濾)
+    "danmu_ban_words": [], # 額外過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序

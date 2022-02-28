@@ -8,9 +8,10 @@ from ColorPrint import err_print
 
 
 class Danmu():
-    def __init__(self, sn, full_filename):
+    def __init__(self, sn, full_filename, cookies):
         self._sn = sn
         self._full_filename = full_filename
+        self._cookies = cookies
 
     def get_BGRcolor(self, RGBcolor):
         r = RGBcolor[0:2]
@@ -39,6 +40,28 @@ class Danmu():
         if r.status_code != 200:
             err_print(self._sn, '彈幕下載失敗', 'status_code=' + str(r.status_code), status=1)
             return
+
+        h = {
+            'accept':
+            'application/json',
+            'origin':
+            'https://ani.gamer.com.tw',
+            'authority':
+            'ani.gamer.com.tw',
+            'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+        }
+        ban_words_response = requests.get(
+            'https://ani.gamer.com.tw/ajax/keywordGet.php', headers=h, cookies=self._cookies)
+
+        if ban_words_response.status_code != 200:
+            err_print(self._sn, '取得線上過濾彈幕失敗', 'status_code=' +
+                      str(r.status_code), status=1)
+        else:
+            online_ban_words = json.loads(ban_words_response.text)
+            for online_ban_word in online_ban_words:
+                err_print(self._sn, '取得線上過濾彈幕', detail=online_ban_word['keyword'], status=0, display=False)
+                ban_words.append(online_ban_word['keyword'])
 
         output = open(self._full_filename, 'w', encoding='utf8')
         danmu_template_file = os.path.join(os.path.dirname(__file__), 'DanmuTemplate.ass')

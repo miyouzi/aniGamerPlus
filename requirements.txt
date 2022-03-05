@@ -9,3 +9,4 @@ beautifulsoup4==4.9.3
 gevent_websocket==0.10.1
 pysocks
 lxml
+markupsafe<2.1.0

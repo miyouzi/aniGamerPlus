@@ -14,14 +14,13 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 from urllib.parse import quote
-import json
-import requests
+
 
 class TryTooManyTimeError(BaseException):
     pass
 
 
-class Anime():
+class Anime:
     def __init__(self, sn, debug_mode=False, gost_port=34173):
         self._settings = Config.read_settings()
         self._cookies = Config.read_cookie()
@@ -49,7 +48,7 @@ class Anime():
         self._danmu = False
 
         if self._settings['use_mobile_api']:
-            err_print(sn, '解析模式', 'APP解析',display=False)
+            err_print(sn, '解析模式', 'APP解析', display=False)
         else:
             err_print(sn, '解析模式', 'Web解析', display=False)
 

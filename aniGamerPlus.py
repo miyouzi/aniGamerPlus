@@ -391,8 +391,8 @@ def __get_info_only(sn):
 
     if danmu:
         full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
-        d = Danmu(sn, full_filename)
-        d.download()
+        d = Danmu(sn, full_filename, Config.read_cookie())
+        d.download(settings['danmu_ban_words'])
 
     thread_limiter.release()
 
@@ -747,7 +747,7 @@ if __name__ == '__main__':
         parser.add_argument('--no_classify', '-n', action='store_true', help='不建立番劇資料夾')
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
         parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊，可搭配 -d 更新彈幕')
-        parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕(beta)')
+        parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕')
         arg = parser.parse_args()
 
         if (arg.download_mode not in ('list', 'multi', 'sn-list')) and arg.sn is None:

@@ -2,14 +2,16 @@
 import requests
 import json
 import random
+import re
 import os
 from ColorPrint import err_print
 
 
 class Danmu():
-    def __init__(self, sn, full_filename):
+    def __init__(self, sn, full_filename, cookies):
         self._sn = sn
         self._full_filename = full_filename
+        self._cookies = cookies
 
     def get_BGRcolor(self, RGBcolor):
         r = RGBcolor[0:2]
@@ -17,7 +19,10 @@ class Danmu():
         b = RGBcolor[4:6]
         return f"{b}{g}{r}"
 
-    def download(self):
+    def find_ban_word(self, text, ban_word_re):
+        return ban_word_re.search(text) != None
+
+    def download(self, ban_words):
         h = {
             'Content-Type':
             'application/x-www-form-urlencoded;charset=utf-8',
@@ -36,6 +41,28 @@ class Danmu():
             err_print(self._sn, '彈幕下載失敗', 'status_code=' + str(r.status_code), status=1)
             return
 
+        h = {
+            'accept':
+            'application/json',
+            'origin':
+            'https://ani.gamer.com.tw',
+            'authority':
+            'ani.gamer.com.tw',
+            'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+        }
+        ban_words_response = requests.get(
+            'https://ani.gamer.com.tw/ajax/keywordGet.php', headers=h, cookies=self._cookies)
+
+        if ban_words_response.status_code != 200:
+            err_print(self._sn, '取得線上過濾彈幕失敗', 'status_code=' +
+                      str(r.status_code), status=1)
+        else:
+            online_ban_words = json.loads(ban_words_response.text)
+            for online_ban_word in online_ban_words:
+                err_print(self._sn, '取得線上過濾彈幕', detail=online_ban_word['keyword'], status=0, display=False)
+                ban_words.append(online_ban_word['keyword'])
+
         output = open(self._full_filename, 'w', encoding='utf8')
         danmu_template_file = os.path.join(os.path.dirname(__file__), 'DanmuTemplate.ass')
         with open(danmu_template_file, 'r', encoding='utf8') as temp:
@@ -47,8 +74,13 @@ class Danmu():
         roll_channel = list()
         roll_time = list()
 
+        ban_word_re = re.compile("|".join(ban_words), re.IGNORECASE)
+
         for danmu in j:
-            BGRcolor = self.get_BGRcolor(danmu['color'][1:])
+            text = danmu['text']
+            if self.find_ban_word(text, ban_word_re):
+                err_print(self._sn, f'跳過彈幕 [{text}]', self._full_filename, display=False)
+                continue
 
             output.write('Dialogue: ')
             output.write('0,')
@@ -59,6 +91,7 @@ class Danmu():
             h, m = divmod(m, 60)
             output.write(f'{h:d}:{m:02d}:{s:02d}.{hundred_ms:d}0,')
 
+            BGRcolor = self.get_BGRcolor(danmu['color'][1:])
             if danmu['position'] == 0:  # Roll danmu
                 height = 0
                 end_time = 0
@@ -66,13 +99,14 @@ class Danmu():
                     if roll_channel[i] <= danmu['time']:
                         height = i * 54 + 27
                         roll_channel[i] = danmu['time'] + \
-                            (len(danmu['text']) * roll_time[i]) / 8 + 1
+                            (len(text) * roll_time[i]) / 8 + 1
                         end_time = start_time + roll_time[i]
                         break
                 if height == 0:
                     roll_channel.append(0)
                     roll_time.append(random.randint(10, 14))
-                    roll_channel[-1] = danmu['time'] + (len(danmu['text']) * roll_time[-1]) / 8 + 1
+                    roll_channel[-1] = danmu['time'] + \
+                        (len(text) * roll_time[-1]) / 8 + 1
                     height = len(roll_channel) * 54 - 27
                     end_time = start_time + roll_time[-1]
 
@@ -97,7 +131,7 @@ class Danmu():
                 output.write(
                     'Bottom,,0,0,0,,{\\1c&H4C' + BGRcolor + '}')
 
-            output.write(danmu['text'])
+            output.write(text)
             output.write('\n')
 
         err_print(self._sn, '彈幕下載完成', self._full_filename, status=2)

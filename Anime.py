@@ -15,7 +15,7 @@ import socket
 import threading
 from urllib.parse import quote
 import json
-
+import requests
 
 class TryTooManyTimeError(BaseException):
     pass
@@ -930,6 +930,23 @@ class Anime():
                     err_print(self._sn, 'TG NOTIFY ERROR', "Exception: Invalid access token\nToken: " + vApiTokenTelegram, status=1) # Cannot find chat id
             except BaseException as e:
                 err_print(self._sn, 'TG NOTIFY ERROR', 'Exception: ' + str(e), status=1)
+
+        # 推送通知至 Discord
+        if self._settings['discord_notify']:
+            msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下載完成，本集 ' + str(self.video_size) + ' MB'
+            url = self._settings['discord_token']
+            data = {
+                'content': None,
+                'embeds': [{
+                    'title': '下載完成',
+                    'description': msg,
+                    'color': '5814783',
+                    'author': {
+                        'name': '🔔 動畫瘋'
+                    }}]}
+            r = requests.post(url, json=data)
+            if r.status_code != 200:
+                err_print(self._sn, 'discord NOTIFY ERROR', "Exception: Send msg error\nReq: " + req, status=1)
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录

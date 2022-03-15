@@ -126,6 +126,12 @@ def __init_settings():
                 },
                 'telebot_notify': False,
                 'telebot_token': "",
+                'discord_notify': False,
+                'discord_token': '',
+                'plex_refresh': False,
+                'plex_url': '',
+                'plex_token': '',
+                'plex_section': '',
                 'faststart_movflags': False,
                 'audio_language': False,
                 'use_mobile_api': False,
@@ -251,6 +257,18 @@ def __update_settings(old_settings):  # 升级配置文件
         # 新增推送通知到TG的功能
         new_settings['telebot_notify'] = False
         new_settings['telebot_token'] = ""
+
+    if 'discord_notify' not in new_settings.keys():
+        # 新增推送通知到TG的功能
+        new_settings['discord_notify'] = False
+        new_settings['discord_token'] = ''
+
+    if 'plex_refresh' not in new_settings.keys():
+        # 新增 plex 自動更新
+        new_settings['plex_refresh'] = False
+        new_settings['plex_url'] = ''
+        new_settings['plex_token'] = ''
+        new_settings['plex_section'] = ''
 
     if 'faststart_movflags' not in new_settings.keys():
         # v9.0 新增功能: 将 metadata 移至视频文件头部

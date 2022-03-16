@@ -177,12 +177,16 @@ class Anime:
         if self._settings['use_mobile_api']:
             for _type in self._src['data']['anime']['volumes']:
                 for _sn in self._src['data']['anime']['volumes'][_type]:
-                    if _type == '0':
+                    if _type == '0': # 本篇
                         self._episode_list[str(_sn['volume'])] = int(_sn["video_sn"])
-                    elif _type == '1' or _type == '4':
-                        self._episode_list[self._src["videoTypeList"][int(_type)]["name"]] = int(_sn["video_sn"])
-                    else:
-                        self._episode_list[f'{self._src["videoTypeList"][int(_type)]["name"]} {_sn["volume"]}'] = int(_sn["video_sn"])
+                    elif _type == '1': # 電影
+                        self._episode_list['電影'] = int(_sn["video_sn"])
+                    elif _type == '2': # 特別篇
+                        self._episode_list[f'特別篇{_sn["volume"]}'] = int(_sn["video_sn"])
+                    elif _type == '3': # 中文配音
+                        self._episode_list[f'中文配音{_sn["volume"]}'] = int(_sn["video_sn"])
+                    else: # 中文電影
+                        self._episode_list['中文電影'] = int(_sn["video_sn"])
         else:
             try:
                 a = self._src.find('section', 'season').find_all('a')

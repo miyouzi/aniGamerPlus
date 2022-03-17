@@ -6,7 +6,7 @@ import os
 from ColorPrint import err_print
 
 
-class Danmu():
+class Danmu:
     def __init__(self, sn, full_filename):
         self._sn = sn
         self._full_filename = full_filename

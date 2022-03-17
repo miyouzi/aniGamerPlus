@@ -15,17 +15,17 @@ def read_log_settings():
     settings = {}
     try:
         with open(Config.get_config_path(), 'r', encoding='utf-8') as f:
-            # 转义win路径
+            # 轉譯 win 路徑
             settings = json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
     except json.JSONDecodeError:
-        Config.del_bom(Config.get_config_path(), display=False)  # 移除bom
-        # 重新载入
+        Config.del_bom(Config.get_config_path(), display=False)  # 移除 bom
+        # 重新載入
         with open(Config.get_config_path(), 'r', encoding='utf-8') as f:
             settings = json.loads(re.sub(r'\\', '\\\\\\\\', f.read()))
     except BaseException as e:
         settings['save_logs'] = True
         settings['quantity_of_logs'] = 7
-        print('日志配置讀取失敗, 將使用默認配置: 啓用日志, 最多保存7份 '+str(e))
+        print('日誌設定讀取失敗，將使用預設設定：啟用日誌，最多儲存7份 '+str(e))
     if 'save_logs' not in settings.keys():
         settings['save_logs'] = True
     if 'quantity_of_logs' not in settings.keys():
@@ -37,12 +37,12 @@ log_settings = read_log_settings()
 
 
 def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=True, display_time=True):
-    # status 三个设定值, 0 为一般输出, 1 为错误输出, 2 为成功输出
-    # err_msg 为信息类型/概要, 最好为四字中文
-    # detail 为详细信息描述
-    # no_sn 控制是否打印 sn , 默认打印
-    # 格式范例:
-    # 2019-01-30 17:22:30 更新狀態: sn=12345 檢查更新失敗, 跳過等待下次檢查
+    # status 三個設定值：0 為一般輸出、1 為錯誤輸出、2 為成功輸出
+    # err_msg 為資訊型別/概要，最好為四字中文
+    # detail 為詳細資訊描述
+    # no_sn 控制是否列印 sn，預設列印
+    # 格式範例：
+    # 2019-01-30 17:22:30 更新狀態：sn=12345 檢查更新失敗，跳過等待下次檢查
     green = False
 
     def succeed_or_failed_print():
@@ -74,11 +74,11 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
         if status == 0:
             print(msg)
         elif status == 1:
-            # 为 1 错误输出
+            # 為 1 錯誤輸出
             green = False
             succeed_or_failed_print()
         else:
-            # 为 2 成功输出
+            # 為 2 成功輸出
             green = True
             succeed_or_failed_print()
 
@@ -91,7 +91,7 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
             log.write(msg + '\n')
 
 
-# 用於Win下染色輸出，代碼來自 https://blog.csdn.net/five3/article/details/7630295
+# 用於Win下染色輸出，程式碼來自 https://blog.csdn.net/five3/article/details/7630295
 class Color:
     ''' See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winprog/winprog/windows_api_reference.asp
     for information on Windows APIs.'''

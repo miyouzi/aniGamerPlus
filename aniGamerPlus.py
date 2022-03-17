@@ -524,7 +524,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         anime = anime['anime']
 
         # 劇集列表 key value 互換, {'sn', '劇集名'}
-        episode_dict = {value:key for key,value in anime.get_episode_list().items()}
+        episode_dict = {value: key for key, value in anime.get_episode_list().items()}
         ep_sn_list = list(episode_dict.keys())  # 本番劇集sn列表
         tasks_counter = 0  # 任務計數器
         ep_range = list(map(lambda x: int(x), ep_range))
@@ -715,11 +715,11 @@ danmu = settings['danmu']
 if __name__ == '__main__':
     if settings['check_latest_version']:
         check_new_version()  # 檢查新版
-        version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
-        print(version_msg)
+    version_msg = '當前aniGamerPlus版本: ' + settings['aniGamerPlus_version']
+    print(version_msg)
 
-        # 初始化 sqlite3 資料庫
-        conn = sqlite3.connect(db_path)
+    # 初始化 sqlite3 資料庫
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('CREATE TABLE IF NOT EXISTS anime ('
                    'sn INTEGER PRIMARY KEY NOT NULL,'
@@ -812,7 +812,7 @@ if __name__ == '__main__':
             print('未設定下載解析度，將使用設定檔案指定的解析度：' + resolution + 'P')
         else:
             if arg.download_mode in ('sn-list', 'list'):
-                err_print(0,'無效參數:', 'list 及 sn-list 模式無法透過命令列指定解析度', 1, no_sn=True, display_time=False)
+                err_print(0, '無效參數:', 'list 及 sn-list 模式無法透過命令列指定解析度', 1, no_sn=True, display_time=False)
                 resolution = settings['download_resolution']
                 print('將使用設定檔案指定的解析度：' + resolution + 'P')
             else:
@@ -878,9 +878,9 @@ if __name__ == '__main__':
                     processing_queue.append(task_sn)
                     new_tasks_counter = new_tasks_counter + 1
                     err_print(task_sn, '加入任務列隊')
-                    info = '本次新增了 ' + str(new_tasks_counter) + ' 個新任務, 目前列隊中共有 ' + str(len(processing_queue)) + ' 個任務'
+        info = '本次新增了 ' + str(new_tasks_counter) + ' 個新任務，目前列隊中共有 ' + str(len(processing_queue)) + ' 個任務'
         err_print(0, '更新資訊', info, no_sn=True)
         err_print(0, '更新终了', no_sn=True)
         print()
         for i in range(settings['check_frequency'] * 60):
-            time.sleep(1)  # cool down, 這麽寫是爲了可以 Ctrl+C 馬上退出
+            time.sleep(1)  # cool down，這麽寫是爲了可以 Ctrl+C 馬上退出

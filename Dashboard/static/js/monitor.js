@@ -5,7 +5,7 @@ layui.use('element', function(){
 	let ws = protocol.replace('http', 'ws');
 	let tasks_progress_url = ws+'//'+window.location.host+'/data/tasks_progress'+'?token=';
 	
-	// 获取token
+	// 獲取 token
 	$.get('data/get_token', function(token){
 		tasks_progress_url += token;
 		
@@ -19,12 +19,12 @@ layui.use('element', function(){
 				for (let sn in data){
 					
 					if ($('#'+sn).length > 0) {
-						// 如果该任务卡片已存在
+						// 如果該任務卡片已存在
 						$("#status"+sn).html(data[sn]["status"]);
 						$("#header"+sn).html(data[sn]["filename"]);						
 						element.progress(sn, Math.round(data[sn]["rate"])+'%');
 					} else {
-						// 如果该任务卡片不存在
+						// 如果該任務卡片不存在
 						let task_item_templates = `
 							<div class="layui-col-xs12 layui-card" id=${sn}>
 								<div class="layui-card-header" style="height:auto !important;" id=${"header"+sn}>${data[sn]["filename"]}</div>

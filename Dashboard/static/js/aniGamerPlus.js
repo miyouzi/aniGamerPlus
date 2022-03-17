@@ -1,4 +1,4 @@
-var dataArrays; //用户配置json
+var dataArrays; // 使用者設定 json
 var proxy_protocol;
 var proxy_ip;
 var proxy_port;
@@ -52,19 +52,19 @@ function reloadSetting() {
 function readJson() {
 	$.getJSON("data/config.json", function(data) {
 		dataArrays = data;
-		parseProxy(data.proxy); // 解析代理配置
+		parseProxy(data.proxy); // 解析代理設定
 	});
 }
 
 function renderJson() {
 	for (var id of id_list) {
-		if (id == 'proxy') continue; //代理设置已被分解
+		if (id == 'proxy') continue; // 已解析代理設定
 		var idType = document.getElementById(id).type;
 		switch (idType) {
 			case 'text':
 			case 'number':
 			case 'password':
-				if (id  == 'multi-thread')  // 手动任务的默认线程数
+				if (id  == 'multi-thread')  // 手動任務的預設執行緒數
 					$('#manual_thread_limit').val(dataArrays[id]);
 				$("#" + id).val(dataArrays[id]);
 				break;
@@ -88,7 +88,7 @@ function renderJson() {
 
 function readSettings() {
 	for (var id of id_list) {
-		if (id == 'proxy') continue; //代理设置已被分解
+		if (id == 'proxy') continue; // 手動任務的預設執行緒數
 
 		var idType = document.getElementById(id).type;
 		switch (idType) {
@@ -113,16 +113,16 @@ function readSettings() {
 				break;
 		}
 
-		// 合并代理配置
+		// 合併代理設定
 		var a = ['proxy_protocol', 'proxy_ip', 'proxy_port', 'proxy_user', 'proxy_passwd'];
 		for (var i in a) {
 			var ip_port = dataArrays["proxy_ip"] + ':' + dataArrays["proxy_port"];
 			var protocol = dataArrays["proxy_protocol"] + '://';
 			if (dataArrays["proxy_user"]?.length * dataArrays["proxy_passwd"]?.length == 0) {
-				// 如果没有用户密码
+				// 如果沒有使用者密碼
 				dataArrays["proxy"] = protocol + ip_port;
 			} else {
-				// 如果有用户密码
+				// 如果有使用者密碼
 				var user_pw = dataArrays["proxy_user"] + ':' + dataArrays["proxy_passwd"] + '@';
 				dataArrays["proxy"] = protocol + user_pw + ip_port;
 			}
@@ -140,14 +140,14 @@ function readSettings() {
 		contentType: 'application/json; charset=utf-8',
 		data: JSON.stringify(dataArrays),
 		success: function(data) {
-			// 向用户提示提交成功
+			// 向使用者提示送出成功
 			$('#uploadOk').show();
 			$('#uploadFailed').hide();
 			$('#uploadStatus').modal();
 			reloadSetting();
 		},
 		error:function(status){
-			// 向用户提示提交失败
+			// 向使用者提示送出失敗
 			$('#uploadOk').hide();
 			$('#uploadFailed').show();
 			$('#uploadStatus').modal();
@@ -157,14 +157,14 @@ function readSettings() {
 
 function getUA(){
 	$('#ua').val(navigator.userAgent);
-	alert("已取得當前瀏覽器UA");
+	alert("已取得當前瀏覽器 UA");
 }
 
 function readManualConfig(){
 	var manualData = {};
 	var link = $('#manual_link').val();
 	if (link.length == 0) {
-		alert('請輸入影片鏈接！')
+		alert('請輸入影片連結！')
 	} else {
 		var sn = link.replace(/(https:\/\/)?ani\.gamer\.com\.tw\/animeVideo\.php\?sn=/i, '');
 		manualData['sn'] = sn;
@@ -194,14 +194,14 @@ function readManualConfig(){
 			contentType: 'application/json; charset=utf-8',
 			data: JSON.stringify(manualData),
 			success: function(data) {
-				// 向用户提示提交成功
+				// 向使用者提示送出成功
 				$('#uploadOk').show();
 				$('#uploadFailed').hide();
 				$('#uploadStatus').modal();
 				reloadSetting();
 			},
 			error:function(status){
-				// 向用户提示提交失败
+				// 向使用者提示送出失敗
 				$('#uploadOk').hide();
 				$('#uploadFailed').show();
 				$('#uploadStatus').modal();
@@ -224,14 +224,14 @@ function postSnList(){
 		contentType: 'text/plain; charset=utf-8',
 		data: sn_list,
 		success: function(data) {
-			// 向用户提示提交成功
+			// 向使用者提示送出成功
 			$('#uploadOk').show();
 			$('#uploadFailed').hide();
 			$('#uploadStatus').modal();
 			showSnList();
 		},
 		error:function(status){
-			// 向用户提示提交失败
+			// 向使用者提示送出失敗
 			$('#uploadOk').hide();
 			$('#uploadFailed').show();
 			$('#uploadStatus').modal();

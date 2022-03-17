@@ -16,11 +16,11 @@
 		<script src="../static/js/aniGamerPlus.js"></script>
 		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0" />
 		<link rel="shortcut icon" href="../static/img/aniGamerPlus.ico" type="image/x-icon" />
-		<title>aniGamerPlus控制臺</title>
+		<title>aniGamerPlus 控制臺</title>
 	</head>
 	<body>
 		<nav class="navbar navbar-expand-md bg-dark navbar-dark fixed-top">
-			<a class="navbar-brand" href="#">aniGamerPlus控制臺</a>
+			<a class="navbar-brand" href="#">aniGamerPlus 控制臺</a>
 
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
 				<span class="navbar-toggler-icon"></span>
@@ -37,28 +37,28 @@
 						<a class="nav-link" href="#" data-toggle="modal" data-target="#snList">sn_list</a>
 					</li>
 					<li class="nav-item my-navbar">
-						<button class="btn btn-success" type="button" data-toggle="modal" data-target="#manualTasks">添加手動任務</button>
+						<button class="btn btn-success" type="button" data-toggle="modal" data-target="#manualTasks">手動新增任務</button>
 					</li>
 				</ul>
 			</div>
 		</nav>
 
-		<!-- 手动模式模态框 -->
+		<!-- 手動模式動態框 -->
 		<div class="modal fade" id="manualTasks">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
-					<!-- 模态框头部 -->
+					<!-- 模組頂部 -->
 					<div class="modal-header">
-						<h4 class="modal-title">手動添加任務</h4>
+						<h4 class="modal-title">手動新增任務</h4>
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
 					</div>
-					<!-- 模态框主体 -->
+					<!-- 模組框主體 -->
 					<div class="modal-body setting-wrapper">
 						<form>
 							<div class="row setting-content setting-content">
 								<div class="input-group">
 									<div class="input-group-prepend">
-										<span class="input-group-text">影片鏈接</span>
+										<span class="input-group-text">影片連結</span>
 									</div>
 									<input id="manual_link" type="text" class="form-control input-group-prepend-form-control" />
 								</div>
@@ -108,7 +108,7 @@
 
 							<div class="row input-group setting-content" style="max-width: 15rem;">
 								<div class="input-group-prepend">
-									<span class="input-group-text">最大并發下載數</span>
+									<span class="input-group-text">最大併發下載數</span>
 								</div>
 								<input id="manual_thread_limit" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
 								 placeholder="正整數" />
@@ -118,40 +118,40 @@
 
 						</form>
 					</div>
-					<!-- 模态框底部 -->
+					<!-- 模組框底部 -->
 					<div class="modal-footer">
-						<button type="button" class="btn btn-success" onclick="readManualConfig()">提交</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+						<button type="button" class="btn btn-success" onclick="readManualConfig()">送出</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- sn_list 模态框 -->
+		<!-- sn_list 模組框 -->
 		<div class="modal fade" id="snList">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 
-					<!-- 模态框头部 -->
+					<!-- 模組框頂部 -->
 					<div class="modal-header">
 						<h4 class="modal-title">sn_list</h4>
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
 					</div>
 
-					<!-- 模态框主体 -->
+					<!-- 模組框主體 -->
 					<div class="modal-body setting-wrapper">
 						<dl>
 							<dt>格式：</dt>
 							<dd><code>
 									@分類(可空)<br>
-									sn碼 下載模式(可空) 	&lt;重命名&gt;(可空) #注釋(可空)
+									sn碼 下載模式(可空) 	&lt;重命名&gt;(可空) #註解(可空)
 								</code></dd>
 
 							<dt>説明</dt>
-							<dd>注釋 <kbd>#</kbd> 後面的所有字符程序均不會讀取, 可以用於標記番劇名</dd>
-							<dd>在一排番劇列表的上方 <kbd>@</kbd> 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的資料夾下</dd>
+							<dd>註解 <kbd>#</kbd> 後面的所有字符程式均不會讀取，可以用於標記番劇名</dd>
+							<dd>在一排番劇列表的上方 <kbd>@</kbd> 開頭後面的字符將會作爲番劇的分類名，番劇會歸類在此分類名的資料夾下</dd>
 							<dd>若單獨 <kbd>@</kbd> 表示不分類</dd>
-							<dd>用 <kbd>&lt;</kbd> 與 <kbd>&gt;</kbd> 將自定義的番劇名框起來, 下載時將會使用這個名字作爲番劇目錄名</dd>
+							<dd>用 <kbd>&lt;</kbd> 與 <kbd>&gt;</kbd> 將自定義的番劇名框起來，下載時將會使用這個名字作爲番劇目錄名</dd>
 						</dl>
 
 						<form>
@@ -162,10 +162,10 @@
 						
 					</div>
 
-					<!-- 模态框底部 -->
+					<!-- 模組框底部 -->
 					<div class="modal-footer">
-						<button type="button" class="btn btn-success" onclick="postSnList()">提交</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+						<button type="button" class="btn btn-success" onclick="postSnList()">送出</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
 					</div>
 
 				</div>
@@ -173,28 +173,28 @@
 		</div>
 
 
-		<!-- 提交请求模态框 -->
+		<!-- 送出請求模組框 -->
 		<div class="modal fade" id="uploadStatus">
 			<div class="modal-dialog modal-sm" role="document">
 				<div class="modal-content">
 
-					<!-- 模态框头部 -->
+					<!-- 模組框頂部 -->
 					<div class="modal-header">
-						<h4 class="modal-title">提交結果</h4>
+						<h4 class="modal-title">送出結果</h4>
 						<button type="button" class="close" data-dismiss="modal">&times;</button>
 					</div>
 
-					<!-- 模态框主体 -->
+					<!-- 模組框主體 -->
 					<div class="modal-body setting-wrapper">
 						<center>
 							<div id="uploadOk" style="display: none;">
 								<i class="far fa-check-circle fa-4x" style="color: #28A745;"></i>
-								<p class="upload-status">配置已成功提交</p>
+								<p class="upload-status">設定已成功送出</p>
 							</div>
 
 							<div id="uploadFailed" style="display: block;">
 								<i class="fas fa-exclamation-circle fa-4x" style="color: #DC3545;"></i>
-								<p class="upload-status">配置提交失敗</p>
+								<p class="upload-status">設定送出失敗</p>
 							</div>
 
 
@@ -202,16 +202,16 @@
 
 					</div>
 
-					<!-- 模态框底部 -->
+					<!-- 模組框底部 -->
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
 					</div>
 
 				</div>
 			</div>
 		</div>
 
-		<!-- 自动模式配置界面主体 -->
+		<!-- 自動模式設定界面主體 -->
 		<div class="setting-wrapper mx-auto" style="padding-top: 70px;">
 			<form>
 				<div class="row">
@@ -230,7 +230,7 @@
 						<div class="input-group-prepend">
 							<span class="input-group-text">暫存目錄</span>
 						</div>
-						<input id="temp_dir" type="text" class="form-control input-group-prepend-form-control" placeholder="放空則存放於程式所在資料夾" />
+						<input id="temp_dir" type="text" class="form-control input-group-prepend-form-control" placeholder="留空則存放於程式所在資料夾" />
 					</div>
 				</div>
 
@@ -258,14 +258,14 @@
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">檔名添加番劇名</span>
+							<span class="input-group-text">檔名新增番劇名</span>
 							<input id="add_bangumi_name_to_video_filename" type="checkbox" data-toggle="switch" data-on-color="success"
 							 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">檔名添加解析度</span>
+							<span class="input-group-text">檔名新增解析度</span>
 							<input id="add_resolution_to_video_filename" type="checkbox" data-toggle="switch" data-on-color="success"
 							 　data-size="normal" />
 						</div>
@@ -313,14 +313,14 @@
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">最大并發下載數</span>
+							<span class="input-group-text">最大併發下載數</span>
 						</div>
 						<input id="multi-thread" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
 						 placeholder="正整數" />
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">最大并發分段數</span>
+							<span class="input-group-text">最大併發分段數</span>
 						</div>
 						<input id="multi_downloading_segment" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
 						 placeholder="正整數" />
@@ -339,10 +339,10 @@
 					</div>
 					<div class="input-group col-md-12 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">請求UA　　　　</span>
+							<span class="input-group-text">請求 UA　　　　</span>
 						</div>
 						<input id="ua" type="text" class="form-control input-group-prepend-form-control" placeholder="若有使用cookie請與取得cookie的瀏覽器保持一致" />
-						<button type="button" class="btn btn-dark" onclick="getUA()">取得當前UA</button>
+						<button type="button" class="btn btn-dark" onclick="getUA()">取得當前 UA</button>
 					</div>
 				</div>
 
@@ -369,7 +369,7 @@
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">伺服器IP</span>
+							<span class="input-group-text">伺服器 IP</span>
 						</div>
 						<input id="proxy_ip" type="text" class="form-control input-group-prepend-form-control" placeholder="127.0.0.1" />
 					</div>
@@ -381,7 +381,7 @@
 					</div>
 					<div class="input-group col-md-6 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">用戶名</span>
+							<span class="input-group-text">使用者名稱</span>
 						</div>
 						<input id="proxy_user" type="text" class="form-control input-group-prepend-form-control" placeholder="沒有放空即可" />
 					</div>
@@ -400,42 +400,42 @@
 				<div class="row setting-content">
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">啓動時檢查更新</span>
+							<span class="input-group-text">啟動時檢查更新</span>
 							<input id="check_latest_version" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">每次檢查讀取sn_list</span>
+							<span class="input-group-text">每次檢查讀取 sn_list</span>
 							<input id="read_sn_list_when_checking_update" type="checkbox" data-toggle="switch" data-on-color="success"
 							 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">每次檢查讀取配置</span>
+							<span class="input-group-text">每次檢查讀取設定</span>
 							<input id="read_config_when_checking_update" type="checkbox" data-toggle="switch" data-on-color="success"
 							 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">記錄日志</span>
+							<span class="input-group-text">記錄日誌</span>
 							<input id="save_logs" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
 						</div>
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">日志數量</span>
+							<span class="input-group-text">日誌數量</span>
 						</div>
 						<input id="quantity_of_logs" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="正整數, 每天一個日志" />
+						 placeholder="正整數，每天一個日志" />
 					</div>
 				</div>
 				<br /><br />
 				<center>
-					<button type="button" class="btn btn-success" onclick="readSettings()">保存</button>
-					<button type="button" class="btn btn-danger" onclick="reloadSetting()">重載配置</button>
+					<button type="button" class="btn btn-success" onclick="readSettings()">儲存</button>
+					<button type="button" class="btn btn-danger" onclick="reloadSetting()">重載設定</button>
 				</center>
 
 			</form>

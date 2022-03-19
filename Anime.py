@@ -944,8 +944,8 @@ class Anime:
                         'name': '🔔 動畫瘋'
                     }}]}
             r = requests.post(url, json=data)
-            if r.status_code != 200:
-                err_print(self._sn, 'discord NOTIFY ERROR', "Exception: Send msg error\nReq: " + req, status=1)
+            if r.status_code != 204:
+                err_print(self._sn, 'discord NOTIFY ERROR', "Exception: Send msg error\nReq: " + r.text, status=1)
 
         # plex 自動更新媒體庫
         if self._settings['plex_refresh']:

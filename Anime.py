@@ -932,31 +932,37 @@ class Anime:
 
         # 推送通知至 Discord
         if self._settings['discord_notify']:
-            msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下載完成，本集 ' + str(self.video_size) + ' MB'
-            url = self._settings['discord_token']
-            data = {
-                'content': None,
-                'embeds': [{
-                    'title': '下載完成',
-                    'description': msg,
-                    'color': '5814783',
-                    'author': {
-                        'name': '🔔 動畫瘋'
-                    }}]}
-            r = requests.post(url, json=data)
-            if r.status_code != 204:
-                err_print(self._sn, 'discord NOTIFY ERROR', "Exception: Send msg error\nReq: " + r.text, status=1)
+            try:
+                msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下載完成，本集 ' + str(self.video_size) + ' MB'
+                url = self._settings['discord_token']
+                data = {
+                    'content': None,
+                    'embeds': [{
+                        'title': '下載完成',
+                        'description': msg,
+                        'color': '5814783',
+                        'author': {
+                            'name': '🔔 動畫瘋'
+                        }}]}
+                r = requests.post(url, json=data)
+                if r.status_code != 204:
+                    err_print(self._sn, 'discord NOTIFY ERROR', "Exception: Send msg error\nReq: " + r.text, status=1)
+            except:
+                err_print(self._sn, 'Discord NOTIFY UNKNOWN ERROR', 'Exception: ' + str(e), status=1)
 
         # plex 自動更新媒體庫
         if self._settings['plex_refresh']:
-            url = 'https://{plex_url}/library/sections/{plex_section}/refresh?X-Plex-Token={plex_token}'.format(
-                plex_url=self._settings['plex_url'],
-                plex_section=self._settings['plex_section'],
-                plex_token=self._settings['plex_token']
-            )
-            r = requests.get(url)
-            if r.status_code != 200:
-                err_print(self._sn, 'Plex auto Refresh ERROR', status=1)
+            try:
+                url = 'https://{plex_url}/library/sections/{plex_section}/refresh?X-Plex-Token={plex_token}'.format(
+                    plex_url=self._settings['plex_url'],
+                    plex_section=self._settings['plex_section'],
+                    plex_token=self._settings['plex_token']
+                )
+                r = requests.get(url)
+                if r.status_code != 200:
+                    err_print(self._sn, 'Plex auto Refresh ERROR', status=1)
+            except:
+                err_print(self._sn, 'Plex auto Refresh UNKNOWN ERROR', 'Exception: ' + str(e), status=1)
 
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录

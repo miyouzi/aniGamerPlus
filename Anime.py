@@ -773,8 +773,8 @@ class Anime:
             else:
                 shutil.move(downloading_file, output_file)  # 此方法在遇到 rclone 掛載時會出錯
 
-                self.local_video_path = output_file  # 記錄儲存路徑，FTP 上傳用
-                self._video_filename = filename  # 記錄檔名，FTP 上傳用
+            self.local_video_path = output_file  # 記錄儲存路徑，FTP 上傳用
+            self._video_filename = filename  # 記錄檔名，FTP 上傳用
             err_print(self._sn, '下載完成', filename, status=2)
         else:
             err_msg_detail = filename + ' ffmpeg_return_code=' + str(
@@ -996,9 +996,9 @@ class Anime:
                         else:
                             detail = self._video_filename + ' 連線FTP時發生錯誤，5 分鐘後重試，最多重試三次：' + str(e)
                             err_print(self._sn, 'FTP 狀態', detail, status=1)
-                        err_counter = err_counter + 1
-                        for i in range(5 * 60):
-                            time.sleep(1)
+                    err_counter = err_counter + 1
+                    for i in range(5 * 60):
+                        time.sleep(1)
                 except BaseException as e:
                     if show_err:
                         detail = self._video_filename + ' 在連線 FTP 時發生無法處理的異常：' + str(e)

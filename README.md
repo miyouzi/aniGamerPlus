@@ -129,7 +129,7 @@ docker run -td --name anigamerplus \
  - v16 支援向 酷Q 推送下載完成訊息
  - v16 支援將影片 metadata 前置，此功能會在線觀看時更快播放
  - v20 上線 Web 控制面板
- - v20.2 支援命令列下載時同時下載彈幕（beta）
+ - v20.2 支援命令列下載時同時下載彈幕
 
 ## 任務列表
  - [x] 下載使用代理
@@ -144,7 +144,7 @@ docker run -td --name anigamerplus \
 
 若不存在 **config.json**，則程式在執行時將會使用預設設定建立。
 
-```
+```json
 {
     "bangumi_dir": "",  # 下載存放目錄，動畫將會以番劇為單位分資料夾存放
     "temp_dir": "",  # 臨時目錄位置，v9.0 開始下載中文件將會放在這裏，完成後再轉移至番劇目錄，留空默認在程式所在目錄的 temp 資料夾下
@@ -198,6 +198,8 @@ docker run -td --name anigamerplus \
     "faststart_movflags": false,  # 是否將影片 metadata 前置，啟用此功能時在線觀看會更快播放，僅在 video_filename_extension 為 mp4 時有效
     "audio_language": false,  # 是否添加音軌標簽
     "use_mobile_api": false,  # 使用移動端 API 進行影片解析
+    "danmu": false, # 是否下載彈幕(已包含動畫瘋內建的關鍵字過濾)
+    "danmu_ban_words": [], # 額外過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
     "check_latest_version": true,  # 是否檢查更新
     "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啟後對 sn_list.txt 的更改將會在下次檢查更新時生效而不用重啟程式
     "read_config_when_checking_update": true,  # 是否在檢查更新時讀取設定文件, 開啟後對設定文件的更改將會在下次檢查時更新生效而不用重啟程式
@@ -424,6 +426,7 @@ optional arguments:
                         僅查詢資訊
   --user_command, -u    所有下載完成後執行用戶命令
   --danmu, -d           以 .ass 下載彈幕(beta)
+
 ```
 
  - **-s** 接要下載影片的 sn 碼，不可空
@@ -460,7 +463,7 @@ optional arguments:
 
  - **-u** 所有任務完成後執行使用者命令（設定在```config.json```的```user_command```中），用於實現下載完成後關機等操作
 
- - **-d** 下載 .ass 彈幕(beta)，推薦使用 XySubFilter 進行字幕渲染
+ - **-d** 下載 `.ass` 彈幕，推薦使用 XySubFilter 進行字幕渲染
 
  - **-e**
     - **在 ```range``` 模式下，下載此番劇指定劇集，支援範圍輸入，支援多個不連續聚集下載，僅支援整數命名的劇集**

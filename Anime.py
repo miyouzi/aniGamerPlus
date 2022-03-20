@@ -882,7 +882,7 @@ class Anime:
         if self._danmu:
             full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
             d = Danmu(self._sn, full_filename)
-            d.download()
+            d.download(self._settings['danmu_ban_words'])
 
         # 推送 CQ 通知
         if self._settings['coolq_notify']:

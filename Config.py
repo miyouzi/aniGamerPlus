@@ -21,8 +21,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v22.7'
-latest_config_version = 15.3
+aniGamerPlus_version = 'v23'
+latest_config_version = 16
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -137,6 +137,7 @@ def __init_settings():
                 'use_mobile_api': False,
                 'danmu': False,
                 'check_latest_version': True,  # 是否檢查新版本
+                'danmu_ban_words': [],
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
                 'ads_time': 25,
@@ -315,6 +316,9 @@ def __update_settings(old_settings):  # 升級設定檔案
         # 支援下載彈幕
         # https://github.com/miyouzi/aniGamerPlus/pull/66
         new_settings['danmu'] = False
+
+    if 'danmu_ban_words' not in new_settings.keys():
+        new_settings['danmu_ban_words'] = []
 
     if 'use_mobile_api' not in new_settings.keys():
         # v21.0 新增使用 APP API #69

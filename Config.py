@@ -21,7 +21,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v23'
+aniGamerPlus_version = 'v23.1'
 latest_config_version = 16
 latest_database_version = 2.0
 cookie = None
@@ -141,7 +141,7 @@ def __init_settings():
                 'read_sn_list_when_checking_update': True,
                 'read_config_when_checking_update': True,
                 'ads_time': 25,
-                "mobile_ads_time": 3,
+                'mobile_ads_time': 3,
                 'use_dashboard': True,
                 'dashboard': {
                     'host': '127.0.0.1',

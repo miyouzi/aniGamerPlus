@@ -884,7 +884,7 @@ class Anime:
         # 下載彈幕
         if self._danmu:
             full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
-            d = Danmu(self._sn, full_filename)
+            d = Danmu(self._sn, full_filename, Config.read_cookie())
             d.download(self._settings['danmu_ban_words'])
 
         # 推送 CQ 通知

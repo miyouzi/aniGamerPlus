@@ -25,24 +25,24 @@ windows 使用者可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlu
 
 Python 版本 3 以上
 
-**使用前确认已安装好依赖**
-```
-pip3 install requests beautifulsoup4 lxml termcolor chardet pysocks
-pip3 install Flask Flask_BasicAuth Flask_Sockets gevent gevent_websocket
-```
-
 下載源碼
-```
+```bash
 git clone https://github.com/miyouzi/aniGamerPlus.git
 ```
 
-升級
+**第一次使用前，進入原始碼所在資料夾，安裝依賴（重要）**
+```bash
+cd aniGamerPlus
+pip3 install -r requirements.txt
 ```
+
+升級
+```bash
 git pull https://github.com/miyouzi/aniGamerPlus.git
 ```
 
 使用
-```
+```bash
 python3 aniGamerPlus.py
 ```
 

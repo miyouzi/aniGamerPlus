@@ -71,7 +71,7 @@ class Danmu():
         else:
             working_dir = os.path.dirname(os.path.realpath(__file__))
 
-        danmu_template_file = (working_dir, 'DanmuTemplate.ass')
+        danmu_template_file = os.path.join(working_dir, 'DanmuTemplate.ass')
         with open(danmu_template_file, 'r', encoding='utf8') as temp:
             for line in temp.readlines():
                 output.write(line)

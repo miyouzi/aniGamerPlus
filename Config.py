@@ -578,8 +578,8 @@ def check_encoding(file_path):
     with open(file_path, 'rb') as f:
         data = f.read()
         file_encoding = chardet.detect(data)['encoding']  # 识别文件编码
-        if file_encoding == 'utf-8' or file_encoding == 'ascii':
-            # 如果为 UTF-8 编码, 无需操作
+        if file_encoding == 'utf-8' or file_encoding == 'ascii' or not f.read(1):
+            # 如果为 UTF-8 编码, 无需操作 / 文件為空
             return
         else:
             # 如果为其他编码, 则转为 UTF-8 编码, 包含處理 BOM 頭

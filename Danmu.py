@@ -6,6 +6,13 @@ import re
 import os
 from ColorPrint import err_print
 
+# https://github.com/RyanL-29/aniGamerPlus/issues/16
+# 你猜猜看我是 .exe 或是 .py 檔案
+if getattr(sys, 'frozen', False):
+    working_dir = os.path.dirname(sys.executable)
+else:
+    working_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 class Danmu():
     def __init__(self, sn, full_filename, cookies):
@@ -64,7 +71,7 @@ class Danmu():
                 ban_words.append(online_ban_word['keyword'])
 
         output = open(self._full_filename, 'w', encoding='utf8')
-        danmu_template_file = os.path.join(os.path.dirname(__file__), 'DanmuTemplate.ass')
+        danmu_template_file = working_dir, 'DanmuTemplate.ass')
         with open(danmu_template_file, 'r', encoding='utf8') as temp:
             for line in temp.readlines():
                 output.write(line)

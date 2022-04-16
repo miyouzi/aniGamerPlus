@@ -912,7 +912,7 @@ class Anime:
                 vApiTokenTelegram = self._settings['telebot_token']
                 try:
                     if self._settings['telebot_use_chat_id']: #手动指定发送目标
-                        chat_id = self._settings['telebot__chat_id']
+                        chat_id = self._settings['telebot_chat_id']
                     else:
                         apiMethod = "getUpdates"
                         api_url = "https://api.telegram.org/bot" + vApiTokenTelegram + "/" + apiMethod # Telegram bot api url

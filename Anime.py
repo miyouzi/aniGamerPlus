@@ -911,7 +911,7 @@ class Anime:
                 msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'
                 vApiTokenTelegram = self._settings['telebot_token']
                 try:
-                    if self._settings['telebot_use_chat_id']: #手动指定发送目标
+                    if self._settings['telebot_use_chat_id'] and self._settings['telebot_chat_id']:  #手动指定发送目标
                         chat_id = self._settings['telebot_chat_id']
                     else:
                         apiMethod = "getUpdates"

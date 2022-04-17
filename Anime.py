@@ -33,6 +33,7 @@ class Anime:
         self._title = ''
         self._sn = sn
         self._bangumi_name = ''
+        self._bangumi_name_orig = ''
         self._episode = ''
         self._episode_list = {}
         self._device_id = ''
@@ -46,6 +47,9 @@ class Anime:
         self.realtime_show_file_size = False
         self.upload_succeed_flag = False
         self._danmu = False
+
+        self.season_title_filter = re.compile('第[零一二三四五六七八九十]{1,3}季$')
+        self.extra_title_filter = re.compile('\[(特別篇|中文配音)\]$')
 
         if self._settings['use_mobile_api']:
             err_print(sn, '解析模式', 'APP解析', display=False)
@@ -487,6 +491,31 @@ class Anime:
             self.__get_m3u8_dict()
         return self._m3u8_dict
 
+    def get_season_num(self, zh_num):
+        zh2digit_table = {'零': 0, '一': 1, '二': 2, '兩': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10}
+
+        # 位數遞增，由高位開始取
+        digit_num = 0
+        # 結果
+        result = 0
+        # 暫時存儲的變量
+        tmp = 0
+
+        while digit_num < len(zh_num):
+            tmp_zh = zh_num[digit_num]
+            tmp_num = zh2digit_table.get(tmp_zh, None)
+            if tmp_num >= 10:
+                if tmp == 0:
+                    tmp = 1
+                result = result + tmp_num * tmp
+                tmp = 0
+            elif tmp_num is not None:
+                tmp = tmp * 10 + tmp_num
+            digit_num += 1
+
+        result = result + tmp
+        return result
+
     def __get_filename(self, resolution, without_suffix=False):
         # 处理剧集名补零
         if re.match(r'^[+-]?\d+(\.\d+){0,1}$', self._episode) and self._settings['zerofill'] > 1:
@@ -496,12 +525,29 @@ class Anime:
                 # 如果是浮点数
                 a = re.findall(r'^\d+\.', self._episode)[0][:-1]
                 b = re.findall(r'\.\d+$', self._episode)[0]
-                episode = '[' + a.zfill(self._settings['zerofill']) + b + ']'
+                episode = a.zfill(self._settings['zerofill']) + b
             else:
                 # 如果是整数
-                episode = '[' + self._episode.zfill(self._settings['zerofill']) + ']'
+                episode = self._episode.zfill(self._settings['zerofill'])
         else:
-            episode = '[' + self._episode + ']'
+            episode = self._episode
+
+        if self._settings['plex_naming']:
+            # 適配 PLEX 命名規則
+            season = re.findall(self.season_title_filter, self._bangumi_name_orig)
+            extra = re.findall(self.extra_title_filter, self._bangumi_name_orig)
+            if season:
+                season_num_string = ''.join(season).replace('第','').replace('季','')
+                season_num = self.get_season_num(season_num_string)
+                episode = '[S' + str(season_num).zfill(self._settings['zerofill']) + 'E' + episode + ']'
+            elif extra:
+                episode = '[E' + episode + ']' # do not classify season if the bangumi type is "特別篇" or "中文配音"
+            elif episode == "電影":
+                episode = '[' + episode + ']' # there is no episode num for "電影"
+            else:
+                episode = '[S01E' + episode + ']' # as season 1 if there is no matching above types
+        else:
+            episode = '[' + episode + ']'
 
         if self._settings['add_bangumi_name_to_video_filename']:
             # 如果用户需要番剧名
@@ -792,6 +838,10 @@ class Anime:
         if save_dir:
             self._bangumi_dir = save_dir  # 用于 cui 用户指定下载在当前目录
 
+        # 預先保留原始標題
+        self._bangumi_name_orig = self._title.replace('[' + self.get_episode() + ']', '').strip()  # 提取番剧名（去掉集数后缀）
+        self._bangumi_name_orig = re.sub(r'\s+', ' ', self._bangumi_name_orig)  # 去除重复空格
+
         if rename:
             bangumi_name = self._bangumi_name
             # 适配多版本的番剧
@@ -832,7 +882,34 @@ class Anime:
         if bangumi_tag:  # 如果指定了番剧分类
             self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(bangumi_tag))
         if classify:  # 控制是否建立番剧文件夹
-            self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(self._bangumi_name))
+            if self._settings['classify_season']:  # 控制是否建立番剧季度子文件夹
+                season = re.findall(self.season_title_filter, self._bangumi_name_orig)
+                extra = re.findall(self.extra_title_filter, self._bangumi_name_orig)
+                if season:
+                    season_num_string = ''.join(season).replace('第','').replace('季','')
+                    season_num = self.get_season_num(season_num_string)
+                    root_bangumi_dir = self._bangumi_name_orig.replace(str(season[0]),'') # remove season name for bangumi root dir
+                    root_bangumi_dir = "".join(root_bangumi_dir.rstrip()) # remove tail space if exists
+                    sub_dir = "Season "+str(season_num) # add season sub folder
+                elif extra:
+                    root_bangumi_dir = self._bangumi_name_orig.replace("["+str(extra[0])+"]",'') # remove extra name for bangumi root dir
+                    root_bangumi_dir = "".join(root_bangumi_dir.rstrip()) # remove tail space if exists
+                    sub_dir = "Specials" # add special sub folder if the bangumi type is "特別篇" or "中文配音"
+                elif self.get_episode() == "電影":
+                    root_bangumi_dir = self._bangumi_name_orig.replace("[電影]",'') # remove 電影 for bangumi root dir
+                    sub_dir = "Movie" # add movie sub folder if the bangumi type is "電影"
+                else:
+                    root_bangumi_dir = self._bangumi_name_orig # for bangumi root dir
+                    root_bangumi_dir = "".join(root_bangumi_dir.rstrip()) # remove tail space if exists
+                    sub_dir = "Season 1" # as season 1 if there is no matching season
+                # 如果设定重命名了番剧
+                # 将其中的番剧根目錄名换成用户设定的
+                if rename:
+                    root_bangumi_dir = self._bangumi_name
+                self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(root_bangumi_dir), sub_dir)
+            else:
+                self._bangumi_dir = os.path.join(self._bangumi_dir, Config.legalize_filename(self._bangumi_name))
+
         if not os.path.exists(self._bangumi_dir):
             try:
                 os.makedirs(self._bangumi_dir)  # 按番剧创建文件夹分类

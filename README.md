@@ -149,6 +149,7 @@ docker run -td --name anigamerplus \
     "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分資料夾存放
     "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
     "classify_bangumi": true,  # 控制是否建立番劇資料夾
+    "classify_season": false,  # 控制是否建立季度子目錄
     "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
     "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
@@ -191,6 +192,7 @@ docker run -td --name anigamerplus \
             "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321"
         ]
     },
+    "plex_naming": false, # 適配PLEX命名規則
     "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
     "audio_language": false,  # 是否添加音軌標簽
     "use_mobile_api": false,  # 使用移動端API進行影片解析

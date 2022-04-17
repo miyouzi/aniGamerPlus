@@ -126,7 +126,7 @@ def __init_settings():
                 },
                 'telebot_notify': False,
                 'telebot_token': "",
-                'telebot_use_chat_id': False
+                'telebot_use_chat_id': False,
                 'telebot_chat_id': "",
                 'discord_notify': False,
                 'discord_token': '',

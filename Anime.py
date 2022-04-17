@@ -987,11 +987,14 @@ class Anime:
             try:
                 msg = '【aniGamerPlus消息】\n《' + self._video_filename + '》下载完成, 本集 ' + str(self.video_size) + ' MB'
                 vApiTokenTelegram = self._settings['telebot_token']
-                apiMethod = "getUpdates"
-                api_url = "https://api.telegram.org/bot" + vApiTokenTelegram + "/" + apiMethod # Telegram bot api url
                 try:
-                    response = self.__request(api_url).json()
-                    chat_id = response["result"][0]["message"]["chat"]["id"] # Get chat id
+                    if self._settings['telebot_use_chat_id'] and self._settings['telebot_chat_id']:  #手动指定发送目标
+                        chat_id = self._settings['telebot_chat_id']
+                    else:
+                        apiMethod = "getUpdates"
+                        api_url = "https://api.telegram.org/bot" + vApiTokenTelegram + "/" + apiMethod # Telegram bot api url
+                        response = self.__request(api_url).json()
+                        chat_id = response["result"][0]["message"]["chat"]["id"] # Get chat id
                     try:
                         api_method = "sendMessage"
                         req = "https://api.telegram.org/bot" \

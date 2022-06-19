@@ -144,46 +144,46 @@ docker run -td --name anigamerplus \
 
 若不存在**config.json**, 则程序在运行时将会使用默认配置创建.
 
-```json
+```jsonc
 {
-    "bangumi_dir": "",  # 下載存放目錄, 動畫將會以番劇為單位分資料夾存放
-    "temp_dir": "",  # 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
-    "classify_bangumi": true,  # 控制是否建立番劇資料夾
-    "classify_season": false,  # 控制是否建立季度子目錄
-    "check_frequency": 5,  # 檢查更新頻率, 單位為分鐘
-    "download_resolution": "1080",  # 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
-    "lock_resolution": false,  # 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
-    "only_use_vip": false,  # 锁定 VIP 账号下载
-    "default_download_mode": "latest",  # 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
-    "use_copyfile_method": false,  # 轉移影片至番劇資料夾時使用複製方法, 適用於保存到 rclone 掛載盤的情況
-    "multi-thread": 1,  # 最大并發下載數, 最高為 5, 超過將重置為 5
-    "multi_upload": 3,  # 最大并發上傳數
-    "segment_download_mode": true,  # 分段下載模式, 速度更快, 容錯率更高
-    "segment_max_retry": 8,  # 在分段下載模式時有效, 每個分段最大重試次數, -1 為無限重試
-    "multi_downloading_segment": 3,  # 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效, 最高為 5, 超過將重置為 5
-    "add_bangumi_name_to_video_filename": true,  # 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
-    "add_resolution_to_video_filename": true,  # 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
-    "customized_video_filename_prefix": "【動畫瘋】",  # 影片檔名前綴
-    "customized_bangumi_name_suffix": "",  # 影片檔名中番劇名的后缀, 在劇集名之前
-    "customized_video_filename_suffix": "",  # 影片檔名後綴
-    "video_filename_extension": "mp4",  # 影片檔副檔名, ts, mov, mkv 經過測試可以使用, 但 flv 不支援, 非 mp4 副檔名 faststart_movflags 將强制為 false
-    "zerofill": 1,  # 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
-    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  #  請求UA, 需要和獲取cookie的瀏覽器相同
-    "use_proxy": false,  # 代理開關
-    "proxy": {"http://user:passwd@example.com:1000"},  # 代理配置
-    "upload_to_server": false,  # 上傳功能開關
-    "ftp": {  # FTP配置
-        "server": "",  # FTP Server IP
-        "port": "",  # 端口
-        "user": "",  # 使用者名
-        "pwd": "",  # 密碼
-        "tls": true,  # 是否是 FTP over TLS
-        "cwd": "",  # 登陸後首先進入的目錄
-        "show_error_detail": false,  # 是否顯示細節錯誤信息
-        "max_retry_num": 15  # 最大重傳數, 支援續傳
+    "bangumi_dir": "",  // 下載存放目錄, 動畫將會以番劇為單位分資料夾存放
+    "temp_dir": "",  // 臨時目錄位置, v9.0 開始下載中文件將會放在這裏, 完成後再轉移至番劇目錄, 留空默認在程序所在目錄的 temp 資料夾下
+    "classify_bangumi": true,  // 控制是否建立番劇資料夾
+    "classify_season": false,  // 控制是否建立季度子目錄
+    "check_frequency": 5,  // 檢查更新頻率, 單位為分鐘
+    "download_resolution": "1080",  // 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
+    "lock_resolution": false,  // 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
+    "only_use_vip": false,  // 锁定 VIP 账号下载
+    "default_download_mode": "latest",  // 默認下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
+    "use_copyfile_method": false,  // 轉移影片至番劇資料夾時使用複製方法, 適用於保存到 rclone 掛載盤的情況
+    "multi-thread": 1,  // 最大并發下載數, 最高為 5, 超過將重置為 5
+    "multi_upload": 3,  // 最大并發上傳數
+    "segment_download_mode": true,  // 分段下載模式, 速度更快, 容錯率更高
+    "segment_max_retry": 8,  // 在分段下載模式時有效, 每個分段最大重試次數, -1 為無限重試
+    "multi_downloading_segment": 3,  // 每個影片最大并發下載分段數, 僅在 "segment_download_mode" 為 true 時有效, 最高為 5, 超過將重置為 5
+    "add_bangumi_name_to_video_filename": true,  // 如果為 false, 則只有劇集名, 若劇集名為個位數字, 則補零
+    "add_resolution_to_video_filename": true,  // 是否在影片檔名中添加清晰度, 格式舉例: [1080P]
+    "customized_video_filename_prefix": "【動畫瘋】",  // 影片檔名前綴
+    "customized_bangumi_name_suffix": "",  // 影片檔名中番劇名的后缀, 在劇集名之前
+    "customized_video_filename_suffix": "",  // 影片檔名後綴
+    "video_filename_extension": "mp4",  // 影片檔副檔名, ts, mov, mkv 經過測試可以使用, 但 flv 不支援, 非 mp4 副檔名 faststart_movflags 將强制為 false
+    "zerofill": 1,  // 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  //  請求UA, 需要和獲取cookie的瀏覽器相同
+    "use_proxy": false,  // 代理開關
+    "proxy": {"http://user:passwd@example.com:1000"},  // 代理配置
+    "upload_to_server": false,  // 上傳功能開關
+    "ftp": {  // FTP配置
+        "server": "",  // FTP Server IP
+        "port": "",  // 端口
+        "user": "",  // 使用者名
+        "pwd": "",  // 密碼
+        "tls": true,  // 是否是 FTP over TLS
+        "cwd": "",  // 登陸後首先進入的目錄
+        "show_error_detail": false,  // 是否顯示細節錯誤信息
+        "max_retry_num": 15  // 最大重傳數, 支援續傳
     },
-    "user_command": "shutdown -s -t 60"  # 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
-    "coolq_notify": false,  # 是否向酷Q推送下載完成訊息
+    "user_command": "shutdown -s -t 60"  // 命令行模式使用 -u 參數有效, 在命令行模式下完成所有任務后執行的命令
+    "coolq_notify": false,  // 是否向酷Q推送下載完成訊息
     "coolq_settings": {
         "msg_argument_name": "message",
         "message_suffix": "追加的資訊",
@@ -192,30 +192,30 @@ docker run -td --name anigamerplus \
             "http://127.0.0.1:5700/send_group_msg?access_token=abc&group_id=87654321"
         ]
     },
-    "plex_naming": false, # 適配PLEX命名規則
-    "faststart_movflags": false,  # 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
-    "audio_language": false,  # 是否添加音軌標簽
-    "use_mobile_api": false,  # 使用移動端API進行影片解析
-    "danmu": false, # 是否下載彈幕(已包含動畫瘋內建的關鍵字過濾)
-    "danmu_ban_words": [], # 額外過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
-    "check_latest_version": true,  # 是否檢查更新
-    "read_sn_list_when_checking_update": true,  # 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
-    "read_config_when_checking_update": true,  # 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
-    "ads_time": 25,  # 非VIP廣告等待時間, 如果等待時間不足, 程式會自行追加時間 (最大20秒)
-    "mobile_ads_time":3  # 使用移動端API解析的廣告等待時間
-    "use_dashboard": true  # Web 控制台開關
-    "dashboard": {  # Web控制面板配置
-        "host": "127.0.0.1",  # 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
-        "port": 5000,  # 監聽端口
-        "SSL": false,  # 是否開啓SSL, 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書
-        "BasicAuth": false,  # 是否使用 BasicAuth 進行認證, 注意, 用戶密碼是明文傳輸的, 如有需要建議同時啓用 SSL
-        "username": "admin",  # BasicAuth 用戶名
-        "password": "admin"  # BasicAuth 密碼
+    "plex_naming": false, // 適配PLEX命名規則
+    "faststart_movflags": false,  // 是否將影片 metadata 前置, 啓用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
+    "audio_language": false,  // 是否添加音軌標簽
+    "use_mobile_api": false,  // 使用移動端API進行影片解析
+    "danmu": false, // 是否下載彈幕(已包含動畫瘋內建的關鍵字過濾)
+    "danmu_ban_words": [], // 額外過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
+    "check_latest_version": true,  // 是否檢查更新
+    "read_sn_list_when_checking_update": true,  // 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
+    "read_config_when_checking_update": true,  // 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
+    "ads_time": 25,  // 非VIP廣告等待時間, 如果等待時間不足, 程式會自行追加時間 (最大20秒)
+    "mobile_ads_time":3  // 使用移動端API解析的廣告等待時間
+    "use_dashboard": true  // Web 控制台開關
+    "dashboard": {  // Web控制面板配置
+        "host": "127.0.0.1",  // 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
+        "port": 5000,  // 監聽端口
+        "SSL": false,  // 是否開啓SSL, 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書
+        "BasicAuth": false,  // 是否使用 BasicAuth 進行認證, 注意, 用戶密碼是明文傳輸的, 如有需要建議同時啓用 SSL
+        "username": "admin",  // BasicAuth 用戶名
+        "password": "admin"  // BasicAuth 密碼
     },
-    "save_logs": true,  # 是否記錄日志, 一天一個日志
-    "quantity_of_logs": 7,  # 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
-    "config_version": 14.0,  # 配置文件版本
-    "database_version": 2.0  # 資料庫版本
+    "save_logs": true,  // 是否記錄日志, 一天一個日志
+    "quantity_of_logs": 7,  // 日志保留數量, 正整數值, 必須大於等於 1, 默認為 7
+    "config_version": 14.0,  // 配置文件版本
+    "database_version": 2.0  // 資料庫版本
 }
 ```
 

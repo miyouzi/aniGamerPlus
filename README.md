@@ -405,7 +405,7 @@ usage: aniGamerPlus.py [-h] [--sn SN]
                        [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}]
                        [--thread_limit THREAD_LIMIT] [--current_path]
                        [--episodes EPISODES] [--no_classify]
-                       [--information_only] [--user_command] [--danmu]
+                       [--information_only] [--user_command] [--danmu] [--my_anime]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -424,6 +424,7 @@ optional arguments:
                         僅查詢資訊
   --user_command, -u    所有下載完成后執行用戶命令
   --danmu, -d           以 `.ass` 下載彈幕
+  --my_anime            匯出「我的動畫」至 `my_anime.txt`，和 sn_list 所需的格式相同
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空

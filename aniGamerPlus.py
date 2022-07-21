@@ -9,6 +9,7 @@
 from gevent import monkey
 monkey.patch_all()
 
+
 import os, sys, time, re, random, traceback, argparse
 import signal
 import sqlite3
@@ -16,6 +17,7 @@ import threading
 import subprocess
 import platform
 import socket
+import requests
 
 import Config
 from Anime import Anime, TryTooManyTimeError
@@ -684,7 +686,6 @@ def parse_anime(soup, animes, headers, cookies):
     return True
 
 def export_my_anime():
-    import requests
     from bs4 import BeautifulSoup
 
     url = "https://ani.gamer.com.tw/mygather.php"

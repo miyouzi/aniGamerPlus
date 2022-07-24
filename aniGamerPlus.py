@@ -470,7 +470,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 task = threading.Thread(target=__get_info_only, args=(anime_sn,))
             else:
                 task = threading.Thread(target=__download_only, args=(anime_sn, cui_resolution, cui_save_dir, realtime_show_file_size, classify))
-            task.setDaemon(True)
+            task.daemon = True
             thread_tasks.append(task)
             task.start()
             tasks_counter = tasks_counter + 1
@@ -500,7 +500,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                     a = threading.Thread(target=__get_info_only, args=(episode_dict[ep],))
                 else:
                     a = threading.Thread(target=__download_only, args=(episode_dict[ep], cui_resolution, cui_save_dir, realtime_show_file_size))
-                a.setDaemon(True)
+                a.daemon = True
                 thread_tasks.append(a)
                 a.start()
                 tasks_counter = tasks_counter + 1
@@ -535,7 +535,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                     a = threading.Thread(target=__get_info_only, args=(sn,))
                 else:
                     a = threading.Thread(target=__download_only, args=(sn, cui_resolution, cui_save_dir, realtime_show_file_size))
-                a.setDaemon(True)
+                a.daemon = True
                 thread_tasks.append(a)
                 a.start()
                 tasks_counter = tasks_counter + 1
@@ -557,7 +557,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 a = threading.Thread(target=__get_info_only, args=(sn,))
             else:
                 a = threading.Thread(target=__download_only,args=(sn, cui_resolution, cui_save_dir, realtime_show_file_size))
-            a.setDaemon(True)
+            a.daemon = True
             thread_tasks.append(a)
             a.start()
             tasks_counter = tasks_counter + 1
@@ -587,7 +587,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
             for sn in queue.keys():  # 遍历任务列队
                 processing_queue.append(sn)
                 task = threading.Thread(target=worker, args=(sn, queue[sn], realtime_show_file_size))
-                task.setDaemon(True)
+                task.daemon = True
                 thread_tasks.append(task)
                 task.start()
                 err_print(sn, '加入任务列隊')
@@ -663,7 +663,7 @@ def __init_proxy():
             gost_subprocess.communicate()
 
         run_gost_threader = threading.Thread(target=run_gost)
-        run_gost_threader.setDaemon(True)
+        run_gost_threader.daemon = True
         run_gost_threader.start()  # 启动 gost
         time.sleep(3)  # 给时间让 gost 启动
 
@@ -679,7 +679,7 @@ def run_dashboard():
 
     from Dashboard.Server import run as dashboard
     server = threading.Thread(target=dashboard)
-    server.setDaemon(True)
+    server.daemon = True
     server.start()
     if settings['dashboard']['SSL']:
         dashboard_address = 'https://'
@@ -873,7 +873,7 @@ if __name__ == '__main__':
             for task_sn in queue.keys():
                 if task_sn not in processing_queue:  # 如果该任务没有在进行中，则启动
                     task = threading.Thread(target=worker, args=(task_sn, queue[task_sn]))
-                    task.setDaemon(True)
+                    task.daemon = True
                     task.start()
                     processing_queue.append(task_sn)
                     new_tasks_counter = new_tasks_counter + 1

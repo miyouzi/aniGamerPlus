@@ -65,6 +65,38 @@ def build_anime(sn):
         err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
     return anime
 
+def read_db_all():
+    db_locker.acquire()
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("select * FROM anime")
+
+    try:
+        values = cursor.fetchall()
+    except IndexError as e:
+        cursor.close()
+        conn.close()
+        db_locker.release()
+        raise e
+
+    anime_db = [0] * len(values)
+    for i in range(len(values)):
+        anime_db[i] = {'sn': values[i][0],
+                    'title': values[i][1],
+                    'anime_name': values[i][2],
+                    'episode': values[i][3],
+                    'status': values[i][4],
+                    'remote_status': values[i][5],
+                    'resolution': values[i][6],
+                    'file_size': values[i][7],
+                    'local_file_path': values[i][8]}
+
+    cursor.close()
+    conn.close()
+    db_locker.release()
+    return anime_db
+
 
 def read_db(sn):
     db_locker.acquire()
@@ -392,9 +424,28 @@ def __get_info_only(sn):
         download_dir = os.path.join(download_dir, Config.legalize_filename(anime.get_bangumi_name()))
 
     if danmu:
-        full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
-        d = Danmu(sn, full_filename, Config.read_cookie())
+        if os.path.exists(download_dir):
+            full_filename = os.path.join(download_dir, anime.get_filename()).replace('.' + settings['video_filename_extension'], '.ass')
+            d = Danmu(sn, full_filename, Config.read_cookie())
+            d.download(settings['danmu_ban_words'])
+        else:
+            err_print(sn, '彈幕下載異常', '番劇資料夾不存在: ' + download_dir, status=1)
+
+    thread_limiter.release()
+
+
+def __get_danmu_only(sn, bangumi_name, video_path):
+    thread_limiter.acquire()
+
+    download_dir = settings['bangumi_dir']
+    if classify:  # 控制是否建立番剧文件夹
+        download_dir = os.path.join(download_dir, Config.legalize_filename(bangumi_name))
+
+    if os.path.exists(download_dir):
+        d = Danmu(sn, video_path.replace('.' + settings['video_filename_extension'], '.ass'), Config.read_cookie())
         d.download(settings['danmu_ban_words'])
+    else:
+        err_print(sn, '彈幕下載異常', '番劇資料夾不存在: ' + download_dir, status=1)
 
     thread_limiter.release()
 
@@ -597,6 +648,22 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
             err_print(0, '任務資訊', msg, no_sn=True)
             print()
 
+    elif cui_download_mode == 'danmu':
+        tasks_counter = 0
+        for anime_db in ep_range:
+            if anime_db["status"] == 1:
+                if not anime_db["anime_name"] is None \
+                and not anime_db["local_file_path"] is None :
+                    a = threading.Thread(target=__get_danmu_only,args=(anime_db["sn"], anime_db["anime_name"], anime_db["local_file_path"]))
+                    a.setDaemon(True)
+                    thread_tasks.append(a)
+                    a.start()
+                    tasks_counter = tasks_counter + 1
+                else:
+                    err_print(anime_db["sn"], '彈幕更新失敗', "資料庫不存在番劇名稱或影片路徑", status=1)
+
+        print('所有任務已添加至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
+
     __kill_thread_when_ctrl_c()
     kill_gost()  # 结束 gost
 
@@ -792,7 +859,7 @@ if __name__ == '__main__':
         parser.add_argument('--sn', '-s', type=int, help='視頻sn碼(數字)')
         parser.add_argument('--resolution', '-r', type=int, help='指定下載清晰度(數字)', choices=[360, 480, 540, 576, 720, 1080])
         parser.add_argument('--download_mode', '-m', type=str, help='下載模式', default='single',
-                            choices=['single', 'latest', 'largest-sn', 'multi', 'all', 'range', 'list', 'sn-list', 'sn-range'])
+                            choices=['single', 'latest', 'largest-sn', 'multi', 'all', 'range', 'list', 'sn-list', 'sn-range', 'db'])
         parser.add_argument('--thread_limit', '-t', type=int, help='最高并發下載數(數字)')
         parser.add_argument('--current_path', '-c', action='store_true', help='下載到當前工作目錄')
         parser.add_argument('--episodes', '-e', type=str, help='僅下載指定劇集')
@@ -807,7 +874,7 @@ if __name__ == '__main__':
             export_my_anime()
             sys.exit(0)
 
-        if (arg.download_mode not in ('list', 'multi', 'sn-list')) and arg.sn is None:
+        if (arg.download_mode not in ('list', 'multi', 'sn-list', 'db')) and arg.sn is None:
             err_print(0, '參數錯誤', '非 list/multi 模式需要提供 sn ', no_sn=True, status=1)
             sys.exit(1)
 
@@ -875,6 +942,10 @@ if __name__ == '__main__':
             else:
                 resolution = str(arg.resolution)
                 print('指定下载解析度: ' + resolution + 'P')
+
+        if arg.download_mode == "db":
+            download_mode = "danmu"
+            download_episodes = read_db_all()
 
         if arg.information_only:
             # 为避免排版混乱, 仅显示信息时强制为单线程

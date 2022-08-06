@@ -663,7 +663,7 @@ class Anime:
             chunk_uri = url_path + '/' + chunk
             task = threading.Thread(target=download_chunk, args=(chunk_uri,))
             chunk_tasks_list.append(task)
-            task.setDaemon(True)
+            task.daemon = True
             limiter.acquire()
             task.start()
 
@@ -799,7 +799,7 @@ class Anime:
                 time_counter = time_counter + 1
 
         ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 检查线程
-        ffmpeg_checker.setDaemon(True)  # 如果 Anime 线程被 kill, 检查进程也应该结束
+        ffmpeg_checker.daemon = True  # 如果 Anime 线程被 kill, 检查进程也应该结束
         ffmpeg_checker.start()
         run = run_ffmpeg.communicate()
         return_str = str(run[1])

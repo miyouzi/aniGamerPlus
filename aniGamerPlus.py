@@ -9,6 +9,7 @@
 from gevent import monkey
 monkey.patch_all()
 
+
 import os, sys, time, re, random, traceback, argparse
 import signal
 import sqlite3
@@ -16,6 +17,7 @@ import threading
 import subprocess
 import platform
 import socket
+import requests
 
 import Config
 from Anime import Anime, TryTooManyTimeError
@@ -670,6 +672,56 @@ def __init_proxy():
     else:
         print('使用代理連接動畫瘋, 使用http/https/socks5協議')
 
+def doRequest(url, headers, cookies, params=None):
+    return requests.get(url, headers=headers, cookies=cookies, params=params)
+
+def parse_anime(soup, animes, headers, cookies):
+    if soup.text.find("目前沒有訂閱內容") != -1:
+        return False
+    for animeInfo in soup.select_one(".theme-list-block").select("a"):
+        response = doRequest(f"https://ani.gamer.com.tw/{animeInfo['href']}", headers, cookies)
+        sn = response.url.split("=")[-1]
+        name = animeInfo.select_one(".theme-name").text
+        animes.append({"sn": sn, "name": name})
+    return True
+
+def export_my_anime():
+    from bs4 import BeautifulSoup
+
+    url = "https://ani.gamer.com.tw/mygather.php"
+    header = {
+        'accept':
+        'application/json',
+        'origin':
+        'https://ani.gamer.com.tw',
+        'authority':
+        'ani.gamer.com.tw',
+        'user-agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+    }
+
+    cookies = Config.read_cookie()
+    if not cookies:
+        err_print(0, f"請先設定cookie後再執行此指令", status=1, no_sn=True)
+        return
+
+    page = 1
+    animes = []
+    while True:
+        params = {'page': page, 'sort': 0}
+        bahamygatherPage = doRequest(url, headers=header, cookies=cookies, params=params)
+        if bahamygatherPage.status_code == requests.codes.ok:
+            soup = BeautifulSoup(bahamygatherPage.text, 'html.parser')
+            if not parse_anime(soup, animes, header, cookies):
+                break
+        else:
+            err_print(0, f"匯入我的動畫失敗，狀態碼{bahamygatherPage.status_code}", status=1, no_sn=True)
+        page += 1
+
+    with open("my_anime.txt", "w", encoding="utf-8") as f:
+        for anime in animes:
+            f.write(f"{anime['sn']} all <{anime['name']}>\n")
+
 
 def run_dashboard():
     # 检测端口是否占用
@@ -748,7 +800,12 @@ if __name__ == '__main__':
         parser.add_argument('--user_command', '-u', action='store_true', help='所有下載完成后執行用戶命令')
         parser.add_argument('--information_only', '-i', action='store_true', help='僅查詢資訊，可搭配 -d 更新彈幕')
         parser.add_argument('--danmu', '-d', action='store_true', help='以 .ass 下載彈幕')
+        parser.add_argument('--my_anime', action='store_true', help='匯出「我的動畫」至my_anime.txt')
         arg = parser.parse_args()
+
+        if arg.my_anime:
+            export_my_anime()
+            sys.exit(0)
 
         if (arg.download_mode not in ('list', 'multi', 'sn-list')) and arg.sn is None:
             err_print(0, '參數錯誤', '非 list/multi 模式需要提供 sn ', no_sn=True, status=1)

@@ -81,11 +81,11 @@ docker run -td --name anigamerplus \
     -v /path/to/config.json:/app/config.json \
     -v /path/to/download:/app/bangumi \
     -v /path/to/aniGamer.db:/app/aniGamer.db \
-    -p 5000:5000 \
+    -p 5001:5001 \
     tonypepe/anigamerplus
 ```
 
-啟動後可至 `localhost:5000` 使用 [Dashboard](#dashboard)。
+啟動後可至 `localhost:5001` 使用 [Dashboard](#dashboard)。
 
 ## 鳴謝
 
@@ -206,7 +206,7 @@ docker run -td --name anigamerplus \
     "use_dashboard": true  // Web 控制台開關
     "dashboard": {  // Web控制面板配置
         "host": "127.0.0.1",  // 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
-        "port": 5000,  // 監聽端口
+        "port": 5001,  // 監聽端口
         "SSL": false,  // 是否開啓SSL, 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書
         "BasicAuth": false,  // 是否使用 BasicAuth 進行認證, 注意, 用戶密碼是明文傳輸的, 如有需要建議同時啓用 SSL
         "username": "admin",  // BasicAuth 用戶名
@@ -513,7 +513,7 @@ optional arguments:
 
 在 v20 版本首次啓用了 Web 控制臺, 相關配置在 ```config.json``` 的 ```dashboard``` 項目中.
 
-Web 控制臺默認啓用, 默認端口 5000, 支援 SSL (https), 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書.
+Web 控制臺默認啓用, 默認端口 5001, 支援 SSL (https), 證書保存在 Dashboard\sslkey, 如果有需要可以自行替換證書.
 
 如果想開放外部訪問, 可以將 ```dashboard``` 配置中的 ```host``` 設置成 ```0.0.0.0```
 
@@ -529,7 +529,7 @@ Web 控制臺默認啓用, 默認端口 5000, 支援 SSL (https), 證書保存�
 # Web控制面板配置
 "dashboard": {
     "host": "127.0.0.1",  # 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
-    "port": 5000,  # 監聽端口
+    "port": 5001,  # 監聽端口
     "SSL": false,  # 是否開啓SSL
     "BasicAuth": false,  # 是否使用 BasicAuth 進行認證
     "username": "admin",  # BasicAuth 用戶名

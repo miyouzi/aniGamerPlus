@@ -1,6 +1,8 @@
 FROM python:slim
 
-RUN apt update && apt install -y g++ gcc libevent-dev libxslt-dev ffmpeg
+RUN apt update && \
+    apt install -y g++ gcc make libevent-dev libffi-dev libxml2-dev libxslt-dev zlib1g-dev ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . .

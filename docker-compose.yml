@@ -16,5 +16,5 @@ services:
         source: ./aniGamer.db
         target: /app/aniGamer.db
     ports:
-      - "5001:5001"
+      - "5000:5000"
     restart: unless-stopped

@@ -149,7 +149,7 @@ def __init_settings():
                 'use_dashboard': True,
                 'dashboard': {
                     'host': '127.0.0.1',
-                    'port': 5001,
+                    'port': 5000,
                     'SSL': False,
                     'BasicAuth': False,
                     'username': 'admin',
@@ -312,7 +312,7 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'dashboard' not in new_settings.keys():
         new_settings['dashboard'] = {
             'host': '127.0.0.1',
-            'port': 5001,
+            'port': 5000,
             'SSL': False,
             'BasicAuth': False,
             'username': 'admin',

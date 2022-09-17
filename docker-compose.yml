@@ -1,0 +1,20 @@
+version: "3.9"
+name: ani-gamer-plus
+
+services:
+  ani-gamer-plus:
+    build:
+      context: .
+    image: anigamerplus
+    container_name: "ani-gamer-plus"
+    volumes:
+      - "./downloads:/app/bangumi"
+      - type: bind
+        source: ./config.json
+        target: /app/config.json
+      - type: bind
+        source: ./aniGamer.db
+        target: /app/aniGamer.db
+    ports:
+      - "5000:5000"
+    restart: unless-stopped

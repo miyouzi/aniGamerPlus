@@ -1,11 +1,12 @@
-FROM python:3
+FROM python:slim
 
-COPY . /app
+RUN apt update && \
+    apt install -y g++ gcc make libevent-dev libffi-dev libxml2-dev libxslt-dev zlib1g-dev ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-RUN set -x \
-    && apt update \
-    && apt install g++ gcc libevent-dev libxslt-dev ffmpeg -y \
-    && pip3 install greenlet lxml \
-    && pip install --no-cache-dir -r requirements.txt
-EXPOSE 5000
-CMD python3 aniGamerPlus.py
+COPY . .
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+ENTRYPOINT [ "python3", "-u", "aniGamerPlus.py" ]

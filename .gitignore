@@ -126,3 +126,4 @@ logs/
 temp/
 cookie2.txt
 */*.iml
+**/.DS_Store

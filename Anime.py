@@ -78,7 +78,7 @@ class Anime:
             # 无需 gost 的情况
             os.environ['HTTP_PROXY'] = self._settings['proxy']
             os.environ['HTTPS_PROXY'] = self._settings['proxy']
-        os.environ['NO_PROXY'] = "127.0.0.1,localhost"
+        os.environ['NO_PROXY'] = "127.0.0.1,localhost,bahamut.akamaized.net"
 
     def renew(self):
         self.__get_src()

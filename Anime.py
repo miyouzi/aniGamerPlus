@@ -5,6 +5,7 @@
 # @File    : Anime.py @Software: PyCharm
 import ftplib
 import shutil
+import traceback
 import Config
 from Danmu import Danmu
 from bs4 import BeautifulSoup
@@ -960,9 +961,13 @@ class Anime:
 
         # 下載彈幕
         if self._danmu:
-            full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
-            d = Danmu(self._sn, full_filename, Config.read_cookie())
-            d.download(self._settings['danmu_ban_words'])
+            try:
+                full_filename = os.path.join(self._bangumi_dir, self.__get_filename(resolution)).replace('.' + self._settings['video_filename_extension'], '.ass')
+                d = Danmu(self._sn, full_filename, Config.read_cookie())
+                d.download(self._settings['danmu_ban_words'])
+            except BaseException as e:
+                err_print(self._sn, '彈幕異常', '下載彈幕時發生未知錯誤: '+str(e), status=1)
+                err_print(self._sn, '彈幕異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
 
         # 推送 CQ 通知
         if self._settings['coolq_notify']:

@@ -4,6 +4,7 @@ import json
 import random
 import re
 import os
+import Config
 from ColorPrint import err_print
 
 
@@ -66,7 +67,7 @@ class Danmu():
                 ban_words.append(online_ban_word['keyword'])
 
         output = open(self._full_filename, 'w', encoding='utf8')
-        danmu_template_file = os.path.join(os.path.dirname(__file__), 'DanmuTemplate.ass')
+        danmu_template_file = os.path.join(Config.get_working_dir(), 'DanmuTemplate.ass')
         with open(danmu_template_file, 'r', encoding='utf8') as temp:
             for line in temp.readlines():
                 output.write(line)

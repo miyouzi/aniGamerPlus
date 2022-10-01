@@ -138,7 +138,10 @@ def manual_task():
         mode = data['mode']
 
     # 下载线程数
-    thread = int(data['thread'])
+    if data['thread']:
+        thread = int(data['thread'])
+    else:
+        thread = 1
     if thread > Config.get_max_multi_thread():
         # 是否超过最大允许线程数
         thread_limit = Config.get_max_multi_thread()

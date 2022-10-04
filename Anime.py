@@ -289,8 +289,9 @@ class Anime:
                     # set-cookie刷新cookie只有一次机会, 如果其他线程先收到, 则此处会返回 deleted
                     # 等待其他线程刷新了cookie, 重新读入cookie
 
-                    if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' in self._req_header:
+                    if self._settings['use_mobile_api'] and 'X-Bahamut-App-Android' in self._req_header:
                         # 使用移动API将无法进行 cookie 刷新, 改回 header 刷新 cookie
+                        err_print(self._sn, '嘗試切換回 Web Header 刷新 Cookie', display=False)
                         self._req_header = self._web_header
                         self.__request('https://ani.gamer.com.tw/')  # 再次尝试获取新 cookie
                     else:
@@ -319,7 +320,7 @@ class Anime:
                             err_print(0, '用戶cookie更新失敗! 使用游客身份訪問', status=1, no_sn=True)
                             Config.invalid_cookie()  # 将失效cookie更名
 
-                        if self._settings['use_mobile_api'] and 'X-Bahamut-App-InstanceId' not in self._req_header:
+                        if self._settings['use_mobile_api'] and 'X-Bahamut-App-Android' not in self._req_header:
                             # 即使切换 header cookie 也无法刷新, 那么恢复 header, 好歹广告只有 3s
                             self._req_header = self._mobile_header
 
@@ -338,6 +339,10 @@ class Anime:
                     # 20210724 动画疯一步到位刷新 Cookie
                     if 'BAHARUNE' in f.headers.get('set-cookie'):
                         err_print(0, '用戶cookie已更新', status=2, no_sn=True)
+                        if self._settings['use_mobile_api']:
+                            # 当使用 APP API 临时切换至 Web API 更新 Cookie 时，Cookie 更新成功再切换回 App Header
+                            self._req_header = self._mobile_header
+                            err_print(self._sn, '切換回 App Header 進行影片解析', display=False)
 
         return f
 

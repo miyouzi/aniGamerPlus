@@ -41,6 +41,8 @@ def err_print(sn, err_msg, detail='', status=0, no_sn=False, prefix='', display=
     # err_msg 为信息类型/概要, 最好为四字中文
     # detail 为详细信息描述
     # no_sn 控制是否打印 sn , 默认打印
+    # display 是否在 console 显示（False则仅输出在日志文件）
+    # display_time 是否显示时间
     # 格式范例:
     # 2019-01-30 17:22:30 更新狀態: sn=12345 檢查更新失敗, 跳過等待下次檢查
     green = False

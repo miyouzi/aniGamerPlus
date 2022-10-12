@@ -17,6 +17,8 @@
 
 ffmpeg 需要另外下載, [**點擊這裡前往下載頁**](https://ffmpeg.org/download.html). 若不知道如何將 ffmpeg 放入 PATH 則直接將 **ffmpeg.exe** 放在和本程式同一個資料夾下即可.
 
+:warning: [**使用 Cookie 解析存在帳號被封鎖風險，不可解封，請三思后使用！**](https://github.com/miyouzi/aniGamerPlus/issues/207) :warning:
+
 ## EXE 檔案運行(對於不熟悉Python的使用者)
 
 windows 使用者可以[**點擊這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe文件使用.
@@ -281,7 +283,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 ### cookie.txt
 
 1.  使用者cookie文件, 將瀏覽器的cookie字段複製, 以**cookie.txt**為檔名保存在程序目錄下
-2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目
+2.  將獲取cookie的瀏覽器UA, 写入```config.json```的```ua```項目 （重要:warning:）
 
 **v6.0版本開始支援自動刷新cookie, 爲了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
 
@@ -300,8 +302,13 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
  - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
     ![](screenshot/CookiesFormat.png)
+   
+#### （推薦自動獲取UA）通過獲取Web控制臺如何獲取 UA:
 
-#### 使用Chrome舉例如何獲取 UA:
+ - 開啓 Web 控制臺功能（默認開啓），打開控制臺，找到`取得當前UA`按鈕，點擊後會自動填入當前瀏覽器UA，然後保存即可
+    ![](screenshot/set_ua_via_dashboard.png)
+
+#### （手動方式獲取UA）使用Chrome舉例如何獲取 UA:
 
  - 訪問 **https://developers.whatismybrowser.com/useragents/parse/?analyse-my-user-agent=yes** 即可查看該瀏覽器 UA
  - 如果此網址失效，以下為可查詢UA的備用網址：

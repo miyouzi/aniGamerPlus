@@ -22,7 +22,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v24.2'
-latest_config_version = 17.0
+latest_config_version = 17.1
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -158,7 +158,8 @@ def __init_settings():
                 'save_logs': True,
                 'quantity_of_logs': 7,
                 'config_version': latest_config_version,
-                'database_version': latest_database_version
+                'database_version': latest_database_version,
+                'download_cd': 600      # 下載冷卻時間(秒)
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)

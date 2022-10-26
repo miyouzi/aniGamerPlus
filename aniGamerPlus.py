@@ -279,7 +279,8 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         sys.exit(1)
 
     update_db(anime)  # 下载完成后, 更新数据库
-    thread_limiter.release()  # 并发下载限制器
+    download_cd = threading.Thread(target=download_cd_counter)
+    download_cd.start()
     # =====下载模块结束 =====
 
     # =====上传模块=====
@@ -298,10 +299,20 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         upload_limiter.release()  # 并发上传限制器
     # =====上传模块结束=====
 
+    download_cd.join()
     queue.pop(sn)  # 从任务列队中移除
-    processing_queue.remove(sn)  # 从当前任务列队中移除
+    processing_queue.remove(sn)  # 从当前任务列队中移除 
     err_print(sn, '任務完成', status=2)
+    
 
+def download_cd_counter():
+    seconds = settings['download_cd']
+    while(seconds > 0):
+        err_print('', '下載冷卻:', '下載冷卻時間剩餘 ' + str(seconds) + ' 秒', status=0, no_sn=True)
+        wait_time = min(30, seconds)
+        time.sleep(wait_time)
+        seconds -= wait_time
+    thread_limiter.release()  # 并发下载限制器
 
 def check_tasks():
     for sn in sn_dict.keys():

@@ -15,7 +15,7 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 from urllib.parse import quote
-import cloudscraper
+
 
 class TryTooManyTimeError(BaseException):
     pass
@@ -30,7 +30,7 @@ class Anime:
         self._temp_dir = self._settings['temp_dir']
         self._gost_port = str(gost_port)
 
-        self._session = cloudscraper.create_scraper()
+        self._session = requests.session()
         self._title = ''
         self._sn = sn
         self._bangumi_name = ''
@@ -233,12 +233,12 @@ class Anime:
             "Connection": "Keep-Alive"
         }
         self._web_header = {
-                # "user-agent": ua,
+                "user-agent": ua,
                 "referer": ref,
-                # "accept-language": lang,
-                # "accept": accept,
-                # "accept-encoding": accept_encoding,
-                # "cache-control": cache_control,
+                "accept-language": lang,
+                "accept": accept,
+                "accept-encoding": accept_encoding,
+                "cache-control": cache_control,
                 "origin": origin
             }
         if self._settings['use_mobile_api']:

@@ -204,7 +204,7 @@ docker run -td --name anigamerplus \
     "read_sn_list_when_checking_update": true,  // 是否在檢查更新時讀取sn_list.txt, 開啓後對sn_list.txt的更改將會在下次檢查更新時生效而不用重啓程序
     "read_config_when_checking_update": true,  // 是否在檢查更新時讀取配置文件, 開啓後對配置文件的更改將會在下次檢查時更新生效而不用重啓程序
     "ads_time": 25,  // 非VIP廣告等待時間, 如果等待時間不足, 程式會自行追加時間 (最大20秒)
-    "mobile_ads_time":3  // 使用移動端API解析的廣告等待時間
+    "mobile_ads_time": 25  // 使用移動端API解析的廣告等待時間
     "use_dashboard": true  // Web 控制台開關
     "dashboard": {  // Web控制面板配置
         "host": "127.0.0.1",  // 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
@@ -302,7 +302,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
  - 在程序所在目錄新建一個名爲**cookie.txt**的文本文件, 打開將上面的Cookie複製貼上保存即可
     ![](screenshot/CookiesFormat.png)
-   
+
 #### （推薦自動獲取UA）通過獲取Web控制臺如何獲取 UA:
 
  - 開啓 Web 控制臺功能（默認開啓），打開控制臺，找到`取得當前UA`按鈕，點擊後會自動填入當前瀏覽器UA，然後保存即可
@@ -455,7 +455,7 @@ optional arguments:
     - **list** 讀取 sn_list 中的内容進行下載, 並會將任務狀態記錄在資料庫中, 重啓自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法通過```-r```參數指定解析度**
 
     - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法通過```-r```參數指定解析度**
-    
+
     - **sn-range** 下載此番据指定sn範圍的劇集, 對於劇集名稱不是正整數的番劇, 可以用此模式
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
@@ -484,7 +484,7 @@ optional arguments:
     - 指定不連續劇集或sn時, 請用英文逗號```,```分隔, 中間無空格
 
     - 在 ```range``` 模式下, 指定連續劇集格式: 起始劇集-終止劇集. 舉例想下載第5到9集, 則格式為 5-9
-    
+
     - 在 ```sn-range``` 模式下, 格式同 ```range``` 模式, 不過將劇集改成 sn 碼
 
     - 將會按sn順序下載
@@ -499,7 +499,7 @@ optional arguments:
 
         - 想下載某番劇第2集, 第5到8集, 第12集
         ```python3 aniGamerPlus.py -s 10218 -e 2,5-8,12```
-        
+
         - 想下載某番劇sn範圍 14440 到 14459 的劇集, 外加 sn 為 14670 和 14746 的兩集
         ```python3 aniGamerPlus.py -s 14440 -m sn-range -e 14670,14746,14440-14459```
 

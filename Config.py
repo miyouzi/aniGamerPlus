@@ -158,7 +158,8 @@ def __init_settings():
                 'save_logs': True,
                 'quantity_of_logs': 7,
                 'config_version': latest_config_version,
-                'database_version': latest_database_version
+                'database_version': latest_database_version,
+                'download_cd': 600      # 下載冷卻時間(秒)
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)

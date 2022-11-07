@@ -24,5 +24,6 @@ var id_list = [
 	'read_sn_list_when_checking_update',
 	'read_config_when_checking_update', 
 	'save_logs', 
-	'quantity_of_logs'
+	'quantity_of_logs',
+	'download_cd'
 ]

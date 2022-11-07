@@ -279,7 +279,8 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         sys.exit(1)
 
     update_db(anime)  # 下载完成后, 更新数据库
-    thread_limiter.release()  # 并发下载限制器
+    download_cd = threading.Thread(target=download_cd_counter)
+    download_cd.start()
     # =====下载模块结束 =====
 
     # =====上传模块=====
@@ -298,9 +299,20 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         upload_limiter.release()  # 并发上传限制器
     # =====上传模块结束=====
 
+    download_cd.join()
     queue.pop(sn)  # 从任务列队中移除
-    processing_queue.remove(sn)  # 从当前任务列队中移除
+    processing_queue.remove(sn)  # 从当前任务列队中移除 
     err_print(sn, '任務完成', status=2)
+    
+
+def download_cd_counter():
+    seconds = settings['download_cd']
+    while(seconds > 0):
+        err_print('', '下載冷卻:', '下載冷卻時間剩餘 ' + str(seconds) + ' 秒', status=0, no_sn=True)
+        wait_time = min(30, seconds)
+        time.sleep(wait_time)
+        seconds -= wait_time
+    thread_limiter.release()  # 并发下载限制器
 
 
 def check_tasks():
@@ -360,6 +372,11 @@ def check_tasks():
                     new_anime = new_anime['anime']
                 insert_db(new_anime)
                 queue[latest_sn] = sn_dict[sn]
+
+        # sn 解析冷却
+        if settings['parse_sn_cd'] > 0:
+            err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+            time.sleep(settings['parse_sn_cd'])
 
 
 def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False, classify=True):
@@ -739,18 +756,21 @@ def __init_proxy():
     else:
         print('使用代理連接動畫瘋, 使用http/https/socks5協議')
 
-def doRequest(url, headers, cookies, params=None):
+
+def do_request(url, headers, cookies, params=None):
     return requests.get(url, headers=headers, cookies=cookies, params=params)
+
 
 def parse_anime(soup, animes, headers, cookies):
     if soup.text.find("目前沒有訂閱內容") != -1:
         return False
     for animeInfo in soup.select_one(".theme-list-block").select("a"):
-        response = doRequest(f"https://ani.gamer.com.tw/{animeInfo['href']}", headers, cookies)
+        response = do_request(f"https://ani.gamer.com.tw/{animeInfo['href']}", headers, cookies)
         sn = response.url.split("=")[-1]
         name = animeInfo.select_one(".theme-name").text
         animes.append({"sn": sn, "name": name})
     return True
+
 
 def export_my_anime():
     from bs4 import BeautifulSoup
@@ -776,7 +796,7 @@ def export_my_anime():
     animes = []
     while True:
         params = {'page': page, 'sort': 0}
-        bahamygatherPage = doRequest(url, headers=header, cookies=cookies, params=params)
+        bahamygatherPage = do_request(url, headers=header, cookies=cookies, params=params)
         if bahamygatherPage.status_code == requests.codes.ok:
             soup = BeautifulSoup(bahamygatherPage.text, 'html.parser')
             if not parse_anime(soup, animes, header, cookies):

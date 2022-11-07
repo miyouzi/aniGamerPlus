@@ -3,6 +3,8 @@
     "temp_dir": "",
     "classify_bangumi": true,
     "check_frequency": 5,
+    "download_cd": 60,
+    "parse_sn_cd": 3,
     "download_resolution": "1080",
     "lock_resolution": false,
     "only_use_vip": false,

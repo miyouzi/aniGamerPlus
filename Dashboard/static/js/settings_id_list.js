@@ -16,13 +16,13 @@ var id_list = [
 	'ua', 
 	'use_mobile_api',
 	'danmu',
-	
 	'use_proxy', 
 	'proxy',
-	
 	'check_latest_version', 
 	'read_sn_list_when_checking_update',
 	'read_config_when_checking_update', 
 	'save_logs', 
-	'quantity_of_logs'
+	'quantity_of_logs',
+	'download_cd',
+	'parse_sn_cd'
 ]

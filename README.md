@@ -153,6 +153,8 @@ docker run -td --name anigamerplus \
     "classify_bangumi": true,  // 控制是否建立番劇資料夾
     "classify_season": false,  // 控制是否建立季度子目錄
     "check_frequency": 5,  // 檢查更新頻率, 單位為分鐘
+    "download_cd": 5,  // # 下載冷卻時間(秒)
+    "parse_sn_cd": 3,  // sn 页面(即播放界面)解析冷却时间(秒)
     "download_resolution": "1080",  // 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  // 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
     "only_use_vip": false,  // 锁定 VIP 账号下载
@@ -226,6 +228,11 @@ docker run -td --name anigamerplus \
 ### 使用代理
 aniGamerPlus本身支援使用單個```http```或```https```或```socks5```(v12開始支援)代理.
 
+**你可以在 Web 控制臺設置代理, 如下圖所示:**
+![](screenshot/Dashboard_proxy.png)
+
+**或者手動編輯`config.json`檔案的`proxy`字段, 請按下方格式填入:**
+
 無密碼驗證的代理使用以下格式:
 ```
 http://example.com:1000
@@ -240,12 +247,6 @@ http://user:passwd@example.com:1000
 ```
 socks5h://127.0.0.1:1483
 ```
-
-如果想使用其他的代理協議或使用鏈式代理, 需要下載 [**Gost**](https://github.com/ginuerzh/gost) 放置在系統PATH, 或本程序目錄下, 並命名爲 ```gost```, windows平臺為```gost.exe```
-
-若想使用鏈式代理, 請使用整數作爲 key, 代理出口將會是 key 最大的代理服務器.
-
-Gost 支援 Shadowsocks 協議, 其實現是基於[shadowsocks-go](https://github.com/shadowsocks/shadowsocks-go), 目前僅支援這幾種加密方式: ```aes-128-cfb``` ```aes-192-cfb``` ```aes-256-cfb``` ```bf-cfb``` ```cast5-cfb``` ```des-cfb``` ```rc4-md5``` ```rc4-md5-6``` ```chacha20``` ```salsa20``` ```rc4``` ```table```
 
 **注意: ```read_config_when_checking_update``` 配置對代理配置無效**
 

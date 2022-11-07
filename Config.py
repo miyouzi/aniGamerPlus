@@ -21,8 +21,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v24.3'
-latest_config_version = 17.1
+aniGamerPlus_version = 'v24.4'
+latest_config_version = 17.2
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -83,6 +83,8 @@ def __init_settings():
                 'classify_bangumi': True,  # 控制是否建立番剧目录
                 'classify_season': False,  # 控制是否建立季度子目录
                 'check_frequency': 5,  # 检查 cd 时间, 单位分钟
+                'download_cd': 60,  # 下載冷卻時間(秒)
+                'parse_sn_cd': 5,  # sn 页面(即播放界面)解析冷却时间
                 'download_resolution': '1080',  # 下载分辨率
                 'lock_resolution': False,  # 锁定分辨率, 如果分辨率不存在, 则宣布下载失败
                 'only_use_vip': False,  # 锁定 VIP 账号下载
@@ -104,6 +106,7 @@ def __init_settings():
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36",
                 'use_proxy': False,
                 'proxy': 'http://user:passwd@example.com:1000',  # 代理功能, config_version v13.0 删除链式代理
+                "no_proxy_akamai": False,  # 不代理 akamai CDN
                 'upload_to_server': False,
                 'ftp': {  # 将文件上传至远程服务器
                     'server': '',
@@ -158,8 +161,7 @@ def __init_settings():
                 'save_logs': True,
                 'quantity_of_logs': 7,
                 'config_version': latest_config_version,
-                'database_version': latest_database_version,
-                'download_cd': 600      # 下載冷卻時間(秒)
+                'database_version': latest_database_version
                 }
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(settings, f, ensure_ascii=False, indent=4)
@@ -373,8 +375,16 @@ def __update_settings(old_settings):  # 升级配置文件
         new_settings['only_use_vip'] = False
 
     if 'no_proxy_akamai' not in new_settings.keys():
-        # 是否代理 akamai CDN （视频流）
+        # v24.3 添加是否代理 akamai CDN （视频流）
         new_settings['no_proxy_akamai'] = False
+
+    if 'download_cd' not in new_settings.keys():
+        # v24.4 下載冷卻時間(秒)
+        new_settings['download_cd'] = 60
+
+    if 'parse_sn_cd' not in new_settings.keys():
+        # v24.4 sn解析冷卻時間(秒)
+        new_settings['parse_sn_cd'] = 5
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

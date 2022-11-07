@@ -314,6 +314,7 @@ def download_cd_counter():
         seconds -= wait_time
     thread_limiter.release()  # 并发下载限制器
 
+
 def check_tasks():
     for sn in sn_dict.keys():
         anime = build_anime(sn)
@@ -371,6 +372,11 @@ def check_tasks():
                     new_anime = new_anime['anime']
                 insert_db(new_anime)
                 queue[latest_sn] = sn_dict[sn]
+
+        # sn 解析冷却
+        if settings['parse_sn_cd'] > 0:
+            err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+            time.sleep(settings['parse_sn_cd'])
 
 
 def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False, classify=True):
@@ -750,18 +756,21 @@ def __init_proxy():
     else:
         print('使用代理連接動畫瘋, 使用http/https/socks5協議')
 
-def doRequest(url, headers, cookies, params=None):
+
+def do_request(url, headers, cookies, params=None):
     return requests.get(url, headers=headers, cookies=cookies, params=params)
+
 
 def parse_anime(soup, animes, headers, cookies):
     if soup.text.find("目前沒有訂閱內容") != -1:
         return False
     for animeInfo in soup.select_one(".theme-list-block").select("a"):
-        response = doRequest(f"https://ani.gamer.com.tw/{animeInfo['href']}", headers, cookies)
+        response = do_request(f"https://ani.gamer.com.tw/{animeInfo['href']}", headers, cookies)
         sn = response.url.split("=")[-1]
         name = animeInfo.select_one(".theme-name").text
         animes.append({"sn": sn, "name": name})
     return True
+
 
 def export_my_anime():
     from bs4 import BeautifulSoup
@@ -787,7 +796,7 @@ def export_my_anime():
     animes = []
     while True:
         params = {'page': page, 'sort': 0}
-        bahamygatherPage = doRequest(url, headers=header, cookies=cookies, params=params)
+        bahamygatherPage = do_request(url, headers=header, cookies=cookies, params=params)
         if bahamygatherPage.status_code == requests.codes.ok:
             soup = BeautifulSoup(bahamygatherPage.text, 'html.parser')
             if not parse_anime(soup, animes, header, cookies):

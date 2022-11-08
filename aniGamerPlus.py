@@ -321,6 +321,10 @@ def check_tasks():
         anime = build_anime(sn)
         if anime['failed']:
             err_print(sn, '更新狀態', '檢查更新失敗, 跳過等待下次檢查', status=1)
+            # sn 解析冷却
+            if settings['parse_sn_cd'] > 0:
+                err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+                time.sleep(settings['parse_sn_cd'])
             continue
         anime = anime['anime']
         err_print(sn, '更新資訊', '正在檢查《' + anime.get_bangumi_name() + '》')

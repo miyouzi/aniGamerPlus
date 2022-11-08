@@ -65,6 +65,7 @@ def build_anime(sn):
         err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
     return anime
 
+
 def read_db_all():
     db_locker.acquire()
     conn = sqlite3.connect(db_path)
@@ -424,7 +425,8 @@ def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_siz
                 err_print(sn, '下載異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
                 anime.video_size = 0
 
-    thread_limiter.release()
+    download_cd = threading.Thread(target=download_cd_counter)
+    download_cd.start()
 
 
 def __get_info_only(sn):

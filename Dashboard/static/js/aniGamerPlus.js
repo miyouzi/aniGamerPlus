@@ -246,3 +246,24 @@ function showSnList(){
 		$("#sn_list").val(data);
 	})
 }
+
+$().ready(() => {
+	$('#simulator_human_watching').on('switchChange.bootstrapSwitch', function(event, state) {
+		if(state){
+			// 如果啟用模擬人類觀看速度
+			// 下載併發數須為1
+			// 分段下載功能需被開啟
+			$('#multi_downloading_segment').val('1');
+			$('#multi_downloading_segment').attr('readonly', true);
+
+			$('#segment_download_mode').bootstrapSwitch('state', true);
+			$('#segment_download_mode').bootstrapSwitch('toggleReadonly',true);
+		}else{
+			// 如果停用模擬人類觀看速度
+			// 解鎖下載併發數
+			// 解鎖分段下載功能
+			$('#multi_downloading_segment').removeAttr('readonly');
+			$('#segment_download_mode').bootstrapSwitch('toggleReadonly',false);
+		}
+	});
+})

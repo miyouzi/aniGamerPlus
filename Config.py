@@ -22,7 +22,7 @@ sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
 aniGamerPlus_version = 'v24.6'
-latest_config_version = 17.2
+latest_config_version = 24.6
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -94,6 +94,7 @@ def __init_settings():
                 'multi_upload': 3,  # 最大并发上传数
                 'segment_download_mode': True,  # 由 aniGamerPlus 下载分段, False 为 ffmpeg 下载
                 'multi_downloading_segment': 2,  # 在上面配置为 True 时有效, 每个视频并发下载分段数
+                'simulator_human_watching': False, # 模擬人類觀看時間, True時會強迫開啟分段下載，並設置分段併發數為1
                 'segment_max_retry': 8,  # 在分段下载模式时有效, 每个分段最大重试次数, -1 为 无限重试
                 'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在文件名中添加清晰度说明
@@ -385,6 +386,10 @@ def __update_settings(old_settings):  # 升级配置文件
     if 'parse_sn_cd' not in new_settings.keys():
         # v24.4 sn解析冷卻時間(秒)
         new_settings['parse_sn_cd'] = 5
+
+    if 'simulator_human_watching' not in new_settings.keys():
+        # v24.6 模擬人類觀看速度
+        new_settings['simulator_human_watching'] = True
 
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:

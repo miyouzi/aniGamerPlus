@@ -289,8 +289,7 @@ class Anime:
             except requests.exceptions.RequestException as e:
                 if error_cnt >= max_retry >= 0:
                     raise TryTooManyTimeError('任務狀態: sn=' + str(self._sn) + ' 请求失败次数过多！请求链接：\n%s' % req)
-                err_detail = 'ERROR: 请求失败！except：\n' + str(e) + '\n3s后重试(最多重试' + str(
-                    max_retry) + '次)'
+                err_detail = 'ERROR: 请求失败！except：\n' + str(e) + '\n3s后重试(最多重试' + str(max_retry) + '次)'
                 if show_fail:
                     err_print(self._sn, '任務狀態', err_detail)
                 time.sleep(3)

@@ -63,6 +63,12 @@ def build_anime(sn):
     except BaseException as e:
         err_print(sn, '抓取失敗', '抓取影片信息時發生未知錯誤: '+str(e), status=1)
         err_print(sn, '抓取異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
+
+    # sn 解析冷却
+    if settings['parse_sn_cd'] > 0:
+        err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+        time.sleep(settings['parse_sn_cd'])
+
     return anime
 
 
@@ -321,10 +327,10 @@ def check_tasks():
         anime = build_anime(sn)
         if anime['failed']:
             err_print(sn, '更新狀態', '檢查更新失敗, 跳過等待下次檢查', status=1)
-            # sn 解析冷却
-            if settings['parse_sn_cd'] > 0:
-                err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
-                time.sleep(settings['parse_sn_cd'])
+            # # sn 解析冷却
+            # if settings['parse_sn_cd'] > 0:
+            #     err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+            #     time.sleep(settings['parse_sn_cd'])
             continue
         anime = anime['anime']
         err_print(sn, '更新資訊', '正在檢查《' + anime.get_bangumi_name() + '》')
@@ -378,10 +384,10 @@ def check_tasks():
                 insert_db(new_anime)
                 queue[latest_sn] = sn_dict[sn]
 
-        # sn 解析冷却
-        if settings['parse_sn_cd'] > 0:
-            err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
-            time.sleep(settings['parse_sn_cd'])
+        # # sn 解析冷却
+        # if settings['parse_sn_cd'] > 0:
+        #     err_print("更新資訊", "SN 解析冷卻 " + str(settings['parse_sn_cd']) + " 秒", no_sn=True)
+        #     time.sleep(settings['parse_sn_cd'])
 
 
 def __download_only(sn, dl_resolution='', dl_save_dir='', realtime_show_file_size=False, classify=True):

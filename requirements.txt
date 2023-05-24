@@ -1,5 +1,5 @@
 termcolor==1.1.0
-flask==1.1.4
+flask==2.2.5
 requests==2.31.0
 chardet==3.0.4
 gevent==22.08.0

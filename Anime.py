@@ -89,10 +89,10 @@ class Anime:
             os.environ['HTTPS_PROXY'] = self._settings['proxy']
             proxy_info = Config.parse_proxy(self._settings['proxy'])
             if proxy_info['proxy_user'] and proxy_info['proxy_passwd']:
-                auth_info = proxy_info['proxy_user'] + ":" + proxy_info['proxy_passwd']
+                auth_info = proxy_info['proxy_user'] + ":" + proxy_info['proxy_passwd'] + "@"
             else:
                 auth_info = ''
-            proxy_without_protocol = auth_info + "@" + proxy_info['proxy_ip'] + ':' + proxy_info['proxy_port']
+            proxy_without_protocol = auth_info + proxy_info['proxy_ip'] + ':' + proxy_info['proxy_port'] 
             self._proxies = {'https': "https://" + proxy_without_protocol,
                              'http': "http://" + proxy_without_protocol}
 

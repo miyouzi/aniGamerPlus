@@ -54,7 +54,6 @@ class Anime:
         self.upload_succeed_flag = False
         self._danmu = False
         self._proxies = {}
-        self._proxy_auth = ()
 
         self.season_title_filter = re.compile('第[零一二三四五六七八九十]{1,3}季$')
         self.extra_title_filter = re.compile('\[(特別篇|中文配音)\]$')
@@ -89,10 +88,13 @@ class Anime:
             os.environ['HTTP_PROXY'] = self._settings['proxy']
             os.environ['HTTPS_PROXY'] = self._settings['proxy']
             proxy_info = Config.parse_proxy(self._settings['proxy'])
-            proxy_without_protocol = proxy_info['proxy_ip'] + ':' + proxy_info['proxy_port']
-            self._proxies = {'https': proxy_without_protocol,
-                             'http': proxy_without_protocol}
-            self._proxy_auth = (proxy_info['proxy_user'], proxy_info['proxy_passwd'])
+            if proxy_info['proxy_user'] and proxy_info['proxy_passwd']:
+                auth_info = proxy_info['proxy_user'] + ":" + proxy_info['proxy_passwd'] + "@"
+            else:
+                auth_info = ''
+            proxy_without_protocol = auth_info + proxy_info['proxy_ip'] + ':' + proxy_info['proxy_port'] 
+            self._proxies = {'https': "https://" + proxy_without_protocol,
+                             'http': "http://" + proxy_without_protocol}
 
         if self._settings['no_proxy_akamai']:
             os.environ['NO_PROXY'] = "127.0.0.1,localhost,bahamut.akamaized.net"
@@ -282,9 +284,11 @@ class Anime:
         while True:
             try:
                 if use_pyhttpx:
+                    #https://github.com/miyouzi/aniGamerPlus/issues/249 pyhttpx 作者 在改動
+                    #https://github.com/zero3301/pyhttpx/commit/4735190df741f4c00287ec948f0734fd2c21bfee 把 proxy 驗證放到了 proxies URL 裏面
                     f = self._pyhttpx_session.get(req, headers=current_header, cookies=cookies, timeout=10,
-                                                  proxies=self._proxies, proxy_auth=self._proxy_auth)
-                else:
+                                                  proxies=self._proxies)
+                else:   
                     f = self._session.get(req, headers=current_header, cookies=cookies, timeout=10)
             except requests.exceptions.RequestException as e:
                 if error_cnt >= max_retry >= 0:

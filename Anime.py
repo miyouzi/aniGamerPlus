@@ -1086,6 +1086,15 @@ class Anime:
             except:
                 err_print(self._sn, 'Plex auto Refresh UNKNOWN ERROR', 'Exception: ' + str(e), status=1)
 
+        # 下載封面照
+        if self._settings['download_poster']:
+            url = self.get_thumbnail()
+            full_filename = os.path.join(self._bangumi_dir, 'poster.jpg')
+            if url:
+                with requests.get(url, stream=True) as r:
+                    with open(full_filename, 'wb') as f:
+                        shutil.copyfileobj(r.raw, f)
+
     def upload(self, bangumi_tag='', debug_file=''):
         first_connect = True  # 标记是否是第一次连接, 第一次连接会删除临时缓存目录
         tmp_dir = str(self._sn) + '-uploading-by-aniGamerPlus'
@@ -1361,6 +1370,19 @@ class Anime:
         err_print(0, indent+'劇集標題:', '\"' + self.get_episode() + '\"', no_sn=True, display_time=False)
         err_print(0, indent+'参考檔名:', '\"' + self.get_filename() + '\"', no_sn=True, display_time=False)
         err_print(0, indent+'可用解析度', 'P '.join(self.get_m3u8_dict().keys()) + 'P\n', no_sn=True, display_time=False)
+
+    def get_thumbnail(self):
+        if self._settings['use_mobile_api']:
+            return self._src['data']['anime']['cover']
+        else:
+            soup = self._src
+            # return soup.find('meta', property='og:image')['content']
+            try:
+                return soup.find('div', 'data-file').img['data-src']
+            except (TypeError, AttributeError, KeyError):
+                # 该sn下没有动画
+                err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
+                sys.exit(1)
 
     def enable_danmu(self):
         self._danmu = True

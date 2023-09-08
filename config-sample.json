@@ -65,6 +65,7 @@
         "username": "admin",
         "password": "admin"
     },
+    "generate_nfo": false,
     "save_logs": true,
     "quantity_of_logs": 7,
     "config_version": 13.1,

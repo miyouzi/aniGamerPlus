@@ -16,6 +16,7 @@ from ftplib import FTP, FTP_TLS
 import socket
 import threading
 from urllib.parse import quote
+from lxml.etree import Element, SubElement, ElementTree
 
 
 class TryTooManyTimeError(BaseException):
@@ -1003,6 +1004,37 @@ class Anime:
                 err_print(self._sn, '彈幕異常', '下載彈幕時發生未知錯誤: '+str(e), status=1)
                 err_print(self._sn, '彈幕異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
 
+        # 產生 nfo 文件
+        if self._settings['generate_nfo']:
+            root_name = 'movie' if self.get_episode() == '電影' else 'tvshow'
+            field: dict = {'thumb': self.get_thumbnail(), 'sn_id': self._sn,
+                           'title': self.get_bangumi_name()}
+
+            if self._settings['use_mobile_api']:
+                date: str = self._src['data']['anime']['season_start']
+                field['year'] = date.split('/')[0]
+                field['premiered'] = date.replace('/', '-')
+                field['plot'] = self._src['data']['anime']['content']
+            else:
+                soup = self._src
+                try:
+                    date = soup.find('ul', 'type-list').li.p.text
+                    field['year'] = date.split('/')[0]
+                    field['premiered'] = date.replace('/', '-')
+
+                except (TypeError, AttributeError, KeyError):
+                    # 该sn下没有动画
+                    err_print(self._sn, 'ERROR: 該 sn 下真的有動畫？', status=1)
+                    sys.exit(1)
+            # nfo_fields = {'year': '2016', 'thumb': 'https://google.com', 'title': 'asdfsd'},
+            data = self.generate_nfo(root_name, field)
+            filename = os.path.join(self._bangumi_dir, f'{root_name}.nfo')
+            ElementTree(data).write(
+                filename, encoding='utf-8', xml_declaration=True, pretty_print=True, standalone=True
+            )
+
+
+
         # 推送 CQ 通知
         if self._settings['coolq_notify']:
             try:
@@ -1389,6 +1421,22 @@ class Anime:
 
     def set_resolution(self, resolution):
         self.video_resolution = int(resolution)
+
+    @classmethod
+    def generate_nfo(cls, root_name: str, nfo_fields: dict):
+        nfo_root = Element(root_name)
+
+        for field_name, values in nfo_fields.items():
+            if not values:
+                continue
+            if not isinstance(values, list):
+                values = [values]
+            for value in values:
+                if field_name == 'thumb':
+                    SubElement(nfo_root, field_name, aspect='poster').text = f'{value}'
+                else:
+                    SubElement(nfo_root, field_name).text = f'{value}'
+        return nfo_root
 
 
 if __name__ == '__main__':

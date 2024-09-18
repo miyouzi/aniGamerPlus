@@ -387,7 +387,7 @@ class Anime:
 
         def get_playlist():
             if self._settings['use_mobile_api']:
-                req = f'https://api.gamer.com.tw/mobile_app/anime/v3/m3u8.php?sn={str(self._sn)}&device={self._device_id}'
+                req = f'https://api.gamer.com.tw/mobile_app/anime/v3/m3u8.php?videoSn={str(self._sn)}&device={self._device_id}'
             else:
                 req = 'https://ani.gamer.com.tw/ajax/m3u8.php?sn=' + str(self._sn) + '&device=' + self._device_id
             self._playlist = self.__request_json(req)
@@ -465,9 +465,9 @@ class Anime:
                 sys.exit(1)
 
         def parse_playlist():
-            req = self._playlist['src']
+            req = self._playlist['data']['src']
             f = self.__request(req, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
-            url_prefix = re.sub(r'playlist.+', '', self._playlist['src'])  # m3u8 URL 前缀
+            url_prefix = re.sub(r'playlist.+', '', self._playlist['data']['src'])  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
             m3u8_dict = {}
             for i in m3u8_list:

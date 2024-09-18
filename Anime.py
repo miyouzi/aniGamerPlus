@@ -137,7 +137,7 @@ class Anime:
 
     def __get_src(self):
         if self._settings['use_mobile_api']:
-            self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v2/video.php?sn={self._sn}', no_cookies=True)
+            self._src = self.__request_json(f'https://api.gamer.com.tw/anime/v1/video.php?videoSn={self._sn}', no_cookies=True)
         else:
             req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
             f = self.__request(req, no_cookies=True, use_pyhttpx=True)
@@ -387,7 +387,7 @@ class Anime:
 
         def get_playlist():
             if self._settings['use_mobile_api']:
-                req = f'https://api.gamer.com.tw/mobile_app/anime/v2/m3u8.php?sn={str(self._sn)}&device={self._device_id}'
+                req = f'https://api.gamer.com.tw/mobile_app/anime/v3/m3u8.php?sn={str(self._sn)}&device={self._device_id}'
             else:
                 req = 'https://ani.gamer.com.tw/ajax/m3u8.php?sn=' + str(self._sn) + '&device=' + self._device_id
             self._playlist = self.__request_json(req)

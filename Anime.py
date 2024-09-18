@@ -200,18 +200,18 @@ class Anime:
 
     def __get_episode_list(self):
         if self._settings['use_mobile_api']:
-            for _type in self._src['data']['anime']['volumes']:
-                for _sn in self._src['data']['anime']['volumes'][_type]:
+            for _type in self._src['data']['anime']['episodes']:
+                for _sn in self._src['data']['anime']['episodes'][_type]:
                     if _type == '0': # 本篇
-                        self._episode_list[str(_sn['volume'])] = int(_sn["video_sn"])
+                        self._episode_list[str(_sn['episode'])] = int(_sn["videoSn"])
                     elif _type == '1': # 電影
-                        self._episode_list['電影'] = int(_sn["video_sn"])
+                        self._episode_list['電影'] = int(_sn["videoSn"])
                     elif _type == '2': # 特別篇
-                        self._episode_list[f'特別篇{_sn["volume"]}'] = int(_sn["video_sn"])
+                        self._episode_list[f'特別篇{_sn["episode"]}'] = int(_sn["videoSn"])
                     elif _type == '3': # 中文配音
-                        self._episode_list[f'中文配音{_sn["volume"]}'] = int(_sn["video_sn"])
+                        self._episode_list[f'中文配音{_sn["episode"]}'] = int(_sn["videoSn"])
                     else: # 中文電影
-                        self._episode_list['中文電影'] = int(_sn["video_sn"])
+                        self._episode_list['中文電影'] = int(_sn["videoSn"])
         else:
             try:
                 a = self._src.find('section', 'season').find_all('a')

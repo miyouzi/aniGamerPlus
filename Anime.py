@@ -246,9 +246,9 @@ class Anime:
         accept_encoding = 'gzip, deflate'
         cache_control = 'max-age=0'
         self._mobile_header = {
-            "User-Agent": "Animad/1.12.5 (tw.com.gamer.android.animad; build: 222; Android 5.1.1) okHttp/4.4.0",
+            "User-Agent": "Animad/1.16.16 (tw.com.gamer.android.animad; build: 328; Android 9) okHttp/4.4.0",
             "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
-            "X-Bahamut-App-Version": "222",
+            "X-Bahamut-App-Version": "328",
             "Accept-Encoding": "gzip",
             "Connection": "Keep-Alive"
         }

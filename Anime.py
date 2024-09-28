@@ -465,9 +465,13 @@ class Anime:
                 sys.exit(1)
 
         def parse_playlist():
-            req = self._playlist['data']['src']
-            f = self.__request(req, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
-            url_prefix = re.sub(r'playlist.+', '', self._playlist['data']['src'])  # m3u8 URL 前缀
+            playlist_url = ""
+            if self._settings['use_mobile_api']:
+                playlist_url = self._playlist['data']['src']
+            else:
+                playlist_url = self._playlist['src']
+            f = self.__request(playlist_url, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
+            url_prefix = re.sub(r'playlist.+', '', playlist_url)  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
             m3u8_dict = {}
             for i in m3u8_list:

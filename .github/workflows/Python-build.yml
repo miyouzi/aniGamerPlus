@@ -33,7 +33,7 @@ jobs:
       run: pyinstaller --noconfirm --distpath %cd%\ --onefile --console --icon %cd%\Dashboard\static\img\aniGamerPlus.ico --clean --add-data %cd%;aniGamerPlus/  %cd%\aniGamerPlus.py
       shell: cmd
     - name: Upload exe
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
        name: aniGamerPlus_artifacts_${{ matrix.python }}
        path: |

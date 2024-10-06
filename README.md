@@ -341,7 +341,7 @@ sn碼 下載模式(可空) #注釋(可空)
 11285 # 關於我轉生變成史萊姆這檔事
 11390 all #笑容的代價 01
 11388 # BanG Dream！第二季
-11317 lastest # SSSS.GRIDMAN
+11317 latest # SSSS.GRIDMAN
 ```
 
 自v6.0開始, 新增對番劇進行分類功能, 在一排番劇列表的上方 **@** 開頭後面的字符將會作爲番劇的分類名, 番劇會歸類在此分類名的資料夾下
@@ -407,20 +407,16 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 參數:
 ```
 >python3 aniGamerPlus.py -h
-當前aniGamerPlus版本: v24.0
-usage: aniGamerPlus.py [-h] [--sn SN]
-                       [--resolution {360,480,540,576,720,1080}]
-                       [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}]
-                       [--thread_limit THREAD_LIMIT] [--current_path]
-                       [--episodes EPISODES] [--no_classify]
-                       [--information_only] [--user_command] [--danmu] [--my_anime]
+當前aniGamerPlus版本: v24.4
+usage: aniGamerPlus.py [-h] [--sn SN] [--resolution {360,480,540,576,720,1080}] [--download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range,db}]
+                       [--thread_limit THREAD_LIMIT] [--current_path] [--episodes EPISODES] [--no_classify] [--user_command] [--information_only] [--danmu] [--my_anime]
 
 optional arguments:
   -h, --help            show this help message and exit
   --sn SN, -s SN        視頻sn碼(數字)
   --resolution {360,480,540,576,720,1080}, -r {360,480,540,576,720,1080}
                         指定下載清晰度(數字)
-  --download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}, -m {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range}
+  --download_mode {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range,db}, -m {single,latest,largest-sn,multi,all,range,list,sn-list,sn-range,db}
                         下載模式
   --thread_limit THREAD_LIMIT, -t THREAD_LIMIT
                         最高并發下載數(數字)
@@ -428,11 +424,11 @@ optional arguments:
   --episodes EPISODES, -e EPISODES
                         僅下載指定劇集
   --no_classify, -n     不建立番劇資料夾
-  --information_only, -i
-                        僅查詢資訊
   --user_command, -u    所有下載完成后執行用戶命令
-  --danmu, -d           以 `.ass` 下載彈幕
-  --my_anime            匯出「我的動畫」至 `my_anime.txt`，和 sn_list 所需的格式相同
+  --information_only, -i
+                        僅查詢資訊，可搭配 -d 更新彈幕
+  --danmu, -d           以 .ass 下載彈幕
+  --my_anime            匯出「我的動畫」至my_anime.txt
 ```
 
  - **-s** 接要下載視頻的sn碼,不可空
@@ -458,6 +454,8 @@ optional arguments:
     - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法通過```-r```參數指定解析度**
 
     - **sn-range** 下載此番据指定sn範圍的劇集, 對於劇集名稱不是正整數的番劇, 可以用此模式
+    
+    - **db** 更新資料庫中所有動畫的彈幕
 
  - **-t** 接最大并發下載數, 可空, 空則讀取**config.json**中的定義
 

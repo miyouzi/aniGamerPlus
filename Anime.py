@@ -137,7 +137,7 @@ class Anime:
 
     def __get_src(self):
         if self._settings['use_mobile_api']:
-            self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v2/video.php?sn={self._sn}', no_cookies=True)
+            self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v4/video.php?sn={self._sn}', no_cookies=True)
         else:
             req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
             f = self.__request(req, no_cookies=True, use_pyhttpx=True)
@@ -200,18 +200,18 @@ class Anime:
 
     def __get_episode_list(self):
         if self._settings['use_mobile_api']:
-            for _type in self._src['data']['anime']['volumes']:
-                for _sn in self._src['data']['anime']['volumes'][_type]:
+            for _type in self._src['data']['anime']['episodes']:
+                for _sn in self._src['data']['anime']['episodes'][_type]:
                     if _type == '0': # 本篇
-                        self._episode_list[str(_sn['volume'])] = int(_sn["video_sn"])
+                        self._episode_list[str(_sn['episode'])] = int(_sn["videoSn"])
                     elif _type == '1': # 電影
-                        self._episode_list['電影'] = int(_sn["video_sn"])
+                        self._episode_list['電影'] = int(_sn["videoSn"])
                     elif _type == '2': # 特別篇
-                        self._episode_list[f'特別篇{_sn["volume"]}'] = int(_sn["video_sn"])
+                        self._episode_list[f'特別篇{_sn["episode"]}'] = int(_sn["videoSn"])
                     elif _type == '3': # 中文配音
-                        self._episode_list[f'中文配音{_sn["volume"]}'] = int(_sn["video_sn"])
+                        self._episode_list[f'中文配音{_sn["episode"]}'] = int(_sn["videoSn"])
                     else: # 中文電影
-                        self._episode_list['中文電影'] = int(_sn["video_sn"])
+                        self._episode_list['中文電影'] = int(_sn["videoSn"])
         else:
             try:
                 a = self._src.find('section', 'season').find_all('a')
@@ -246,9 +246,9 @@ class Anime:
         accept_encoding = 'gzip, deflate'
         cache_control = 'max-age=0'
         self._mobile_header = {
-            "User-Agent": "Animad/1.12.5 (tw.com.gamer.android.animad; build: 222; Android 5.1.1) okHttp/4.4.0",
+            "User-Agent": "Animad/1.16.16 (tw.com.gamer.android.animad; build:328; Android 9) okHttp/4.4.0",
             "X-Bahamut-App-Android": "tw.com.gamer.android.animad",
-            "X-Bahamut-App-Version": "222",
+            "X-Bahamut-App-Version": "328",
             "Accept-Encoding": "gzip",
             "Connection": "Keep-Alive"
         }
@@ -387,7 +387,7 @@ class Anime:
 
         def get_playlist():
             if self._settings['use_mobile_api']:
-                req = f'https://api.gamer.com.tw/mobile_app/anime/v2/m3u8.php?sn={str(self._sn)}&device={self._device_id}'
+                req = f'https://api.gamer.com.tw/mobile_app/anime/v3/m3u8.php?videoSn={str(self._sn)}&device={self._device_id}'
             else:
                 req = 'https://ani.gamer.com.tw/ajax/m3u8.php?sn=' + str(self._sn) + '&device=' + self._device_id
             self._playlist = self.__request_json(req)
@@ -465,9 +465,13 @@ class Anime:
                 sys.exit(1)
 
         def parse_playlist():
-            req = self._playlist['src']
-            f = self.__request(req, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
-            url_prefix = re.sub(r'playlist.+', '', self._playlist['src'])  # m3u8 URL 前缀
+            playlist_url = ""
+            if self._settings['use_mobile_api']:
+                playlist_url = self._playlist['data']['src']
+            else:
+                playlist_url = self._playlist['src']
+            f = self.__request(playlist_url, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
+            url_prefix = re.sub(r'playlist.+', '', playlist_url)  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取
             m3u8_dict = {}
             for i in m3u8_list:

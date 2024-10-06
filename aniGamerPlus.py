@@ -681,10 +681,10 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
         tasks_counter = 0
         for anime_db in ep_range:
             if anime_db["status"] == 1:
-                if not anime_db["anime_name"] is None \
-                and not anime_db["local_file_path"] is None :
+                if anime_db["anime_name"] is not None \
+                and anime_db["local_file_path"] is not None :
                     a = threading.Thread(target=__get_danmu_only,args=(anime_db["sn"], anime_db["anime_name"], anime_db["local_file_path"]))
-                    a.setDaemon(True)
+                    a.daemon = True
                     thread_tasks.append(a)
                     a.start()
                     tasks_counter = tasks_counter + 1
@@ -801,7 +801,7 @@ def export_my_anime():
 
     cookies = Config.read_cookie()
     if not cookies:
-        err_print(0, f"請先設定cookie後再執行此指令", status=1, no_sn=True)
+        err_print(0, "請先設定cookie後再執行此指令", status=1, no_sn=True)
         return
 
     page = 1

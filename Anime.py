@@ -81,20 +81,14 @@ class Anime:
             # 需要使用 gost 的情况, 代理到 gost
             os.environ['HTTP_PROXY'] = 'http://127.0.0.1:' + self._gost_port
             os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:' + self._gost_port
-            self._proxies = {'https': '127.0.0.1:' + self._gost_port,
-                             'http': '127.0.0.1:' + self._gost_port}
+            self._proxies = {'https': 'http://127.0.0.1:' + self._gost_port,
+                             'http': 'http://127.0.0.1:' + self._gost_port}
         else:
             # 无需 gost 的情况
             os.environ['HTTP_PROXY'] = self._settings['proxy']
             os.environ['HTTPS_PROXY'] = self._settings['proxy']
-            proxy_info = Config.parse_proxy(self._settings['proxy'])
-            if proxy_info['proxy_user'] and proxy_info['proxy_passwd']:
-                auth_info = proxy_info['proxy_user'] + ":" + proxy_info['proxy_passwd'] + "@"
-            else:
-                auth_info = ''
-            proxy_without_protocol = auth_info + proxy_info['proxy_ip'] + ':' + proxy_info['proxy_port'] 
-            self._proxies = {'https': "https://" + proxy_without_protocol,
-                             'http': "http://" + proxy_without_protocol}
+            self._proxies = {'https': self._settings['proxy'],
+                             'http': self._settings['proxy']}
 
         if self._settings['no_proxy_akamai']:
             os.environ['NO_PROXY'] = "127.0.0.1,localhost,bahamut.akamaized.net"
@@ -284,11 +278,12 @@ class Anime:
         while True:
             try:
                 if use_pyhttpx:
-                    #https://github.com/miyouzi/aniGamerPlus/issues/249 pyhttpx 作者 在改動
-                    #https://github.com/zero3301/pyhttpx/commit/4735190df741f4c00287ec948f0734fd2c21bfee 把 proxy 驗證放到了 proxies URL 裏面
+                    # https://github.com/miyouzi/aniGamerPlus/issues/249 pyhttpx 作者 在改動
+                    # https://github.com/zero3301/pyhttpx/commit/4735190df741f4c00287ec948f0734fd2c21bfee
+                    # 把 proxy 驗證放到了 proxies URL 裏面
                     f = self._pyhttpx_session.get(req, headers=current_header, cookies=cookies, timeout=10,
                                                   proxies=self._proxies)
-                else:   
+                else:
                     f = self._session.get(req, headers=current_header, cookies=cookies, timeout=10)
             except requests.exceptions.RequestException as e:
                 if error_cnt >= max_retry >= 0:
@@ -1374,6 +1369,6 @@ class Anime:
 
 
 if __name__ == '__main__':
-    a = Anime('31724')
-    print(a.get_m3u8_dict())
+    a = Anime('40035')
+    # print(a.get_m3u8_dict())
     a.download('360')

@@ -712,7 +712,7 @@ class Anime:
             
             # 下載限速
             while time.time() < chunk_shoud_end_time:
-                time.sleep(1)
+                time.sleep(0.1)
             limiter.release()
 
         if self.realtime_show_file_size:
@@ -725,7 +725,8 @@ class Anime:
         chunk_tasks_list = []
         for chunk in chunk_list:
             chunk_uri = url_path + '/' + chunk['ts_name']
-            chunk_time = chunk['ts_time'] if self._settings['simulator_human_watching'] else 0
+            sim_watching_speed = float(self._settings['simulator_watching_speed']) if self._settings['simulator_human_watching'] else 0
+            chunk_time = chunk['ts_time']/sim_watching_speed if self._settings['simulator_human_watching'] else 0
             task = threading.Thread(target=download_chunk, args=(chunk_uri, chunk_time))
             chunk_tasks_list.append(task)
             task.daemon = True

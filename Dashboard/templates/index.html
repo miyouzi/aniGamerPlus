@@ -251,12 +251,6 @@
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">分段下載模式　</span>
-							<input id="segment_download_mode" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
-						</div>
-					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
 							<span class="input-group-text">檔名添加番劇名</span>
 							<input id="add_bangumi_name_to_video_filename" type="checkbox" data-toggle="switch" data-on-color="success"
 							 　data-size="normal" />
@@ -283,12 +277,6 @@
 					</div>
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
-							<span class="input-group-text">模擬人類觀看速度</span>
-							<input id="simulator_human_watching" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
-						</div>
-					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
 							<span class="input-group-text">下載解析度　　</span>
 							<select id="download_resolution" class="selectpicker show-tick form-control" data-style="btn-gray" data-header="選擇解析度">
 								<option>1080P</option>
@@ -309,27 +297,7 @@
 							</select>
 						</div>
 					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
-							<span class="input-group-text">更新間隔　　　</span>
-						</div>
-						<input id="check_frequency" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="單位分鐘" />
-					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
-							<span class="input-group-text">最大并發下載數</span>
-						</div>
-						<input id="multi-thread" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="正整數" />
-					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
-							<span class="input-group-text">最大并發分段數</span>
-						</div>
-						<input id="multi_downloading_segment" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="正整數" />
-					</div>
+					
 					<div class="input-group col-md-4 my-button">
 						<div class="input-group-prepend">
 							<span class="input-group-text">影片檔名前綴　</span>
@@ -342,20 +310,7 @@
 						</div>
 						<input id="customized_video_filename_suffix" type="text" class="form-control input-group-prepend-form-control" />
 					</div>
-					<div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
-							<span class="input-group-text">下載冷卻時間(秒)</span>
-						</div>
-						<input id="download_cd" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="正整數" />
-					</div>
-                    <div class="input-group col-md-4 my-button">
-						<div class="input-group-prepend">
-							<span class="input-group-text">SN解析冷卻時間(秒)</span>
-						</div>
-						<input id="parse_sn_cd" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
-						 placeholder="正整數" />
-					</div>
+					
 					<div class="input-group col-md-8 my-button">
 						<div class="input-group-prepend">
 							<span class="input-group-text">請求UA　　　　</span>
@@ -364,7 +319,78 @@
 						<button type="button" class="btn btn-dark" onclick="getUA()">取得當前UA</button>
 					</div>
 				</div>
-
+				<div class="row">
+					<h2 class="col">模擬觀看設定</h2>
+				</div>
+				<div class="row setting-content">
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">模擬人類觀看速度</span>
+							<input id="simulator_human_watching" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
+						</div>
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">模擬播放倍率</span>
+							<select id="simulator_watching_speed" class="selectpicker show-tick form-control" data-style="btn-gray" data-header="僅在開啟模擬人類觀看時有效" style="min-width:150px;">
+								<option value="2">2</option>
+								<option value="1.75">1.75</option>
+								<option value="1.5">1.5</option>
+								<option value="1.25">1.25</option>
+								<option value="1">1</option>
+								<option value="0.75">0.75</option>
+								<option value="0.5">0.5</option>
+							</select>
+						</div>
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">分段下載模式　</span>
+							<input id="segment_download_mode" type="checkbox" data-toggle="switch" data-on-color="success" 　data-size="normal" />
+						</div>
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">最大并發下載數</span>
+						</div>
+						<input id="multi-thread" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
+						placeholder="正整數" />
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">最大并發分段數</span>
+						</div>
+						<input id="multi_downloading_segment" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
+						placeholder="正整數" />
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">下載冷卻時間(秒)</span>
+						</div>
+						<input id="download_cd" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
+						placeholder="正整數" />
+					</div>
+					
+				</div>
+				<div class="row">
+					<h2 class="col">SN更新設定</h2>
+				</div>
+				<div class="row setting-content">
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">更新間隔(分)　</span>
+						</div>
+						<input id="check_frequency" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
+						placeholder="單位分鐘" />
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">SN解析冷卻時間(秒)</span>
+						</div>
+						<input id="parse_sn_cd" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
+						placeholder="正整數" />
+					</div>
+				</div>
 				<div class="row">
 					<h2 class="col">代理設定</h2>
 				</div>

@@ -17,6 +17,7 @@ import threading
 import subprocess
 import platform
 import socket
+import pip_system_certs.wrapt_requests
 import requests
 
 import Config

@@ -91,3 +91,6 @@ body {
 	font-weight: bold;
 	font-size: larger;
 }
+.bootstrap-select{
+	min-width: 150px;
+}

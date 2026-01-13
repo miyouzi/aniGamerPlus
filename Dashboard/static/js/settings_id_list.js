@@ -24,5 +24,7 @@ var id_list = [
 	'save_logs', 
 	'quantity_of_logs',
 	'download_cd',
-	'parse_sn_cd'
+	'parse_sn_cd',
+	'simulator_human_watching',
+	'simulator_watching_speed'
 ]

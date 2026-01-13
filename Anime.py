@@ -134,7 +134,7 @@ class Anime:
             self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v4/video.php?sn={self._sn}', no_cookies=True)
         else:
             req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
-            f = self.__request(req, no_cookies=True, use_pyhttpx=True)
+            f = self.__request(req, no_cookies=True, use_pyhttpx=False)
             self._src = BeautifulSoup(f.content, "lxml")
 
     def __get_title(self):
@@ -615,7 +615,32 @@ class Anime:
                         + '.' + self._settings['video_filename_extension']
         temp_filename = Config.legalize_filename(temp_filename)
         return temp_filename
+    
+    def __parsem3u8_video_list(self, m3u8_text):
+        m3u8 = []
+        re_time = re.compile(r'\d*.\d*,')       # 取得時間
+        re_name = re.compile(r'media_b.+ts.*')  # 取得檔名
 
+        chunklist = re.findall(r'#EXTINF:.+,.*\nmedia_b.+ts.*', m3u8_text)  # chunk
+
+        if len(chunklist) == 0:
+            # 如果帶時間的解析方法失敗，則採僅解析檔名
+            chunklist = re.findall(r'media_b.+ts.*', m3u8_text)  # chunk
+            for chunk in chunklist:
+                m3u8.append({
+                    'ts_time' : 0,
+                    'ts_name':  chunk,
+                })
+        else:
+            for chunk in chunklist:
+                ts_time = re_time.search(chunk).group(0)
+                ts_name = re_name.search(chunk).group(0)
+                m3u8.append({
+                    'ts_time' : float(ts_time[:-1]),
+                    'ts_name':  ts_name,
+                })
+        return m3u8
+    
     def __segment_download_mode(self, resolution=''):
         # 设定文件存放路径
         filename = self.__get_filename(resolution)
@@ -645,14 +670,15 @@ class Anime:
         with open(m3u8_key_path, 'wb') as f:  # 保存 key
             f.write(self.__request(key_uri, no_cookies=True).content)
 
-        chunk_list = re.findall(r'media_b.+ts.*', m3u8_text)  # chunk
+        chunk_list = self.__parsem3u8_video_list(m3u8_text)
 
         limiter = threading.Semaphore(self._settings['multi_downloading_segment'])  # chunk 并发下载限制器
         total_chunk_num = len(chunk_list)
         finished_chunk_counter = 0
         failed_flag = False
 
-        def download_chunk(uri):
+        def download_chunk(uri, chunk_time):
+            chunk_shoud_end_time = time.time() + chunk_time # 此chunk影片時間(用於下載限速 0=不限速)
             chunk_name = re.findall(r'media_b.+ts', uri)[0]  # chunk 文件名
             chunk_local_path = os.path.join(temp_dir, chunk_name)  # chunk 路径
             nonlocal failed_flag
@@ -683,6 +709,10 @@ class Anime:
             if self.realtime_show_file_size:
                 sys.stdout.write('\r正在下載: sn=' + str(self._sn) + ' ' + filename + ' ' + str(progress_rate) + '%  ')
                 sys.stdout.flush()
+            
+            # 下載限速
+            while time.time() < chunk_shoud_end_time:
+                time.sleep(0.1)
             limiter.release()
 
         if self.realtime_show_file_size:
@@ -694,8 +724,10 @@ class Anime:
 
         chunk_tasks_list = []
         for chunk in chunk_list:
-            chunk_uri = url_path + '/' + chunk
-            task = threading.Thread(target=download_chunk, args=(chunk_uri,))
+            chunk_uri = url_path + '/' + chunk['ts_name']
+            sim_watching_speed = float(self._settings['simulator_watching_speed']) if self._settings['simulator_human_watching'] else 0
+            chunk_time = chunk['ts_time']/sim_watching_speed if self._settings['simulator_human_watching'] else 0
+            task = threading.Thread(target=download_chunk, args=(chunk_uri, chunk_time))
             chunk_tasks_list.append(task)
             task.daemon = True
             limiter.acquire()
@@ -716,9 +748,9 @@ class Anime:
         # replace('\\', '\\\\') 为转义win路径
         m3u8_text_local_version = m3u8_text.replace(original_key_uri, os.path.join(temp_dir, 'key.m3u8key')).replace('\\', '\\\\')
         for chunk in chunk_list:
-            chunk_filename = re.findall(r'media_b.+ts', chunk)[0]  # chunk 文件名
+            chunk_filename = re.findall(r'media_b.+ts', chunk['ts_name'])[0]  # chunk 文件名
             chunk_path = os.path.join(temp_dir, chunk_filename).replace('\\', '\\\\')  # chunk 本地路径
-            m3u8_text_local_version = m3u8_text_local_version.replace(chunk, chunk_path)
+            m3u8_text_local_version = m3u8_text_local_version.replace(chunk['ts_name'], chunk_path)
         with open(m3u8_path, 'w', encoding='utf-8') as f:  # 保存本地化的 m3u8
             f.write(m3u8_text_local_version)
 
@@ -983,6 +1015,11 @@ class Anime:
         # 解析完成, 开始下载
         Config.tasks_progress_rate[int(self._sn)]['status'] = '正在下載'
         Config.tasks_progress_rate[int(self._sn)]['filename'] = self.get_filename()
+
+        # 設定模擬人類觀看速度時，強制開啟分段下載，並設定分段併發數為1
+        if self._settings['simulator_human_watching']:
+            self._settings['multi_downloading_segment'] = 1
+            self._settings['segment_download_mode'] = True
 
         if self._settings['segment_download_mode']:
             self.__segment_download_mode(resolution)

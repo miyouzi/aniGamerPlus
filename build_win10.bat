@@ -3,22 +3,20 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 set "EXE_OUT=aniGamerPlus.exe"
-set "DIST_DIR=dist"
-set "DIST_EXE=%DIST_DIR%\%EXE_OUT%"
 set "ZIP_NAME=aniGamerPlus_windows_x64.zip"
 set "PIPY="
 
-echo [build_win10] Win10 packaging: PyInstaller exe in %DIST_DIR%\ + Release-style zip [%ZIP_NAME%]
-echo [build_win10] matches .github/workflows (Python-build / Release-build); exe not at repo root (暫時)
+echo [build_win10] Build Win10: %EXE_OUT% + dist\%ZIP_NAME%
+echo [build_win10] cleaning build/dist contents, exe in project root ^(upstream CI distpath^)
 taskkill /F /IM "%EXE_OUT%" /T >nul 2>&1
 
 if not exist "build" mkdir "build" 2>nul
+if not exist "dist" mkdir "dist" 2>nul
 call :clean_dir_contents "build"
-
-if not exist "%DIST_DIR%\" mkdir "%DIST_DIR%" 2>nul
-if exist "%DIST_EXE%" (
-  attrib -r "%DIST_EXE%" >nul 2>&1
-  del /f /q "%DIST_EXE%" >nul 2>&1
+call :clean_dir_contents "dist"
+if exist "%EXE_OUT%" (
+  attrib -r "%EXE_OUT%" >nul 2>&1
+  del /f /q "%EXE_OUT%" >nul 2>&1
 )
 
 if not exist "%CD%\Dashboard\static\img\aniGamerPlus.ico" (
@@ -53,69 +51,55 @@ echo [build_win10] FAIL: pip install
 goto :end_fail
 :after_pip
 
-echo [build_win10] PyInstaller output: %DIST_EXE% (add-data: %CD% ^; aniGamerPlus/^)
-REM Same onefile flags as CI: Release-build.yml / Python-build.yml (distpath = dist\)
-%PIPY% -m PyInstaller --noconfirm --distpath "%CD%\%DIST_DIR%" --onefile --console --icon "%CD%\Dashboard\static\img\aniGamerPlus.ico" --clean --add-data "%CD%;aniGamerPlus/" "%CD%\aniGamerPlus.py"
+echo [build_win10] PyInstaller ^(same flags as .github/workflows Release-build / Python-build^)
+echo [build_win10] distpath: %CD%\ ^(add-data: %CD% ^; aniGamerPlus/^)
+%PIPY% -m PyInstaller --noconfirm --distpath "%CD%" --onefile --console --icon "%CD%\Dashboard\static\img\aniGamerPlus.ico" --clean --add-data "%CD%;aniGamerPlus/" "%CD%\aniGamerPlus.py"
 if errorlevel 1 (
   echo [build_win10] FAIL: PyInstaller
   goto :end_fail
 )
 
-if not exist "%DIST_EXE%" (
-  echo [build_win10] FAIL: missing %DIST_EXE%
+if not exist "%EXE_OUT%" (
+  echo [build_win10] FAIL: missing %EXE_OUT%
   goto :end_fail
 )
 
 if exist "dist\%ZIP_NAME%" del /f /q "dist\%ZIP_NAME%"
 
-echo [build_win10] archiving (Release-build.zip layout)
-REM Flat zip: stage then pack (exe 在 dist\，避免 zip 內出現 dist\ 前綴)
-set "ZIPST=%TEMP%\agp_release_%RANDOM%"
-mkdir "%ZIPST%" 2>nul
-copy /y "%DIST_EXE%" "%ZIPST%\%EXE_OUT%" >nul
-if errorlevel 1 (
-  echo [build_win10] FAIL: stage exe for zip
-  rd /s /q "%ZIPST%" 2>nul
-  goto :end_fail
+echo [build_win10] archiving ^(Release-build.yml file list: exe + Dashboard + samples + LICENSE + README^)
+
+where 7z >nul 2>&1
+if not errorlevel 1 (
+  7z a -tzip "dist\%ZIP_NAME%" "%EXE_OUT%" Dashboard DanmuTemplate.ass config-sample.json sn_list-sample.txt LICENSE README.md
+  if not errorlevel 1 if exist "dist\%ZIP_NAME%" goto :zip_ok
 )
-xcopy "Dashboard" "%ZIPST%\Dashboard\" /E /I /Y /Q >nul
-copy /y "DanmuTemplate.ass" "%ZIPST%\" >nul
-copy /y "config-sample.json" "%ZIPST%\" >nul
-copy /y "sn_list-sample.txt" "%ZIPST%\" >nul
-copy /y "LICENSE" "%ZIPST%\" >nul
-copy /y "README.md" "%ZIPST%\" >nul
 
 where tar >nul 2>&1
 if not errorlevel 1 (
-  tar -caf "dist\%ZIP_NAME%" -C "%ZIPST%" . 2>nul
+  tar -caf "dist\%ZIP_NAME%" "%EXE_OUT%" Dashboard DanmuTemplate.ass config-sample.json sn_list-sample.txt LICENSE README.md
+  if not errorlevel 1 if exist "dist\%ZIP_NAME%" goto :zip_ok
 )
-if exist "dist\%ZIP_NAME%" goto :zip_done_staging
 
-powershell -NoProfile -Command "Get-ChildItem -LiteralPath '%ZIPST%' | Compress-Archive -DestinationPath '%CD%\dist\%ZIP_NAME%' -Force"
+powershell -NoProfile -Command "Compress-Archive -LiteralPath '%CD%\%EXE_OUT%','%CD%\Dashboard','%CD%\DanmuTemplate.ass','%CD%\config-sample.json','%CD%\sn_list-sample.txt','%CD%\LICENSE','%CD%\README.md' -DestinationPath '%CD%\dist\%ZIP_NAME%' -Force"
 if errorlevel 1 (
-  echo [build_win10] WARN: exe OK but zip failed; install tar or use PS 5+ Compress-Archive
-  echo [build_win10] OK: %CD%\%DIST_EXE%
-  rd /s /q "%ZIPST%" 2>nul
+  echo [build_win10] WARN: exe OK but zip failed^; install 7-Zip ^(7z^) or use Windows tar / PS 5+ Compress-Archive
+  echo [build_win10] OK: %CD%\%EXE_OUT%
+  goto :end_ok
+)
+if not exist "dist\%ZIP_NAME%" (
+  echo [build_win10] WARN: exe OK but missing dist\%ZIP_NAME%
+  echo [build_win10] OK: %CD%\%EXE_OUT%
   goto :end_ok
 )
 
-:zip_done_staging
-rd /s /q "%ZIPST%" 2>nul
-
-if exist "dist\%ZIP_NAME%" goto :zip_ok
-
-echo [build_win10] WARN: exe OK but missing dist\%ZIP_NAME%
-echo [build_win10] OK: %CD%\%DIST_EXE%
-goto :end_ok
-
 :zip_ok
-echo [build_win10] OK: %CD%\%DIST_EXE%
+echo [build_win10] OK: %CD%\%EXE_OUT%
 echo [build_win10] OK: %CD%\dist\%ZIP_NAME%
 goto :end_ok
 
 :find_python
 set "PIPY="
-for %%V in (3.9 3.8 3.11 3.10 3.12 3.13 3.14) do (
+for %%V in (3.8 3.9 3.10 3.11 3.12 3.13 3.14) do (
   where py >nul 2>&1
   if not errorlevel 1 (
     py -%%V -c "import sys; assert sys.version_info>=(3,8)" 2>nul
@@ -141,7 +125,7 @@ if not errorlevel 1 (
     goto :find_ok
   )
 )
-echo [build_win10] FAIL: no Python 3.8+ (py launcher or python in PATH)
+echo [build_win10] FAIL: no Python 3.8+ ^(py launcher or python in PATH^)
 exit /b 1
 :find_ok
 exit /b 0

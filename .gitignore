@@ -107,9 +107,6 @@ venv.bak/
 .mypy_cache/
 
 # aniGamerPlus
-# Windows 打包產物（僅根目錄；dist/ 已由 Python 範本忽略）
-/*.exe
-/*.zip
 bangumi/
 cookies.txt
 cookie.txt

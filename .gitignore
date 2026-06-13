@@ -107,6 +107,7 @@ venv.bak/
 .mypy_cache/
 
 # aniGamerPlus
+aniGamerPlus_windows_x64.zip
 bangumi/
 cookies.txt
 cookie.txt

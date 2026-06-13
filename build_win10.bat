@@ -3,7 +3,8 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 set "EXE_OUT=aniGamerPlus.exe"
-set "ZIP_NAME=aniGamerPlus_windows_x64.zip"
+set "RELEASE_VERSION=v24.7"
+set "ZIP_NAME=aniGamerPlus_%RELEASE_VERSION%_windows_64bit.zip"
 set "PIPY="
 
 echo [build_win10] Build Win10: %EXE_OUT% + dist\%ZIP_NAME%

@@ -1,4 +1,4 @@
-var dataArrays; //使用者配置json
+var dataArrays; // 使用者設定 json
 var proxy_protocol;
 var proxy_ip;
 var proxy_port;

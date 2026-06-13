@@ -69,7 +69,7 @@ class Anime:
             if self._settings['use_proxy']:  # 使用代理
                 self.__init_proxy()
             self.__init_header()  # http header
-            self.__get_src()  # 獲取網頁, 產生 self._src (BeautifulSoup)
+            self.__get_src()  # 取得網頁, 產生 self._src (BeautifulSoup)
             self.__get_title()  # 提取頁面標題
             self.__get_bangumi_name()  # 提取本番名字
             self.__get_episode()  # 提取劇集碼，str
@@ -269,7 +269,7 @@ class Anime:
             for key in addition_header.keys():
                 current_header[key] = addition_header[key]
 
-        # 獲取頁面
+        # 取得頁面
         error_cnt = 0
         if self._cookies and not no_cookies:
             cookies = self._cookies
@@ -314,7 +314,7 @@ class Anime:
                         # 使用移動API將無法進行 cookie 重新整理, 改回 header 重新整理 cookie
                         err_print(self._sn, '嘗試切換回 Web Header 重新整理 Cookie', display=False)
                         self._req_header = self._web_header
-                        self.__request('https://ani.gamer.com.tw/')  # 再次嘗試獲取新 cookie
+                        self.__request('https://ani.gamer.com.tw/')  # 再次嘗試取得新 cookie
                     else:
                         err_print(self._sn, '收到cookie重置響應', display=False)
                         time.sleep(2)
@@ -374,7 +374,7 @@ class Anime:
             return self.__request(req, no_cookies, show_fail, max_retry, addition_header, use_pyhttpx).json()
 
     def __get_m3u8_dict(self):
-        # m3u8獲取模組參考自 https://github.com/c0re100/BahamutAnimeDownloader
+        # m3u8 取得模組參考自 https://github.com/c0re100/BahamutAnimeDownloader
         def get_device_id():
             req = 'https://ani.gamer.com.tw/ajax/getdeviceid.php'
             self._device_id = self.__request_json(req)['deviceid']
@@ -486,7 +486,7 @@ class Anime:
             unlock()
 
         # 收到錯誤反饋
-        # 可能是限制級動畫要求登陸
+        # 可能是限制級動畫要求登入
         if 'error' in user_info.keys():
             msg = '《' + self._title + '》 '
             msg = msg + 'code=' + str(user_info['error']['code']) + ' message: ' + user_info['error']['message']
@@ -507,12 +507,12 @@ class Anime:
             else:
                 ad_time = self._settings['ads_time']
 
-            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP賬戶, 正在等待'+str(ad_time)+'s廣告時間')
+            err_print(self._sn, '正在等待', '《' + self.get_title() + '》 由於不是VIP帳戶, 正在等待'+str(ad_time)+'s廣告時間')
             start_ad()
             time.sleep(ad_time)
             skip_ad()
         else:
-            err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP賬戶, 立即下載')
+            err_print(self._sn, '開始下載', '《' + self.get_title() + '》 識別到VIP帳戶, 立即下載')
 
         if not self._settings['use_mobile_api']:
             video_start()
@@ -686,7 +686,7 @@ class Anime:
             limiter.release()
 
         if self.realtime_show_file_size:
-            # 是否實時顯示檔案大小, 設計僅 cui 下載單個檔案或執行緒數=1時適用
+            # 是否即時顯示檔案大小, 設計僅 cui 下載單個檔案或執行緒數=1時適用
             sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
             sys.stdout.flush()
         else:
@@ -725,7 +725,7 @@ class Anime:
         if self.realtime_show_file_size:
             sys.stdout.write('\n')
             sys.stdout.flush()
-        err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合並……')
+        err_print(self._sn, '下載狀態', filename + ' 下載完成, 正在解密合併……')
         Config.tasks_progress_rate[int(self._sn)]['status'] = '下載完成'
 
         # 構造 ffmpeg 命令
@@ -752,7 +752,7 @@ class Anime:
         # 記錄檔案大小，單位為 MB
         self.video_size = int(os.path.getsize(merging_file) / float(1024 * 1024))
         # 重新命名
-        err_print(self._sn, '下載狀態', filename + ' 解密合並完成, 本集 ' + str(self.video_size) + 'MB, 正在移至番劇目錄……')
+        err_print(self._sn, '下載狀態', filename + ' 解密合併完成, 本集 ' + str(self.video_size) + 'MB, 正在移至番劇目錄……')
         if os.path.exists(output_file):
             os.remove(output_file)
 
@@ -795,7 +795,7 @@ class Anime:
 
         def check_ffmpeg_alive():
             # 應對ffmpeg卡死, 資源限速等，若 1min 中內檔案大小沒有增加超過 3M, 則判定卡死
-            if self.realtime_show_file_size:  # 是否實時顯示檔案大小, 設計僅 cui 下載單個檔案或執行緒數=1時適用
+            if self.realtime_show_file_size:  # 是否即時顯示檔案大小, 設計僅 cui 下載單個檔案或執行緒數=1時適用
                 sys.stdout.write('正在下載: sn=' + str(self._sn) + ' ' + filename)
                 sys.stdout.flush()
             else:
@@ -807,7 +807,7 @@ class Anime:
             while run_ffmpeg.poll() is None:
 
                 if self.realtime_show_file_size:
-                    # 實時顯示檔案大小
+                    # 即時顯示檔案大小
                     if os.path.exists(downloading_file):
                         size = os.path.getsize(downloading_file)
                         size = size / float(1024 * 1024)
@@ -833,7 +833,7 @@ class Anime:
                 time_counter = time_counter + 1
 
         ffmpeg_checker = threading.Thread(target=check_ffmpeg_alive)  # 檢查執行緒
-        ffmpeg_checker.daemon = True  # 如果 Anime 執行緒被 kill, 檢查程序也應該結束
+        ffmpeg_checker.daemon = True  # 如果 Anime 執行緒被 kill, 檢查執行緒也應該結束
         ffmpeg_checker.start()
         run = run_ffmpeg.communicate()
         return_str = str(run[1])
@@ -892,10 +892,10 @@ class Anime:
         Config.tasks_progress_rate[int(self._sn)] = {'rate': 0, 'filename': '《'+self.get_title()+'》', 'status': '正在解析'}
 
         try:
-            self.__get_m3u8_dict()  # 獲取 m3u8 列表
+            self.__get_m3u8_dict()  # 取得 m3u8 列表
         except TryTooManyTimeError:
-            # 如果在獲取 m3u8 過程中發生意外, 則取消此次下載
-            err_print(self._sn, '下載狀態', '獲取 m3u8 失敗!', status=1)
+            # 如果在取得 m3u8 過程中發生意外, 則取消此次下載
+            err_print(self._sn, '下載狀態', '取得 m3u8 失敗!', status=1)
             self.video_size = 0
             return
 
@@ -1112,7 +1112,7 @@ class Anime:
             while err_counter <= 3:
                 try:
                     ftp.connect(self._settings['ftp']['server'], self._settings['ftp']['port'])  # 連線 FTP
-                    ftp.login(self._settings['ftp']['user'], self._settings['ftp']['pwd'])  # 登陸
+                    ftp.login(self._settings['ftp']['user'], self._settings['ftp']['pwd'])  # 登入
                     connect_flag = True
                     break
                 except ftplib.error_temp as e:
@@ -1154,7 +1154,7 @@ class Anime:
                         ftp.cwd(bangumi_tag)
                     except ftplib.error_perm as e:
                         if show_err:
-                            err_print(self._sn, 'FTP狀態', '建立目錄番劇目錄時發生異常, 你可能沒有許可權建立目錄: ' + str(e), status=1)
+                            err_print(self._sn, 'FTP狀態', '建立目錄番劇目錄時發生異常, 你可能沒有權限建立目錄: ' + str(e), status=1)
 
             # 歸類番劇
             ftp_bangumi_dir = Config.legalize_filename(self._bangumi_name)  # 保證合法
@@ -1166,7 +1166,7 @@ class Anime:
                     ftp.cwd(ftp_bangumi_dir)
                 except ftplib.error_perm as e:
                     if show_err:
-                        detail = '你可能沒有許可權建立目錄(用於分類番劇), 影片檔案將會直接上傳, 收到異常: ' + str(e)
+                        detail = '你可能沒有權限建立目錄(用於分類番劇), 影片檔案將會直接上傳, 收到異常: ' + str(e)
                         err_print(self._sn, 'FTP狀態', detail, status=1)
 
             # 刪除舊的臨時資料夾
@@ -1178,7 +1178,7 @@ class Anime:
             # 建立新的臨時資料夾
             # 建立臨時資料夾是因為 pure-ftpd 在續傳時會將檔名更改成不可預測的名字
             # 正常中斷傳輸會把名字改回來, 但是意外掉線不會, 為了處理這種情況
-            # 需要獲取 pure-ftpd 未知檔名的續傳快取檔案, 為了不和其他影片的快取檔案混淆, 故建立一個臨時資料夾
+            # 需要取得 pure-ftpd 未知檔名的續傳快取檔案, 為了不和其他影片的快取檔案混淆, 故建立一個臨時資料夾
             try:
                 ftp.cwd(tmp_dir)
             except ftplib.error_perm:
@@ -1297,8 +1297,8 @@ class Anime:
                 if remote_size is None:
                     err_print(self._sn, 'FTP狀態', 'remote_size is None')
                     remote_size = 0
-                # 遠端檔案大小獲取失敗, 可能檔案不存在或者抽風
-                # 那上面獲取遠端位元組數將會是0, 導致重新下載, 那麼此時應該清空快取目錄下的檔案
+                # 遠端檔案大小取得失敗, 可能檔案不存在或者抽風
+                # 那上面取得遠端位元組數將會是0, 導致重新下載, 那麼此時應該清空快取目錄下的檔案
                 # 避免後續找錯檔案續傳
                 if remote_size == 0:
                     del_all_files()

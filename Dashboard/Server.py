@@ -46,7 +46,7 @@ handler = TimedRotatingFileHandler(filename=web_log_path, when='midnight', backu
 handler.suffix = '%Y-%m-%d.log'
 handler.extMatch = re.compile(r'^\d{4}-\d{2}-\d{2}.log')
 logger.addHandler(handler)
-logger.propagate = False  # 不在控制臺上輸出
+logger.propagate = False  # 不在控制面板上輸出
 
 # websocket鑑權需要的 token, 隨機一個 32 位初始 token
 websocket_token = ''.join(random.sample(string.ascii_letters + string.digits, 32))
@@ -115,7 +115,7 @@ def recv_config():
     for id in id_list:
         new_settings[id] = data[id]  # 更新配置
     Config.write_settings(new_settings)  # 儲存配置
-    err_print(0, 'Dashboard', '透過 Web 控制臺更新了 config.json', no_sn=True, status=2)
+    err_print(0, 'Dashboard', '透過 Web 控制面板更新了 config.json', no_sn=True, status=2)
     return '{"status":"200"}'
 
 
@@ -152,7 +152,7 @@ def manual_task():
         cui(data['sn'], resolution, mode, thread_limit, [], classify=data['classify'], realtime_show=False, cui_danmu=data['danmu'])
 
     server = threading.Thread(target=run_cui)
-    err_print(0, 'Dashboard', '透過 Web 控制臺下達了手動任務', no_sn=True, status=2)
+    err_print(0, 'Dashboard', '透過 Web 控制面板下達了手動任務', no_sn=True, status=2)
     server.start()  # 啟動手動任務執行緒
     return '{"status":"200"}'
 
@@ -199,7 +199,7 @@ def tasks_progress(ws):
 def set_sn_list():
     data = request.get_data(as_text=True)
     Config.write_sn_list(data)
-    err_print(0, 'Dashboard', '透過 Web 控制臺更新了 sn_list', no_sn=True, status=2)
+    err_print(0, 'Dashboard', '透過 Web 控制面板更新了 sn_list', no_sn=True, status=2)
     return '{"status":"200"}'
 
 

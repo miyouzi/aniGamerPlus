@@ -91,7 +91,7 @@ docker run -td --name anigamerplus \
 
 ## 鳴謝
 
-本專案m3u8獲取模組參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)
+本專案 m3u8 取得模組參考自 [BahamutAnimeDownloader](https://github.com/c0re100/BahamutAnimeDownloader)
 
 ## 第三方拓展工具
  - [aniGamerPlus-swapHistorySnList](https://github.com/chumicat/aniGamerPlus-swapHistorySnList)
@@ -110,18 +110,18 @@ docker run -td --name anigamerplus \
     * [自動下載配置 sn_list.txt](#sn_listtxt)
     * [任務狀態資料庫 aniGamer.db](#anigamerdb)
 * [命令列使用](#命令列使用)
-* [Web控制臺使用](#Dashboard)
+* [Web控制面板使用](#Dashboard)
 
 ## 特性
 
- - 支援多綫程下載
+ - 支援多執行緒下載
  - 支援cookie，支援下載 1080P
  - 下載模式有僅下載最新一集, 下載最新上傳, 下載全部可選.
  - 自訂檢查更新間隔時間
  - 自訂番劇下載目錄
  - 自訂下載檔名字首字尾及是否新增清晰度
  - 下載失敗, 下載過慢自動重啟任務
- - 支援使用FTP上傳至伺服器, 支援斷點續傳(適配Pure-Ftpd), 掉綫重傳, 支援 FTP over TLS
+ - 支援使用FTP上傳至伺服器, 支援斷點續傳(適配Pure-Ftpd), 掉線重傳, 支援 FTP over TLS
  - 檢查程式更新功能
  - 支援新番分類
  - v6.0 開始支援cookie自動重新整理
@@ -129,14 +129,14 @@ docker run -td --name anigamerplus \
  - v9.0 開始支援記錄日誌
  - v9.0 開始自動下載支援自訂番劇名
  - v16 支援向酷Q推送下載完成訊息
- - v16 支援將影片 metadata 前置, 此功能會在綫觀看時更快播放
- - v20 上綫Web控制面板
+ - v16 支援將影片 metadata 前置, 此功能會在線上觀看時更快播放
+ - v20 上線Web控制面板
  - v20.2 支援命令列下載時同時下載彈幕
 
 ## 任務列表
  - [x] 下載使用代理
  - [x] 使用ftp上傳至遠端伺服器
- - [x] Web控制臺(持續完善中)
+ - [x] Web控制面板(持續完善中)
 
 ## 配置說明
 
@@ -157,8 +157,8 @@ docker run -td --name anigamerplus \
     "parse_sn_cd": 3,  // sn 頁面(即播放介面)解析冷卻時間(秒)
     "download_resolution": "1080",  // 下載選取清晰度, 若該清晰度不存在將會選取最近可用清晰度, 可選 360 480 540 576 720 1080
     "lock_resolution": false,  // 鎖定清晰度, 如果指定清晰度不存在, 則放棄下載
-    "only_use_vip": false,  // 鎖定 VIP 賬號下載
-    "default_download_mode": "latest",  // 預設下載模式, 另一可選引數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
+    "only_use_vip": false,  // 鎖定 VIP 帳號下載
+    "default_download_mode": "latest",  // 預設下載模式, 另一可選參數為 all 和 largest-sn. latest 為僅下載最後一集, all 下載番劇全部劇集, largest-sn 下載最近上傳的一集
     "use_copyfile_method": false,  // 轉移影片至番劇資料夾時使用複製方法, 適用於儲存到 rclone 掛載盤的情況
     "multi-thread": 1,  // 最大並發下載數, 最高為 5, 超過將重置為 5
     "multi_upload": 3,  // 最大並發上傳數
@@ -172,7 +172,7 @@ docker run -td --name anigamerplus \
     "customized_video_filename_suffix": "",  // 影片檔名字尾
     "video_filename_extension": "mp4",  // 影片檔副檔名, ts, mov, mkv 經過測試可以使用, 但 flv 不支援, 非 mp4 副檔名 faststart_movflags 將強制為 false
     "zerofill": 1,  // 劇集名補零, 填寫補足位數, 例: 填寫 2 劇集名為 01, 填寫 3 劇集名為 001
-    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  //  請求UA, 需要和獲取cookie的瀏覽器相同
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36",  //  請求UA, 需要和取得 cookie 的瀏覽器相同
     "use_proxy": false,  // 代理開關
     "proxy": {"http://user:passwd@example.com:1000"},  // 代理配置
     "upload_to_server": false,  // 上傳功能開關
@@ -182,11 +182,11 @@ docker run -td --name anigamerplus \
         "user": "",  // 使用者名
         "pwd": "",  // 密碼
         "tls": true,  // 是否是 FTP over TLS
-        "cwd": "",  // 登陸後首先進入的目錄
+        "cwd": "",  // 登入後首先進入的目錄
         "show_error_detail": false,  // 是否顯示細節錯誤資訊
         "max_retry_num": 15  // 最大重傳數, 支援續傳
     },
-    "user_command": "shutdown -s -t 60"  // 命令列模式使用 -u 引數有效, 在命令列模式下完成所有任務後執行的命令
+    "user_command": "shutdown -s -t 60"  // 命令列模式使用 -u 參數有效, 在命令列模式下完成所有任務後執行的命令
     "coolq_notify": false,  // 是否向酷Q推送下載完成訊息
     "coolq_settings": {
         "msg_argument_name": "message",
@@ -197,8 +197,8 @@ docker run -td --name anigamerplus \
         ]
     },
     "plex_naming": false, // 適配PLEX命名規則
-    "faststart_movflags": false,  // 是否將影片 metadata 前置, 啟用此功能時在綫觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
-    "audio_language": false,  // 是否新增音軌標簽
+    "faststart_movflags": false,  // 是否將影片 metadata 前置, 啟用此功能時在線上觀看會更快播放, 僅在 video_filename_extension 為 mp4 時有效
+    "audio_language": false,  // 是否新增音軌標籤
     "use_mobile_api": false,  // 使用移動端API進行影片解析
     "danmu": false, // 是否下載彈幕(已包含動畫瘋內建的關鍵字過濾)
     "danmu_ban_words": [], // 額外過濾彈幕關鍵字(支援python的正規表示式、英文不區分大小寫)
@@ -207,7 +207,7 @@ docker run -td --name anigamerplus \
     "read_config_when_checking_update": true,  // 是否在檢查更新時讀取配置檔案, 開啟後對配置檔案的更改將會在下次檢查時更新生效而不用重啟程式
     "ads_time": 25,  // 非VIP廣告等待時間, 如果等待時間不足, 程式會自行追加時間 (最大20秒)
     "mobile_ads_time": 25  // 使用移動端API解析的廣告等待時間
-    "use_dashboard": true  // Web 控制臺開關
+    "use_dashboard": true  // Web 控制面板開關
     "dashboard": {  // Web控制面板配置
         "host": "127.0.0.1",  // 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
         "port": 5000,  // 監聽連接埠
@@ -228,7 +228,7 @@ docker run -td --name anigamerplus \
 ### 使用代理
 aniGamerPlus本身支援使用單個```http```或```https```或```socks5```(v12開始支援)代理.
 
-**你可以在 Web 控制臺設定代理, 如下圖所示:**
+**你可以在 Web 控制面板設定代理, 如下圖所示:**
 ![](screenshot/Dashboard_proxy.png)
 
 **或者手動編輯`config.json`檔案的`proxy`欄位, 請按下方格式填入:**
@@ -256,7 +256,7 @@ socks5h://127.0.0.1:1483
 
 ### 下載模式說明
 
-v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀取 m3u8 檔案, 下載 key 及所有影片分段至臨時資料夾, 再使用 ffmpeg 解密合並.
+v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀取 m3u8 檔案, 下載 key 及所有影片分段至臨時資料夾, 再使用 ffmpeg 解密合併.
 
 **分段下載模式特點:**
 
@@ -264,52 +264,52 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 - 個別分段下載失敗會自動重試, 最多重試8次
 - aniGamerPlus本身消耗的記憶體將略高於舊下載模式
 - aniGamerPlus本身效能消耗將會略高
-- 短時間內(解密合並階段)將會佔用2倍影片大小的磁碟空間
-- 命令列模式下下載單個影片時, 實時顯示已下載分段數佔總分段數百分比
+- 短時間內(解密合併階段)將會佔用2倍影片大小的磁碟空間
+- 命令列模式下下載單個影片時, 即時顯示已下載分段數佔總分段數百分比
 
-舊下載模式, 即 ffmpeg 下載模式的工作流程: 直接將 m3u8 檔案交給 ffmpeg, 下載解密合並全由 ffmpeg 完成.
+舊下載模式, 即 ffmpeg 下載模式的工作流程: 直接將 m3u8 檔案交給 ffmpeg, 下載解密合併全由 ffmpeg 完成.
 
 **ffmpeg下載模式特點:**
 
 - 一個分段下載失敗即判斷為下載失敗
 - 在下載過程中可能出現 ffmpeg 卡死的情況
 - 不會生成臨時資料夾
-- 命令列模式下下載單個影片時, 實時顯示已下載的大小
+- 命令列模式下下載單個影片時, 即時顯示已下載的大小
 
 
 除非你通往動畫瘋的網路足夠穩, 否則建議使用分段下載模式, 配置 ```segment_download_mode``` 為 ```true``` 開啟分段下載模式
 
-儅開啟分段下載模式時, 配置 ```multi_downloading_segment``` 將有效, 這個值指定一個影片同時最多下載幾個分段, 一般設定在```3```左右速度就足夠快了
+當開啟分段下載模式時, 配置 ```multi_downloading_segment``` 將有效, 這個值指定一個影片同時最多下載幾個分段, 一般設定在```3```左右速度就足夠快了
 
 ### cookie.txt
 
 1.  使用者cookie檔案, 將瀏覽器的cookie欄位複製, 以**cookie.txt**為檔名儲存在程式目錄下
-2.  將獲取cookie的瀏覽器UA, 寫入```config.json```的```ua```專案 （重要:warning:）
+2.  將取得 cookie 的瀏覽器 UA, 寫入```config.json```的```ua```欄位 （重要:warning:）
 
 **v6.0版本開始支援自動重新整理cookie, 為了不與正常使用的cookie衝突, 請從使用瀏覽器的無痕模式取得僅供aniGamerPlus使用的cookie**
 
-取得cookie後, 登陸狀態會顯示在 **https://home.gamer.com.tw/login_devices.php** , 你可以從這裡點選```退出```來失效你的cookie, 其顯示的資訊來自與你取得cookie的瀏覽器(UA)
+取得 cookie 後, 登入狀態會顯示在 **https://home.gamer.com.tw/login_devices.php** , 你可以從這裡點選```退出```來失效你的 cookie, 其顯示的資訊來自你取得 cookie 的瀏覽器(UA)
 
 使用cookie後所抓取的影片記錄會記錄在你的[觀看紀錄](https://ani.gamer.com.tw/viewList.php)中
 
-:warning: **登陸時請勾選"保持登入狀態"**
+:warning: **登入時請勾選"保持登入狀態"**
 
-#### 使用Chrome舉例如何獲取 Cookie:
+#### 使用 Chrome 取得 Cookie 範例
 
- - 開啟Chrome的**無痕模式**, 登陸動畫瘋, 記得勾選**保持登入狀態**
+ - 開啟Chrome的**無痕模式**, 登入動畫瘋, 記得勾選**保持登入狀態**
 
- - 按 F12 調出開發者工具, 前往動畫瘋首頁, 切換到 Network 標簽, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
+ - 按 F12 調出開發者工具, 前往動畫瘋首頁, 切換到 Network 標籤, 在下方選中 "ani.gamer.com.tw" 在右側即可看到 Cookie, 如圖:
     ![](screenshot/WhereIsCookie.png)
 
  - 在程式所在目錄新建一個名為**cookie.txt**的文字檔案, 開啟將上面的Cookie複製貼上儲存即可
     ![](screenshot/CookiesFormat.png)
 
-#### （推薦自動獲取UA）透過獲取Web控制臺如何獲取 UA:
+#### （推薦）透過 Web 控制面板取得 UA
 
- - 開啟 Web 控制臺功能（預設開啟），開啟控制臺，找到`取得當前UA`按鈕，點選後會自動填入當前瀏覽器UA，然後儲存即可
+ - 開啟 Web 控制面板功能（預設開啟），開啟控制面板，找到`取得當前UA`按鈕，點選後會自動填入當前瀏覽器UA，然後儲存即可
     ![](screenshot/set_ua_via_dashboard.png)
 
-#### （手動方式獲取UA）使用Chrome舉例如何獲取 UA:
+#### （手動）使用 Chrome 取得 UA 範例
 
  - 訪問 **https://developers.whatismybrowser.com/useragents/parse/?analyse-my-user-agent=yes** 即可檢視該瀏覽器 UA
  - 如果此網址失效，以下為可查詢UA的備用網址：
@@ -317,7 +317,7 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
     - http://service.spiritsoft.cn/ua.html
     ![](screenshot/how_to_get_my_ua.png)
 
- - 將 UA 複製貼上到```config.json```的```ua```專案
+ - 將 UA 複製貼上到```config.json```的```ua```欄位
     ![](screenshot/how_to_use_my_ua.png)
 
 ### sn_list.txt
@@ -326,13 +326,13 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
 
 可以對個別番劇配置下載模式, 未配置下載模式將會使用**config.json**定義的預設下載模式
 
-支援注釋 **#** 後面的所有字元程式均不會讀取, 可以標記番劇名
+支援註解 **#** 後面的所有字元程式均不會讀取, 可以標記番劇名
 
 模式僅支援在 **latest**, **all**, **largest-sn** 三個中選一個, 錯詞及其他詞將會重置為**config.json**中定義的預設下載模式
 
 格式:
 ```
-sn碼 下載模式(可空) #注釋(可空)
+sn碼 下載模式(可空) #註解(可空)
 ```
 
 範例:
@@ -360,7 +360,7 @@ sn碼 下載模式(可空) #注釋(可空)
 ```
 上面表示將會把**ENDRO**和**上野**放在**2019一月番**資料夾裡, 將**刀劍**放在**2019十月番**資料夾裡, **動物朋友** 不分類, 直接放在番劇目錄下
 
-自 v9.0 開始, 支援重新命名番劇, 在注釋之前, 模式之後, 用 ```<``` 與 ```>``` 將自訂的番劇名框起來, 下載時將會使用這個名字作為番劇目錄名
+自 v9.0 開始, 支援重新命名番劇, 在註解之前, 模式之後, 用 ```<``` 與 ```>``` 將自訂的番劇名框起來, 下載時將會使用這個名字作為番劇目錄名
 
 PS: 連續多個空格將會被替換為單個空格, 和模式需要間隔一個空格
 
@@ -404,7 +404,7 @@ sqlite3資料庫, 可以使用 [SQLite Expert](http://www.sqliteexpert.com/) 等
 
 **EXE 檔的 aniGamerPlus.exe 也是支援命令列使用的, 將下方演示的 ```python3 aniGamerPlus.py``` 換成 ```aniGamerPlus``` 就行**
 
-引數:
+參數:
 ```
 >python3 aniGamerPlus.py -h
 當前aniGamerPlus版本: v24.7
@@ -449,11 +449,11 @@ optional arguments:
 
     - **range** 下載此番指定的劇集
 
-    - **list** 讀取 sn_list 中的內容進行下載, 並會將任務狀態記錄在資料庫中, 重啟自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法透過```-r```引數指定解析度**
+    - **list** 讀取 sn_list 中的內容進行下載, 並會將任務狀態記錄在資料庫中, 重啟自動下載未完成的集數, 該功能用於單次大量下載. **此模式無法透過```-r```參數指定解析度**
 
-    - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法透過```-r```引數指定解析度**
+    - **sn-list** 讀取 sn_list 中的指定sn進行下載, sn後面的模式設定會被忽略，僅下載單個sn, 並會將任務狀態記錄在資料庫中. **此模式無法透過```-r```參數指定解析度**
 
-    - **sn-range** 下載此番據指定sn範圍的劇集, 對於劇集名稱不是正整數的番劇, 可以用此模式
+    - **sn-range** 下載此番劇指定sn範圍的劇集, 對於劇集名稱不是正整數的番劇, 可以用此模式
     
     - **db** 更新資料庫中所有動畫的彈幕
 
@@ -463,7 +463,7 @@ optional arguments:
 
  - **-n** 不建立番劇資料夾
 
- - **-i** 僅顯示影片資訊, 當為```list```模式時, 會獲取 sn_list 中的單個 sn 的資訊.
+ - **-i** 僅顯示影片資訊, 當為```list```模式時, 會取得 sn_list 中的單個 sn 的資訊.
 
  - **-u** 所有任務完成後執行使用者命令 (配置在```config.json```的```user_command```中),  用於實現下載完成後關機等操作
 
@@ -474,7 +474,7 @@ optional arguments:
 
     - **在 ```multi``` 模式下, 用於指定多個sn**
 
-    - ```-e``` 引數優先於 ```-m``` 引數, 若使用 ```-e``` 引數時不指定模式, 則預設為 ```range``` 模式
+    - ```-e``` 參數優先於 ```-m``` 參數, 若使用 ```-e``` 參數時不指定模式, 則預設為 ```range``` 模式
 
     - 若使用 ```-m range``` 則必須使用 ```-e``` 指定需要下載的劇集
 
@@ -517,21 +517,21 @@ optional arguments:
 
 ## Dashboard
 
-在 v20 版本首次啟用了 Web 控制臺, 相關配置在 ```config.json``` 的 ```dashboard``` 專案中.
+在 v20 版本首次啟用了 Web 控制面板, 相關配置在 ```config.json``` 的 ```dashboard``` 區段中.
 
-Web 控制臺預設啟用, 預設埠 5000, 支援 SSL (https), 證書儲存在 Dashboard\sslkey, 如果有需要可以自行替換證書.
+Web 控制面板預設啟用, 預設埠 5000, 支援 SSL (https), 證書儲存在 Dashboard\sslkey, 如果有需要可以自行替換證書.
 
 如果想開放外部訪問, 可以將 ```dashboard``` 配置中的 ```host``` 設定成 ```0.0.0.0```
 
 支援使用 BasicAuth 進行認證, **注意**:warning: **使用者密碼是明文傳輸的, 如有需要建議同時啟用 SSL**.
 
-支援在 Web 控制臺下達手動任務(即命令列模式啟動的任務), 為了控制臺輸出工整, 控制臺不會顯示下載進度.
+支援在 Web 控制面板下達手動任務(即命令列模式啟動的任務), 為了控制面板輸出工整, 控制面板不會顯示下載進度.
 
-**目前控制臺僅能配置部分主要配置, 另外Web任務進度顯示等其他擴充套件功能正在銳意製作中……**
+**目前控制面板僅能配置部分主要配置, 另外Web任務進度顯示等其他擴充功能正在銳意製作中……**
 
 相關配置:
 ```
-"use_dashboard": true  # Web 控制臺開關
+"use_dashboard": true  # Web 控制面板開關
 # Web控制面板配置
 "dashboard": {
     "host": "127.0.0.1",  # 監聽地址, 如果需要允許外部訪問, 請填寫 "0.0.0.0"
@@ -543,12 +543,12 @@ Web 控制臺預設啟用, 預設埠 5000, 支援 SSL (https), 證書儲存在 D
 }
 ```
 
-Web控制臺截圖:
+Web控制面板截圖:
  - 主介面:
     ![](screenshot/Dashboard_UI.png)
  - 手動任務:
     ![](screenshot/Dashboard_manualTask.png)
- - 在綫編輯 sn_list
+ - 在線上編輯 sn_list
     ![](screenshot/Dashboard_sn_list.png)
- - 控制臺輸出:
+ - 控制面板輸出:
     ![](screenshot/Dashboard_Console.png)

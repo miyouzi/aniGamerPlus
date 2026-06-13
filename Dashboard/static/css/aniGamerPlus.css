@@ -67,10 +67,38 @@ body {
 	margin: 0 0 1rem 0;
 }
 
-.bootstrap-switch, .bootstrap-switch .bootstrap-switch-handle-on {
+.bootstrap-switch,
+.bootstrap-switch .bootstrap-switch-handle-on {
 	border-top-left-radius: 0 !important;
 	border-bottom-left-radius: 0 !important;
 	border-color: rgba(206,212,218,1);
+}
+
+/* 開關列：標籤與開關等高、等 padding；寬度交給 bootstrap-switch JS（勿加 min-width） */
+.my-button > .input-group-prepend {
+	flex-wrap: nowrap;
+	align-items: stretch;
+}
+
+.my-button > .input-group-prepend > .bootstrap-switch {
+	flex-shrink: 0;
+	margin-left: -1px;
+}
+
+.my-button .bootstrap-switch .bootstrap-switch-handle-on,
+.my-button .bootstrap-switch .bootstrap-switch-handle-off,
+.my-button .bootstrap-switch .bootstrap-switch-label {
+	white-space: nowrap;
+	padding: 0.375rem 0.75rem;
+	font-size: 1rem;
+	line-height: 1.5;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.my-button .bootstrap-switch .bootstrap-switch-handle-on::before,
+.my-button .bootstrap-switch .bootstrap-switch-handle-off::before {
+	content: none;
 }
 
 .btn-gray {

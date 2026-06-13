@@ -223,7 +223,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         upload_limiter.acquire()  # 並發上傳限制器
         anime = build_anime(sn)
         if anime['failed']:
-            err_print(sn, '任務失敗', '從任務列隊中移除, 等待下次更新重試.', status=1)
+            err_print(sn, '任務失敗', '從任務佇列中移除, 等待下次更新重試.', status=1)
             upload_quit()
 
         # 影片資訊抓取成功
@@ -231,7 +231,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         if not os.path.exists(anime_in_db['local_file_path']):
             # 如果資料庫中記錄的檔案路徑已失效
             update_db(anime)
-            err_msg_detail = 'title=\"' + anime.get_title() + '\" 本地檔案丟失, 從任務列隊中移除, 等待下次更新重試.'
+            err_msg_detail = 'title=\"' + anime.get_title() + '\" 本地檔案丟失, 從任務佇列中移除, 等待下次更新重試.'
             err_print(sn, '上傳失敗', err_msg_detail, status=1)
             upload_quit()
 
@@ -241,7 +241,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
 
         try:
             if not anime.upload(bangumi_tag):  # 如果上傳失敗
-                err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.'
+                err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務佇列中移除, 等待下次更新重試.'
                 err_print(sn, '上傳失敗', err_msg_detail, 1)
             else:
                 update_db(anime)
@@ -261,7 +261,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         queue.pop(sn)
         processing_queue.remove(sn)
         thread_limiter.release()
-        err_print(sn, '任務失敗', '從任務列隊中移除, 等待下次更新重試.', status=1)
+        err_print(sn, '任務失敗', '從任務佇列中移除, 等待下次更新重試.', status=1)
         sys.exit(1)
 
     anime = anime['anime']
@@ -280,7 +280,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
         queue.pop(sn)
         processing_queue.remove(sn)
         thread_limiter.release()
-        err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務列隊中移除, 等待下次更新重試.'
+        err_msg_detail = 'title=\"' + anime.get_title() + '\" 從任務佇列中移除, 等待下次更新重試.'
         err_print(sn, '任務失敗', err_msg_detail, status=1)
         if int(sn) in Config.tasks_progress_rate.keys():
             del Config.tasks_progress_rate[int(sn)]  # 任務失敗, 不在監控此任務進度
@@ -299,7 +299,7 @@ def worker(sn, sn_info, realtime_show_file_size=False):
             anime.upload(bangumi_tag)  # 上傳至伺服器
         except BaseException as e:
             # 兜一下各種奇奇怪怪的錯誤
-            err_print(sn, '上傳異常', '發生未知錯誤, 從任務列隊中移除, 等待下次更新重試: ' + str(e), status=1)
+            err_print(sn, '上傳異常', '發生未知錯誤, 從任務佇列中移除, 等待下次更新重試: ' + str(e), status=1)
             err_print(sn, '上傳異常', '異常詳情:\n'+traceback.format_exc(), status=1, display=False)
             upload_quit()
 
@@ -308,8 +308,8 @@ def worker(sn, sn_info, realtime_show_file_size=False):
     # =====上傳模組結束=====
 
     download_cd.join()
-    queue.pop(sn)  # 從任務列隊中移除
-    processing_queue.remove(sn)  # 從當前任務列隊中移除 
+    queue.pop(sn)  # 從任務佇列中移除
+    processing_queue.remove(sn)  # 從當前任務佇列中移除 
     err_print(sn, '任務完成', status=2)
     
 
@@ -342,9 +342,9 @@ def check_tasks():
             for ep in episode_list:  # 遍歷劇集列表
                 try:
                     db = read_db(ep)
-                    #           未下載的   或                設定要上傳但是沒上傳的                         並且  還沒在列隊中
+                    #           未下載的   或                設定要上傳但是沒上傳的                         並且  還沒在佇列中
                     if (db['status'] == 0 or (db['remote_status'] == 0 and settings['upload_to_server'])) and ep not in queue.keys():
-                        queue[ep] = sn_dict[sn]  # 新增至下載列隊
+                        queue[ep] = sn_dict[sn]  # 新增至下載佇列
                 except IndexError:
                     # 如果資料庫中尚不存在此條記錄
                     if anime.get_sn() == ep:
@@ -356,7 +356,7 @@ def check_tasks():
                             continue
                         new_anime = new_anime['anime']
                     insert_db(new_anime)
-                    queue[ep] = sn_dict[sn]  # 新增至列隊
+                    queue[ep] = sn_dict[sn]  # 新增至佇列
         else:
             if sn_dict[sn]['mode'] == 'largest-sn':
                 # 如果使用者選擇僅下載最新上傳, download_mode = 'largest_sn', 則對 sn 進行排序
@@ -369,9 +369,9 @@ def check_tasks():
                 latest_sn = episode_list[-1]
             try:
                 db = read_db(latest_sn)
-                #           未下載的   或                設定要上傳但是沒上傳的                         並且  還沒在列隊中
+                #           未下載的   或                設定要上傳但是沒上傳的                         並且  還沒在佇列中
                 if (db['status'] == 0 or (db['remote_status'] == 0 and settings['upload_to_server'])) and latest_sn not in queue.keys():
-                    queue[latest_sn] = sn_dict[sn]  # 新增至下載列隊
+                    queue[latest_sn] = sn_dict[sn]  # 新增至下載佇列
             except IndexError:
                 # 如果資料庫中尚不存在此條記錄
                 if anime.get_sn() == latest_sn:
@@ -557,11 +557,11 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
             thread_tasks.append(task)
             task.start()
             tasks_counter = tasks_counter + 1
-            print('新增任務列隊: sn=' + str(anime_sn))
+            print('新增任務佇列: sn=' + str(anime_sn))
         if get_info:
-            print('所有查詢任務已新增至列隊, 共 '+str(tasks_counter)+' 個任務\n')
+            print('所有查詢任務已新增至佇列, 共 '+str(tasks_counter)+' 個任務\n')
         else:
-            print('所有下載任務已新增至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
+            print('所有下載任務已新增至佇列, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode == 'range':
         if get_info:
@@ -588,12 +588,12 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 a.start()
                 tasks_counter = tasks_counter + 1
                 if get_info:
-                    print('新增查詢列隊: sn=' + str(episode_dict[ep]) + ' 《' + anime.get_bangumi_name() + '》 第 ' + ep + ' 集')
+                    print('新增查詢佇列: sn=' + str(episode_dict[ep]) + ' 《' + anime.get_bangumi_name() + '》 第 ' + ep + ' 集')
                 else:
-                    print('新增任務列隊: sn='+str(episode_dict[ep])+' 《'+anime.get_bangumi_name()+'》 第 '+ep+' 集')
+                    print('新增任務佇列: sn='+str(episode_dict[ep])+' 《'+anime.get_bangumi_name()+'》 第 '+ep+' 集')
             else:
                 err_print(0, '《'+anime.get_bangumi_name()+'》 第 '+ep+' 集不存在!', status=1, no_sn=True)
-        print('所有任務已新增至列隊, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
+        print('所有任務已新增至佇列, 共 '+str(tasks_counter)+' 個任務, '+'執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode == 'sn-range':
         if get_info:
@@ -623,10 +623,10 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 a.start()
                 tasks_counter = tasks_counter + 1
                 if get_info:
-                    print('新增查詢列隊: sn=' + str(sn) + ' 《' + anime.get_bangumi_name() + '》 第 ' + episode_dict[sn] + ' 集')
+                    print('新增查詢佇列: sn=' + str(sn) + ' 《' + anime.get_bangumi_name() + '》 第 ' + episode_dict[sn] + ' 集')
                 else:
-                    print('新增任務列隊: sn='+str(sn)+' 《'+anime.get_bangumi_name()+'》 第 ' + episode_dict[sn] + ' 集')
-        print('所有任務已新增至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
+                    print('新增任務佇列: sn='+str(sn)+' 《'+anime.get_bangumi_name()+'》 第 ' + episode_dict[sn] + ' 集')
+        print('所有任務已新增至佇列, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode == 'multi':
         if get_info:
@@ -645,7 +645,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
             a.start()
             tasks_counter = tasks_counter + 1
 
-        print('所有任務已新增至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
+        print('所有任務已新增至佇列, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
 
     elif cui_download_mode in ('list', 'sn-list'):
         if get_info:
@@ -666,14 +666,14 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
             else:
                 print('當前下載模式: 單次下載sn_list.txt中的番劇\n')
 
-            check_tasks()  # 檢查更新，生成任務列隊
-            for sn in queue.keys():  # 遍歷任務列隊
+            check_tasks()  # 檢查更新，生成任務佇列
+            for sn in queue.keys():  # 遍歷任務佇列
                 processing_queue.append(sn)
                 task = threading.Thread(target=worker, args=(sn, queue[sn], realtime_show_file_size))
                 task.daemon = True
                 thread_tasks.append(task)
                 task.start()
-                err_print(sn, '加入任務列隊')
+                err_print(sn, '加入任務佇列')
             msg = '共 ' + str(len(queue)) + ' 個任務'
             err_print(0, '任務資訊', msg, no_sn=True)
             print()
@@ -692,7 +692,7 @@ def __cui(sn, cui_resolution, cui_download_mode, cui_thread_limit, ep_range,
                 else:
                     err_print(anime_db["sn"], '彈幕更新失敗', "資料庫不存在番劇名稱或影片路徑", status=1)
 
-        print('所有任務已新增至列隊, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
+        print('所有任務已新增至佇列, 共 ' + str(tasks_counter) + ' 個任務, ' + '執行緒數: ' + str(cui_thread_limit) + '\n')
 
     __kill_thread_when_ctrl_c()
     kill_gost()  # 結束 gost
@@ -737,7 +737,7 @@ def check_new_version():
 
 def __init_proxy():
     if settings['use_gost']:
-        print('使用代理連線動畫瘋, 使用擴充套件的代理協議')
+        print('使用代理連線動畫瘋, 使用非原生支援的代理協議')
         # 需要使用 gost 的情況
         # 尋找 gost
         check_gost = subprocess.Popen('gost -h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -750,7 +750,7 @@ def __init_proxy():
             else:
                 gost_path = os.path.join(working_dir, 'gost')
             if not os.path.exists(gost_path):
-                err_print(0, '當前代理使用擴充套件協議, 需要使用gost, 但是gost未找到', status=1, no_sn=True)
+                err_print(0, '當前代理使用非原生支援的代理協議, 需要使用gost, 但是gost未找到', status=1, no_sn=True)
                 raise FileNotFoundError  # 如果本地目錄下也沒有找到 gost 則丟出異常
         # 構造 gost 命令
         gost_cmd = [gost_path, '-L=:'+str(gost_port), '-F=' + settings['proxy']]  # 本地監聽連接埠（示意：34173）
@@ -908,7 +908,7 @@ if __name__ == '__main__':
             sys.exit(0)
 
         if (arg.download_mode not in ('list', 'multi', 'sn-list', 'db')) and arg.sn is None:
-            err_print(0, '引數錯誤', '非 list/multi 模式需要提供 sn ', no_sn=True, status=1)
+            err_print(0, '參數錯誤', '非 list/multi 模式需要提供 sn ', no_sn=True, status=1)
             sys.exit(1)
 
         save_dir = ''
@@ -957,7 +957,7 @@ if __name__ == '__main__':
                     if re.match(r'^\d+$', i):
                         download_episodes.append(int(i))
                 if arg.download_mode != 'sn-range':
-                    download_mode = 'range'  # 如果帶 -e 引數沒有指定 multi 模式, 則預設為 range 模式
+                    download_mode = 'range'  # 如果帶 -e 參數沒有指定 multi 模式, 則預設為 range 模式
 
             download_episodes = list(set(download_episodes))  # 去重複
             download_episodes.sort()  # 排序, 任務將會按集數順序下載
@@ -969,7 +969,7 @@ if __name__ == '__main__':
             print('未設定下載解析度, 將使用配置檔案指定的清晰度: ' + resolution + 'P')
         else:
             if arg.download_mode in ('sn-list', 'list'):
-                err_print(0,'無效引數:', 'list 及 sn-list 模式無法透過命令列指定清晰度', 1, no_sn=True, display_time=False)
+                err_print(0,'無效參數:', 'list 及 sn-list 模式無法透過命令列指定清晰度', 1, no_sn=True, display_time=False)
                 resolution = settings['download_resolution']
                 print('將使用配置檔案指定的清晰度: ' + resolution + 'P')
             else:
@@ -1028,7 +1028,7 @@ if __name__ == '__main__':
         if settings['read_config_when_checking_update']:
             settings = Config.read_settings()
         danmu = settings['danmu'] # 避免手動加入工作時，global 覆寫掉 config 的 danmu 設定
-        check_tasks()  # 檢查更新，生成任務列隊
+        check_tasks()  # 檢查更新，生成任務佇列
         new_tasks_counter = 0  # 新增任務計數器
         if queue:
             for task_sn in queue.keys():
@@ -1038,8 +1038,8 @@ if __name__ == '__main__':
                     task.start()
                     processing_queue.append(task_sn)
                     new_tasks_counter = new_tasks_counter + 1
-                    err_print(task_sn, '加入任務列隊')
-        info = '本次更新新增了 '+str(new_tasks_counter)+' 個新任務, 目前列隊中共有 ' + str(len(processing_queue)) + ' 個任務'
+                    err_print(task_sn, '加入任務佇列')
+        info = '本次更新新增了 '+str(new_tasks_counter)+' 個新任務, 目前佇列中共有 ' + str(len(processing_queue)) + ' 個任務'
         err_print(0, '更新資訊', info, no_sn=True)
         err_print(0, '更新終了', no_sn=True)
         print()

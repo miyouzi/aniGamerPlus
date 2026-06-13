@@ -29,7 +29,7 @@ max_multi_thread = 5
 max_multi_downloading_segment = 5
 tasks_progress_rate = {}  # 儲存任務進度, 供面板使用,
 # 格式: {sn: {'rate': 任務進度百分比(float), 'status': 任務狀態, 'filename': 檔名} }
-# 任務狀態有:  '正在下載' '正在解密合並' '正在移至番劇目錄' '任務失敗, 等待重啟' '等待下載'
+# 任務狀態有:  '正在下載' '正在解密合併' '正在移至番劇目錄' '任務失敗, 等待重啟' '等待下載'
 
 
 def __color_print(sn, err_msg, detail='', status=0, no_sn=False, display=True):
@@ -68,7 +68,7 @@ def get_config_path():
 
 
 def get_sn_list_content():
-    # 傳回 sn_list 的所有內容（含註解），提供給 Web 控制臺使用
+    # 傳回 sn_list 的所有內容（含註解），提供給 Web 控制面板使用
     if not os.path.exists(sn_list_path):
         return ""
     with open(sn_list_path, 'r', encoding='utf-8') as f:
@@ -86,8 +86,8 @@ def __init_settings():
                 'download_cd': 60,  # 下載冷卻時間(秒)
                 'parse_sn_cd': 5,  # sn 頁面(即播放介面)解析冷卻時間
                 'download_resolution': '1080',  # 下載解析度
-                'lock_resolution': False,  # 鎖定解析度, 如果解析度不存在, 則宣佈下載失敗
-                'only_use_vip': False,  # 鎖定 VIP 賬號下載
+                'lock_resolution': False,  # 鎖定解析度, 如果解析度不存在, 則判定下載失敗
+                'only_use_vip': False,  # 鎖定 VIP 帳號下載
                 'default_download_mode': 'latest',  # 僅下載最新一集，另一個模式是 'all' 下載所有及日後更新
                 'use_copyfile_method': False,  # 轉移影片至番劇目錄時是否使用複製法, 使用 True 以相容 rclone 掛載盤
                 'multi-thread': 1,  # 最大並發下載數
@@ -97,9 +97,9 @@ def __init_settings():
                 'segment_max_retry': 8,  # 在分段下載模式時有效, 每個分段最大重試次數, -1 為 無限重試
                 'add_bangumi_name_to_video_filename': True,
                 'add_resolution_to_video_filename': True,  # 是否在檔名中新增清晰度說明
-                'customized_video_filename_prefix': '【動畫瘋】',  # 使用者自定字首
+                'customized_video_filename_prefix': '【動畫瘋】',  # 使用者自訂字首
                 'customized_bangumi_name_suffix': '',  # 使用者自訂番劇名字尾（在劇集名稱之前）
-                'customized_video_filename_suffix': '',  # 使用者自定字尾
+                'customized_video_filename_suffix': '',  # 使用者自訂字尾
                 'video_filename_extension': 'mp4',  # 影片副檔名/封裝格式
                 'zerofill': 1,  # 劇集名補零, 此項填補足位數, 小於等於 1 即不補零
                 # cookie的自動重新整理對 UA 有檢查
@@ -114,7 +114,7 @@ def __init_settings():
                     'user': '',
                     'pwd': '',
                     'tls': True,
-                    'cwd': '',  # 檔案存放目錄, 登陸後首先進入的目錄
+                    'cwd': '',  # 檔案存放目錄, 登入後首先進入的目錄
                     'show_error_detail': False,
                     'max_retry_num': 15
                 },
@@ -312,7 +312,7 @@ def __update_settings(old_settings):  # 升級配置檔案
         del new_settings['proxies']
 
     if 'use_dashboard' not in new_settings.keys():
-        # v20 上線 Web 控制臺
+        # v20 上線 Web 控制面板
         new_settings['use_dashboard'] = True
 
     if 'dashboard' not in new_settings.keys():
@@ -482,7 +482,7 @@ def del_bom(path, display=True):
     if have_bom:
         filename = os.path.split(path)[1]
         if display:
-            __color_print(0, '發現 ' + filename + ' 帶有BOM頭, 將移除後儲存', no_sn=True)
+            __color_print(0, '發現 ' + filename + ' 帶有 BOM 標記, 將移除後儲存', no_sn=True)
         try_counter = 0
         while True:
             try:
@@ -509,7 +509,7 @@ def read_settings(config=''):
 
         settings = __read_settings_file()
     else:
-        # 用於檢查 web 控制臺回傳的配置是否正確
+        # 用於檢查 web 控制面板回傳的配置是否正確
         settings = config
 
     if 'database_version' in settings.keys():
@@ -538,23 +538,23 @@ def read_settings(config=''):
         settings['quantity_of_logs'] = 7
 
     if not settings['ua']:
-        # 如果 ua 專案為空
+        # 如果 ua 欄位為空
         settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
 
-    # 如果使用者自定了番劇目錄且存在
+    # 如果使用者自訂了番劇目錄且存在
     if settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir']):
         # 番劇路徑規範化
         settings['bangumi_dir'] = os.path.abspath(settings['bangumi_dir'])
     else:
-        # 如果使用者沒有有自定番劇目錄或目錄不存在，則儲存在本地 bangumi 目錄
+        # 如果使用者沒有有自訂番劇目錄或目錄不存在，則儲存在本地 bangumi 目錄
         settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
 
-    # 如果使用者自定了快取目錄且存在
+    # 如果使用者自訂了快取目錄且存在
     if settings['temp_dir'] and os.path.exists(settings['temp_dir']):
         # 快取路徑規範化
         settings['temp_dir'] = os.path.abspath(settings['temp_dir'])
     else:
-        # 如果使用者沒有有自定快取目錄或目錄不存在，則儲存在本地 temp 目錄
+        # 如果使用者沒有有自訂快取目錄或目錄不存在，則儲存在本地 temp 目錄
         settings['temp_dir'] = os.path.join(working_dir, 'temp')
 
     settings['working_dir'] = working_dir
@@ -592,7 +592,7 @@ def read_settings(config=''):
         __remove_superfluous_logs(settings['quantity_of_logs'])
 
     if settings['use_dashboard']:
-        # 如果啟用的控制臺, 那麼檢查是否存在Dashboard目錄
+        # 如果啟用的控制面板, 那麼檢查是否存在Dashboard目錄
         if not os.path.exists(os.path.join(working_dir, 'Dashboard')):
             settings['use_dashboard'] = False
             __color_print(0, 'Web控制面板', '未發現控制面板所必須的Dashboard資料夾, 強制禁用控制面板!', no_sn=True, status=1)
@@ -741,7 +741,7 @@ def time_stamp_to_time(timestamp):
 
 
 def get_cookie_time():
-    # 獲取 cookie 修改時間
+    # 取得 cookie 修改時間
     cookie_time = os.path.getmtime(cookie_path)
     return time_stamp_to_time(cookie_time)
 

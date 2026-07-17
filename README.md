@@ -320,6 +320,12 @@ v8.0 影片下載模式新增分段下載, 其工作流程: 由 aniGamerPlus 讀
  - 將 UA 複製貼上到```config.json```的```ua```欄位
     ![](screenshot/how_to_use_my_ua.png)
 
+### 從 Chrome 插件取得 範例
+
+ - 請在 [Chrome Web Store](https://chromewebstore.google.com/) 搜尋 **「[[B.M] 動畫瘋 獲取 Cookie](https://chromewebstore.google.com/detail/bm-%E5%8B%95%E7%95%AB%E7%98%8B-%E7%8D%B2%E5%8F%96-cookie/mldicamgcdcfgdjibcojgfcnljooclen)」**，或點擊名稱從商店頁面安裝。
+
+    ![](screenshot/bm-ani-gamer-get-cookie_01.png)
+
 ### sn_list.txt
 
 需要自動下載的番劇列表,一個番劇中選任一sn填入即可

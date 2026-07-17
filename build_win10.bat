@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 set "EXE_OUT=aniGamerPlus.exe"
-set "RELEASE_VERSION=v24.7"
+set "RELEASE_VERSION=v24.8"
 set "ZIP_NAME=aniGamerPlus_%RELEASE_VERSION%_windows_64bit.zip"
 set "PIPY="
 

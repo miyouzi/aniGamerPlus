@@ -7,7 +7,7 @@ import ftplib
 import shutil
 import traceback
 import Config
-import pyhttpx
+from curl_cffi import requests as curl_requests
 from Danmu import Danmu
 from bs4 import BeautifulSoup
 import re, time, os, platform, subprocess, requests, random, sys
@@ -31,11 +31,11 @@ class Anime:
         self._temp_dir = self._settings['temp_dir']
         self._gost_port = str(gost_port)
 
-        self._session = requests.session()
         if 'firefox' in self._settings['ua'].lower():
-            self._pyhttpx_session = pyhttpx.HttpSession(browser_type='firefox')
+            impersonate = 'firefox'
         else:
-            self._pyhttpx_session = pyhttpx.HttpSession(browser_type='chrome')
+            impersonate = 'chrome124'
+        self._session = curl_requests.Session(impersonate=impersonate)
         self._title = ''
         self._sn = sn
         self._bangumi_name = ''
@@ -134,7 +134,7 @@ class Anime:
             self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v4/video.php?sn={self._sn}', no_cookies=True)
         else:
             req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
-            f = self.__request(req, no_cookies=True, use_pyhttpx=True)
+            f = self.__request(req, no_cookies=True)
             self._src = BeautifulSoup(f.content, "lxml")
 
     def __get_title(self):
@@ -277,15 +277,10 @@ class Anime:
             cookies = {}
         while True:
             try:
-                if use_pyhttpx:
-                    # https://github.com/miyouzi/aniGamerPlus/issues/249 pyhttpx 作者 在改動
-                    # https://github.com/zero3301/pyhttpx/commit/4735190df741f4c00287ec948f0734fd2c21bfee
-                    # 把 proxy 驗證放到了 proxies URL 裡面
-                    f = self._pyhttpx_session.get(req, headers=current_header, cookies=cookies, timeout=10,
-                                                  proxies=self._proxies)
-                else:
-                    f = self._session.get(req, headers=current_header, cookies=cookies, timeout=10)
-            except requests.exceptions.RequestException as e:
+                proxies = self._proxies if self._proxies else None
+                f = self._session.get(req, headers=current_header, cookies=cookies, timeout=10,
+                                      proxies=proxies)
+            except (requests.exceptions.RequestException, curl_requests.RequestsError) as e:
                 if error_cnt >= max_retry >= 0:
                     raise TryTooManyTimeError('任務狀態: sn=' + str(self._sn) + ' 請求失敗次數過多！請求連結：\n%s' % req)
                 err_detail = 'ERROR: 請求失敗！except：\n' + str(e) + '\n3s後重試(最多重試' + str(max_retry) + '次)'
@@ -298,12 +293,11 @@ class Anime:
         # 處理 cookie
         if not self._cookies:
             # 當例項中尚無 cookie, 則讀取
-            self._cookies = self._session.cookies
+            self._cookies = self._session.cookies.get_dict()
         elif 'nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys():
             # 處理遊客cookie
-            if 'nologinuser' in self._session.cookies.keys():
-                # self._cookies['nologinuser'] = self._session.cookies['nologinuser']
-                self._cookies = self._session.cookies
+            if 'nologinuser' in self._session.cookies.get_dict().keys():
+                self._cookies = self._session.cookies.get_dict()
         else:  # 如果使用者提供了 cookie, 則處理cookie重新整理
             if 'set-cookie' in f.headers.keys():  # 發現server響應了set-cookie
                 if 'deleted' in f.headers.get('set-cookie'):
@@ -339,39 +333,29 @@ class Anime:
                         if not succeed_flag:
                             self._cookies = {}
                             err_print(0, '使用者cookie更新失敗! 使用遊客身份訪問', status=1, no_sn=True)
-                            Config.invalid_cookie()  # 將失效cookie更名
 
                         if self._settings['use_mobile_api'] and 'X-Bahamut-App-Android' not in self._req_header:
                             # 即使切換 header cookie 也無法重新整理, 那麼恢復 header, 好歹廣告只有 3s
                             self._req_header = self._mobile_header
 
                 else:
-                    # 本執行緒收到了新cookie
-                    # 20220115 簡化 cookie 重新整理邏輯
-                    err_print(self._sn, '收到新cookie', display=False)
+                    # 僅在 BAHARUNE 實際變更時才寫入檔案並提示，避免 ANIME_SIGN 等觸發刷屏
+                    old_baharune = self._cookies.get('BAHARUNE')
+                    self._cookies.update(self._session.cookies.get_dict())
+                    new_baharune = self._cookies.get('BAHARUNE')
 
-                    self._cookies.update(self._session.cookies)
-                    Config.renew_cookies(self._cookies, log=False)
-
-                    key_list_str = ', '.join(self._session.cookies.keys())
-                    err_print(self._sn, f'使用者cookie重新整理 {key_list_str} ', display=False)
-
-                    self.__request('https://ani.gamer.com.tw/')
-                    # 20210724 動畫瘋一步到位重新整理 Cookie
-                    if 'BAHARUNE' in f.headers.get('set-cookie'):
+                    if old_baharune != new_baharune and new_baharune is not None:
+                        Config.renew_cookies(self._cookies, log=False)
                         err_print(0, '使用者cookie已更新', status=2, no_sn=True)
+                        self.__request('https://ani.gamer.com.tw/')
                         if self._settings['use_mobile_api']:
-                            # 當使用 APP API 臨時切換至 Web API 更新 Cookie 時，Cookie 更新成功再切換回 App Header
                             self._req_header = self._mobile_header
                             err_print(self._sn, '切換回 App Header 進行影片解析', display=False)
 
         return f
 
     def __request_json(self, req, no_cookies=False, show_fail=True, max_retry=3, addition_header=None, use_pyhttpx = False):
-        if use_pyhttpx:
-            return self.__request(req, no_cookies, show_fail, max_retry, addition_header, use_pyhttpx).json
-        else:
-            return self.__request(req, no_cookies, show_fail, max_retry, addition_header, use_pyhttpx).json()
+        return self.__request(req, no_cookies, show_fail, max_retry, addition_header, use_pyhttpx).json()
 
     def __get_m3u8_dict(self):
         # m3u8 取得模組參考自 https://github.com/c0re100/BahamutAnimeDownloader

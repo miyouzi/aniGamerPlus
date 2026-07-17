@@ -21,7 +21,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v24.7'
+aniGamerPlus_version = 'v24.8'
 latest_config_version = 17.2
 latest_database_version = 2.0
 cookie = None
@@ -712,25 +712,14 @@ def read_cookie(log=False):
         return cookie
     # 如果什麼也沒讀到(空檔案)
     __color_print(0, '讀取cookie', detail='cookie檔案為空', no_sn=True, status=1)
-    invalid_cookie()
     cookie = {}
     return cookie
 
 
 def invalid_cookie():
-    # 當cookie失效時, 將cookie改名, 避免重複嘗試失效的cookie
-    if os.path.exists(cookie_path):
-        invalid_cookie_path = cookie_path.replace('cookie.txt', 'invalid_cookie.txt')
-        try:
-            global cookie
-            cookie = None  # 重置已讀取的cookie
-            if os.path.exists(invalid_cookie_path):
-                os.remove(invalid_cookie_path)
-            os.rename(cookie_path, invalid_cookie_path)
-        except BaseException as e:
-            __color_print(0, 'cookie狀態', '嘗試標記失效cookie時遇到未知錯誤: ' + str(e), no_sn=True, status=1)
-        else:
-            __color_print(0, 'cookie狀態', '已成功標記失效cookie', no_sn=True, display=False)
+    # 僅重置記憶體中的 cookie，不修改、不移除 cookie.txt
+    global cookie
+    cookie = None
 
 
 def time_stamp_to_time(timestamp):

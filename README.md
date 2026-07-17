@@ -21,7 +21,7 @@ ffmpeg 需要另外下載, [**點選這裡前往下載頁**](https://ffmpeg.org/
 
 ## EXE 檔案執行(對於不熟悉Python的使用者)
 
-windows 使用者可以[**點選這裡**](https://github.com/miyouzi/aniGamerPlus/releases/latest)下載exe檔案使用.
+windows 使用者可以[**點選這裡**](https://github.com/BoringMan314/aniGamerPlus/releases/latest)下載exe檔案使用.
 
 ## 原始碼執行
 

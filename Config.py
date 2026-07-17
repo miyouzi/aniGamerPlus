@@ -8,6 +8,7 @@
 import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
 import socket
+import threading
 from urllib.parse import quote
 from urllib.parse import urlencode
 
@@ -21,7 +22,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v24.8'
+aniGamerPlus_version = 'v24.9'
 latest_config_version = 17.2
 latest_database_version = 2.0
 cookie = None
@@ -735,30 +736,41 @@ def get_cookie_time():
     return time_stamp_to_time(cookie_time)
 
 
+cookie_write_lock = threading.Lock()
+
+
 def renew_cookies(new_cookie, log=True):
     global cookie
-    cookie = None  # 重置cookie
+    if not new_cookie:
+        return
     new_cookie_str = ''
     for key, value in new_cookie.items():
-        new_cookie_str = new_cookie_str + key + '=' + value + '; '
+        new_cookie_str = new_cookie_str + key + '=' + str(value) + '; '
     new_cookie_str = new_cookie_str[0:-2]
-    # print(new_cookie_str)
-    try_counter = 0
-    while True:
+    with cookie_write_lock:
+        cookie = None  # 重置cookie
         try:
-            with open(cookie_path, 'w', encoding='utf-8') as f:
-                f.write(new_cookie_str)
-        except BaseException as e:
-            if try_counter > 3:
-                __color_print(0, '新cookie儲存失敗! 發生異常: ' + str(e), status=1, no_sn=True)
+            with open(cookie_path, 'r', encoding='utf-8') as f:
+                if f.read() == new_cookie_str:
+                    return
+        except BaseException:
+            pass
+        try_counter = 0
+        while True:
+            try:
+                with open(cookie_path, 'w', encoding='utf-8') as f:
+                    f.write(new_cookie_str)
+            except BaseException as e:
+                if try_counter > 3:
+                    __color_print(0, '新cookie儲存失敗! 發生異常: ' + str(e), status=1, no_sn=True)
+                    break
+                random_wait_time = random.uniform(2, 5)
+                time.sleep(random_wait_time)
+                try_counter = try_counter + 1
+            else:
+                if log:
+                    __color_print(0, '新cookie儲存成功', no_sn=True, display=False)
                 break
-            random_wait_time = random.uniform(2, 5)
-            time.sleep(random_wait_time)
-            try_counter = try_counter + 1
-        else:
-            if log:
-                __color_print(0, '新cookie儲存成功', no_sn=True, display=False)
-            break
 
 
 def read_latest_version_on_github():

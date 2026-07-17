@@ -36,6 +36,7 @@ class Anime:
         else:
             impersonate = 'chrome124'
         self._session = curl_requests.Session(impersonate=impersonate)
+        self._renewing_cookie = False  # cookie 刷新確認請求進行中 (遞迴防護)
         self._title = ''
         self._sn = sn
         self._bangumi_name = ''
@@ -260,6 +261,14 @@ class Anime:
         else:
             self._req_header = self._web_header
 
+    def __session_cookie_dict(self):
+        # 將 session cookie jar 攤平成 dict (同名 cookie 跨網域重複時取最後值)
+        jar = self._session.cookies
+        try:
+            return jar.get_dict()
+        except AttributeError:
+            return dict(jar)
+
     def __request(self, req, no_cookies=False, show_fail=True, max_retry=3, addition_header=None, use_pyhttpx = False):
         # 設定 header
         current_header = self._req_header
@@ -293,14 +302,17 @@ class Anime:
         # 處理 cookie
         if not self._cookies:
             # 當例項中尚無 cookie, 則讀取
-            self._cookies = self._session.cookies.get_dict()
+            self._cookies = self.__session_cookie_dict()
         elif 'nologinuser' not in self._cookies.keys() and 'BAHAID' not in self._cookies.keys():
             # 處理遊客cookie
-            if 'nologinuser' in self._session.cookies.get_dict().keys():
-                self._cookies = self._session.cookies.get_dict()
-        else:  # 如果使用者提供了 cookie, 則處理cookie重新整理
-            if 'set-cookie' in f.headers.keys():  # 發現server響應了set-cookie
-                if 'deleted' in f.headers.get('set-cookie'):
+            if 'nologinuser' in self.__session_cookie_dict().keys():
+                self._cookies = self.__session_cookie_dict()
+        elif not self._renewing_cookie:  # 刷新確認請求本身不重入此流程
+            set_cookie_str = f.headers.get('set-cookie') if 'set-cookie' in f.headers.keys() else ''
+            # Cloudflare 幾乎每個回應都會 set-cookie 刷新 __cf_bm, 只有帶 BAHARUNE 才是登入 cookie 輪替
+            if 'BAHARUNE' in set_cookie_str:
+                if 'deleted' in set_cookie_str:
+                    self._cookies.update(self.__session_cookie_dict())
                     # set-cookie 更新 cookie 只有一次機會，若由其他執行緒搶先接收，則此處會傳回 deleted
                     # 等待其他執行緒重新整理了cookie, 重新讀入cookie
 
@@ -308,7 +320,13 @@ class Anime:
                         # 使用移動API將無法進行 cookie 重新整理, 改回 header 重新整理 cookie
                         err_print(self._sn, '嘗試切換回 Web Header 重新整理 Cookie', display=False)
                         self._req_header = self._web_header
-                        self.__request('https://ani.gamer.com.tw/')  # 再次嘗試取得新 cookie
+                        self._renewing_cookie = True
+                        try:
+                            self.__request('https://ani.gamer.com.tw/')  # 再次嘗試取得新 cookie
+                            self._cookies.update(self.__session_cookie_dict())
+                            Config.renew_cookies(self._cookies, log=False)
+                        finally:
+                            self._renewing_cookie = False
                     else:
                         err_print(self._sn, '收到cookie重置響應', display=False)
                         time.sleep(2)
@@ -341,13 +359,20 @@ class Anime:
                 else:
                     # 僅在 BAHARUNE 實際變更時才寫入檔案並提示，避免 ANIME_SIGN 等觸發刷屏
                     old_baharune = self._cookies.get('BAHARUNE')
-                    self._cookies.update(self._session.cookies.get_dict())
+                    self._cookies.update(self.__session_cookie_dict())
                     new_baharune = self._cookies.get('BAHARUNE')
 
                     if old_baharune != new_baharune and new_baharune is not None:
                         Config.renew_cookies(self._cookies, log=False)
                         err_print(0, '使用者cookie已更新', status=2, no_sn=True)
-                        self.__request('https://ani.gamer.com.tw/')
+                        # 防遞迴: 確認請求僅允許一層, 其回應 cookie 在此收割而非重入刷新流程
+                        self._renewing_cookie = True
+                        try:
+                            self.__request('https://ani.gamer.com.tw/')
+                            self._cookies.update(self.__session_cookie_dict())
+                            Config.renew_cookies(self._cookies, log=False)
+                        finally:
+                            self._renewing_cookie = False
                         if self._settings['use_mobile_api']:
                             self._req_header = self._mobile_header
                             err_print(self._sn, '切換回 App Header 進行影片解析', display=False)

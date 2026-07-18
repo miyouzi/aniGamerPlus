@@ -730,7 +730,7 @@ def user_exit(signum, frame):
 def check_new_version():
     # 檢查GitHub上是否有新版
     remote_version = Config.read_latest_version_on_github()
-    if float(settings['aniGamerPlus_version'][1:]) < float(remote_version['tag_name'][1:]):
+    if Config.parse_version(settings['aniGamerPlus_version']) < Config.parse_version(remote_version['tag_name']):
         msg = '發現GitHub上有新版本: '+remote_version['tag_name']+'\n更新內容:\n'+remote_version['body']+'\n'
         err_print(0, msg, status=1, no_sn=True)
 
@@ -771,7 +771,7 @@ def __init_proxy():
 
 
 def do_request(url, headers, cookies, params=None):
-    return requests.get(url, headers=headers, cookies=cookies, params=params)
+    return Config.bahamut_request('GET', url, headers=headers, cookies=cookies, params=params)
 
 
 def parse_anime(soup, animes, headers, cookies):
@@ -790,14 +790,10 @@ def export_my_anime():
 
     url = "https://ani.gamer.com.tw/mygather.php"
     header = {
-        'accept':
-        'application/json',
-        'origin':
-        'https://ani.gamer.com.tw',
-        'authority':
-        'ani.gamer.com.tw',
-        'user-agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+        'accept': 'application/json',
+        'origin': 'https://ani.gamer.com.tw',
+        'referer': 'https://ani.gamer.com.tw/',
+        'User-Agent': settings['ua'],
     }
 
     cookies = Config.read_cookie()
@@ -810,7 +806,7 @@ def export_my_anime():
     while True:
         params = {'page': page, 'sort': 0}
         bahamygatherPage = do_request(url, headers=header, cookies=cookies, params=params)
-        if bahamygatherPage.status_code == requests.codes.ok:
+        if bahamygatherPage.status_code == 200:
             soup = BeautifulSoup(bahamygatherPage.text, 'html.parser')
             if not parse_anime(soup, animes, header, cookies):
                 break

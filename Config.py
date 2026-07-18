@@ -9,6 +9,7 @@ import os, json, re, sys, requests, time, random, codecs, chardet
 import sqlite3
 import socket
 import threading
+from curl_cffi import requests as curl_requests
 from urllib.parse import quote
 from urllib.parse import urlencode
 
@@ -22,7 +23,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v24.9'
+aniGamerPlus_version = 'v24.9.2'
 latest_config_version = 17.2
 latest_database_version = 2.0
 cookie = None
@@ -503,6 +504,27 @@ def del_bom(path, display=True):
                 break
 
 
+def __resolve_data_dir(path, default_name, label):
+    default_path = os.path.join(working_dir, default_name)
+    path = '' if path is None else str(path).strip()
+    if not path:
+        os.makedirs(default_path, exist_ok=True)
+        return default_path
+    if not os.path.isabs(path):
+        path = os.path.join(working_dir, path)
+    path = os.path.abspath(path)
+    if os.path.normcase(path) == os.path.normcase(default_path):
+        os.makedirs(default_path, exist_ok=True)
+        return default_path
+    try:
+        os.makedirs(path, exist_ok=True)
+        return path
+    except OSError as e:
+        __color_print(0, label, '無法建立目錄 ' + path + ': ' + str(e) + '，改用預設 ' + default_path, no_sn=True, status=1)
+        os.makedirs(default_path, exist_ok=True)
+        return default_path
+
+
 def read_settings(config=''):
     if config == '':
         if not os.path.exists(config_path):
@@ -542,21 +564,8 @@ def read_settings(config=''):
         # 如果 ua 欄位為空
         settings['ua'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36"
 
-    # 如果使用者自訂了番劇目錄且存在
-    if settings['bangumi_dir'] and os.path.exists(settings['bangumi_dir']):
-        # 番劇路徑規範化
-        settings['bangumi_dir'] = os.path.abspath(settings['bangumi_dir'])
-    else:
-        # 如果使用者沒有有自訂番劇目錄或目錄不存在，則儲存在本地 bangumi 目錄
-        settings['bangumi_dir'] = os.path.join(working_dir, 'bangumi')
-
-    # 如果使用者自訂了快取目錄且存在
-    if settings['temp_dir'] and os.path.exists(settings['temp_dir']):
-        # 快取路徑規範化
-        settings['temp_dir'] = os.path.abspath(settings['temp_dir'])
-    else:
-        # 如果使用者沒有有自訂快取目錄或目錄不存在，則儲存在本地 temp 目錄
-        settings['temp_dir'] = os.path.join(working_dir, 'temp')
+    settings['bangumi_dir'] = __resolve_data_dir(settings.get('bangumi_dir'), 'bangumi', '番劇目錄')
+    settings['temp_dir'] = __resolve_data_dir(settings.get('temp_dir'), 'temp', '暫存目錄')
 
     settings['working_dir'] = working_dir
     settings['aniGamerPlus_version'] = aniGamerPlus_version
@@ -773,8 +782,34 @@ def renew_cookies(new_cookie, log=True):
                 break
 
 
+def bahamut_request(method, url, **kwargs):
+    # 巴哈站點請求統一走 curl-cffi，通過 TLS 指紋驗證
+    settings = read_settings()
+    if 'firefox' in settings['ua'].lower():
+        impersonate = 'firefox'
+    else:
+        impersonate = 'chrome124'
+    headers = dict(kwargs.pop('headers', None) or {})
+    if not any(k.lower() == 'user-agent' for k in headers):
+        headers['User-Agent'] = settings['ua']
+    kwargs['headers'] = headers
+    if settings.get('use_proxy') and settings.get('proxy'):
+        kwargs['proxies'] = {'https': settings['proxy'], 'http': settings['proxy']}
+    kwargs.setdefault('timeout', 10)
+    session = curl_requests.Session(impersonate=impersonate)
+    try:
+        return session.request(method, url, **kwargs)
+    except curl_requests.RequestsError as e:
+        raise requests.exceptions.RequestException(str(e)) from e
+
+
+def parse_version(version_str):
+    version_str = version_str.lstrip('vV')
+    return tuple(int(part) for part in version_str.split('.'))
+
+
 def read_latest_version_on_github():
-    req = 'https://api.github.com/repos/miyouzi/aniGamerPlus/releases/latest'
+    req = 'https://api.github.com/repos/BoringMan314/aniGamerPlus/releases/latest'
     session = requests.session()
     remote_version = {}
     try:

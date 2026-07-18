@@ -1,5 +1,4 @@
 
-import requests
 import json
 import random
 import re
@@ -26,40 +25,35 @@ class Danmu():
         return result and result.group(0)
 
     def download(self, ban_words):
+        settings = Config.read_settings()
         h = {
-            'Content-Type':
-            'application/x-www-form-urlencoded;charset=utf-8',
-            'origin':
-            'https://ani.gamer.com.tw',
-            'authority':
-            'ani.gamer.com.tw',
-            'user-agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36'
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+            'origin': 'https://ani.gamer.com.tw',
+            'referer': f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}',
+            'User-Agent': settings['ua'],
         }
         data = {'sn': str(self._sn)}
-        r = requests.post(
-            'https://ani.gamer.com.tw/ajax/danmuGet.php', data=data, headers=h)
+        r = Config.bahamut_request(
+            'POST', 'https://ani.gamer.com.tw/ajax/danmuGet.php',
+            data=data, headers=h, cookies=self._cookies)
 
         if r.status_code != 200:
             err_print(self._sn, '彈幕下載失敗', 'status_code=' + str(r.status_code), status=1)
             return
 
         h = {
-            'accept':
-            'application/json',
-            'origin':
-            'https://ani.gamer.com.tw',
-            'authority':
-            'ani.gamer.com.tw',
-            'user-agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+            'accept': 'application/json',
+            'origin': 'https://ani.gamer.com.tw',
+            'referer': f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}',
+            'User-Agent': settings['ua'],
         }
-        ban_words_response = requests.get(
-            'https://ani.gamer.com.tw/ajax/keywordGet.php', headers=h, cookies=self._cookies)
+        ban_words_response = Config.bahamut_request(
+            'GET', 'https://ani.gamer.com.tw/ajax/keywordGet.php',
+            headers=h, cookies=self._cookies)
 
         if ban_words_response.status_code != 200:
             err_print(self._sn, '取得線上過濾彈幕失敗', 'status_code=' +
-                      str(r.status_code), status=1)
+                      str(ban_words_response.status_code), status=1)
         else:
             online_ban_words = json.loads(ban_words_response.text)
             for online_ban_word in online_ban_words:

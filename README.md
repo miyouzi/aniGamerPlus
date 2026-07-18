@@ -4,7 +4,7 @@
  <img alt="GitHub" src="https://img.shields.io/github/license/BoringMan314/aniGamerPlus.svg?style=flat-square">
  <img alt="GitHub release" src="https://img.shields.io/github/release/BoringMan314/aniGamerPlus.svg?style=flat-square">
  <img alt="GitHub Release Date" src="https://img.shields.io/github/release-date/BoringMan314/aniGamerPlus.svg?style=flat-square">
- <img alt="GitHub Releases" src="https://img.shields.io/github/downloads/BoringMan314/aniGamerPlus/latest/total.svg?style=flat-square">
+ <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/BoringMan314/aniGamerPlus/total.svg?style=flat-square">
 </p>
 
 巴哈姆特動畫瘋自動下載工具, 可隨著番劇更新自動下載, 適合部署在全天開機的伺服器或NAS上.

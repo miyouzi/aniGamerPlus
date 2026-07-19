@@ -24,5 +24,7 @@ var id_list = [
 	'save_logs', 
 	'quantity_of_logs',
 	'download_cd',
-	'parse_sn_cd'
+	'parse_sn_cd',
+	'parse_max_retry',
+	'parse_retry_base_delay'
 ]

@@ -23,8 +23,8 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v24.9.2'
-latest_config_version = 17.2
+aniGamerPlus_version = 'v24.9.3'
+latest_config_version = 17.3
 latest_database_version = 2.0
 cookie = None
 max_multi_thread = 5
@@ -87,6 +87,8 @@ def __init_settings():
                 'check_frequency': 5,  # 檢查 cd 時間, 單位分鐘
                 'download_cd': 60,  # 下載冷卻時間(秒)
                 'parse_sn_cd': 5,  # sn 頁面(即播放介面)解析冷卻時間
+                'parse_max_retry': 5,  # 解析頁驗證失敗時最大重試次數
+                'parse_retry_base_delay': 2,  # 解析重試基礎間隔(秒), 實際等待=此值+已重試次數
                 'download_resolution': '1080',  # 下載解析度
                 'lock_resolution': False,  # 鎖定解析度, 如果解析度不存在, 則判定下載失敗
                 'only_use_vip': False,  # 鎖定 VIP 帳號下載
@@ -388,6 +390,14 @@ def __update_settings(old_settings):  # 升級配置檔案
         # v24.4 sn解析冷卻時間(秒)
         new_settings['parse_sn_cd'] = 5
 
+    if 'parse_max_retry' not in new_settings.keys():
+        # v24.9.3 解析頁驗證失敗重試次數
+        new_settings['parse_max_retry'] = 5
+
+    if 'parse_retry_base_delay' not in new_settings.keys():
+        # v24.9.3 解析重試基礎間隔(秒)
+        new_settings['parse_retry_base_delay'] = 2
+
     new_settings['config_version'] = latest_config_version
     with open(config_path, 'w', encoding='utf-8') as f:
         json.dump(new_settings, f, ensure_ascii=False, indent=4)
@@ -588,6 +598,16 @@ def read_settings(config=''):
     if settings['multi_downloading_segment'] > max_multi_downloading_segment:
         # 如果並發分段數超限
         settings['multi_downloading_segment'] = max_multi_downloading_segment
+
+    if settings.get('parse_max_retry', 5) < 1:
+        settings['parse_max_retry'] = 1
+    elif settings.get('parse_max_retry', 5) > 10:
+        settings['parse_max_retry'] = 10
+
+    if settings.get('parse_retry_base_delay', 2) < 0:
+        settings['parse_retry_base_delay'] = 0
+    elif settings.get('parse_retry_base_delay', 2) > 60:
+        settings['parse_retry_base_delay'] = 60
 
     if settings['video_filename_extension'].lower() == 'flv':
         # flv 格式會輸出異常, 強制重置

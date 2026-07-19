@@ -351,6 +351,20 @@
 						<input id="parse_sn_cd" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
 						 placeholder="正整數" />
 					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">解析失敗重試次數</span>
+						</div>
+						<input id="parse_max_retry" type="number" min="1" step="1" class="form-control input-group-prepend-form-control"
+						 placeholder="1-10" />
+					</div>
+					<div class="input-group col-md-4 my-button">
+						<div class="input-group-prepend">
+							<span class="input-group-text">解析重試間隔(秒)</span>
+						</div>
+						<input id="parse_retry_base_delay" type="number" min="0" step="1" class="form-control input-group-prepend-form-control"
+						 placeholder="基礎秒數" />
+					</div>
 					<div class="input-group col-md-8 my-button">
 						<div class="input-group-prepend">
 							<span class="input-group-text">請求UA　　　　</span>

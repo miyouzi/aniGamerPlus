@@ -5,6 +5,8 @@
     "check_frequency": 5,
     "download_cd": 60,
     "parse_sn_cd": 3,
+    "parse_max_retry": 5,
+    "parse_retry_base_delay": 2,
     "download_resolution": "1080",
     "lock_resolution": false,
     "only_use_vip": false,

@@ -36,6 +36,7 @@ class Anime:
         else:
             impersonate = 'chrome124'
         self._session = curl_requests.Session(impersonate=impersonate)
+        self._session_warmed_up = False
         self._renewing_cookie = False  # cookie 刷新確認請求進行中 (遞迴防護)
         self._title = ''
         self._sn = sn
@@ -130,13 +131,58 @@ class Anime:
         else:
             return self.__get_filename(str(self.video_resolution))
 
+    def __warmup_session(self):
+        if self._session_warmed_up:
+            return
+        self.__request('https://ani.gamer.com.tw/', no_cookies=True, show_fail=False, max_retry=1)
+        self._session_warmed_up = True
+
+    def __is_valid_web_src(self, soup):
+        return soup.find('div', 'anime_name') is not None
+
+    def __fetch_src_with_retry(self, fetch, validate, label):
+        max_retry = self._settings.get('parse_max_retry', 5)
+        base_delay = self._settings.get('parse_retry_base_delay', 2)
+        warmup_retry_at = max(0, (max_retry + 1) // 2 - 1)
+        last_result = None
+        for attempt in range(max_retry):
+            last_result = fetch()
+            if validate(last_result):
+                return last_result
+            if attempt < max_retry - 1:
+                wait = base_delay + attempt
+                err_print(self._sn, label,
+                          f'驗證失敗，{wait}s 後重試 ({attempt + 1}/{max_retry})', display=False)
+                time.sleep(wait)
+                if attempt == warmup_retry_at:
+                    self._session_warmed_up = False
+                    self.__warmup_session()
+        return last_result
+
     def __get_src(self):
         if self._settings['use_mobile_api']:
-            self._src = self.__request_json(f'https://api.gamer.com.tw/mobile_app/anime/v4/video.php?sn={self._sn}', no_cookies=True)
+            def fetch():
+                return self.__request_json(
+                    f'https://api.gamer.com.tw/mobile_app/anime/v4/video.php?sn={self._sn}',
+                    no_cookies=True, show_fail=False, max_retry=1)
+
+            def validate(src):
+                return isinstance(src, dict) and 'data' in src and 'anime' in src['data']
+
+            self._src = self.__fetch_src_with_retry(fetch, validate, 'APP 解析')
         else:
+            self.__warmup_session()
             req = f'https://ani.gamer.com.tw/animeVideo.php?sn={self._sn}'
-            f = self.__request(req, no_cookies=True)
-            self._src = BeautifulSoup(f.content, "lxml")
+
+            def fetch():
+                return self.__request(req, no_cookies=True, show_fail=False, max_retry=1)
+
+            def validate(resp):
+                return resp.status_code == 200 and self.__is_valid_web_src(
+                    BeautifulSoup(resp.content, 'lxml'))
+
+            resp = self.__fetch_src_with_retry(fetch, validate, 'Web 解析')
+            self._src = BeautifulSoup(resp.content, 'lxml')
 
     def __get_title(self):
         if self._settings['use_mobile_api']:

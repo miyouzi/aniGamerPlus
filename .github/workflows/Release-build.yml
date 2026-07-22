@@ -6,32 +6,49 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v24.7)'
+        required: true
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       # You can use PyPy versions in python-version.
       # For example, pypy2 and pypy3
       matrix:
-        python: [3.8.x]
+        python: [3.11.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
           python-version: ${{ matrix.python }}
 
     - name: Set up ENV
       run: |
         chcp 65001
-        echo ("RELEASE_VERSION=" + $env:GITHUB_REF.replace('refs/tags/', '')) >> $env:GITHUB_ENV
-        echo ("RELEASE_TITLE=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit") >> $env:GITHUB_ENV
-        echo ("RELEASE_FILENAME=aniGamerPlus_" + $env:GITHUB_REF.replace('refs/tags/', '') + "_windows_64bit.zip") >> $env:GITHUB_ENV
+        if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+          $version = "${{ inputs.version }}"
+        } else {
+          $version = "${{ github.ref_name }}"
+        }
+        echo ("RELEASE_VERSION=" + $version) >> $env:GITHUB_ENV
+        echo ("RELEASE_TITLE=aniGamerPlus_" + $version + "_windows_64bit") >> $env:GITHUB_ENV
+        echo ("RELEASE_FILENAME=aniGamerPlus_" + $version + "_windows_64bit.zip") >> $env:GITHUB_ENV
         git fetch --tags --force
     - name: Get tag message
       id: tag_data
-      uses: ericcornelissen/git-tag-annotation-action@v1
+      run: |
+        $tagMessage = git tag -l --format='%(contents)' $env:RELEASE_VERSION
+        echo "git-tag-annotation<<EOF" >> $env:GITHUB_OUTPUT
+        echo $tagMessage >> $env:GITHUB_OUTPUT
+        echo "EOF" >> $env:GITHUB_OUTPUT
     - name: Test ENV
       run: |
         echo $RELEASE_VERSION
@@ -54,24 +71,14 @@ jobs:
     - name: Archive release
       run: 7z a -tzip ${{ env.RELEASE_FILENAME }} aniGamerPlus.exe Dashboard DanmuTemplate.ass config-sample.json sn_list-sample.txt LICENSE README.md
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+    - name: Create Release and Upload Asset
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.RELEASE_VERSION }}
-        release_name: "${{ env.RELEASE_TITLE }}"
+        name: "${{ env.RELEASE_TITLE }}"
         body: ${{ steps.tag_data.outputs.git-tag-annotation }}
         draft: false
         prerelease: false
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: actions/upload-release-asset@v1
+        files: ./${{ env.RELEASE_FILENAME }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./${{ env.RELEASE_FILENAME }}
-        asset_name: ${{ env.RELEASE_FILENAME }}
-        asset_content_type: application/zip

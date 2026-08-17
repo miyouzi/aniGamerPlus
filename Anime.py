@@ -385,7 +385,7 @@ class Anime:
             if self._settings['use_mobile_api']:
                 req = f'https://api.gamer.com.tw/mobile_app/anime/v3/m3u8.php?videoSn={str(self._sn)}&device={self._device_id}'
             else:
-                req = 'https://api.gamer.com.tw/anime/v1/video_src.php?sn=' + str(self._sn) + '&device=' + self._device_id
+                req = 'https://api.gamer.com.tw/anime/v1/video_src.php?videoSn=' + str(self._sn) + '&deviceid=' + self._device_id + '&deviceTypeUseCases=1'
             self._playlist = self.__request_json(req)
 
         def random_string(num):
@@ -464,8 +464,7 @@ class Anime:
             if self._settings['use_mobile_api']:
                 playlist_url = self._playlist['data']['src']
             else:
-                data = self._playlist.get('data')
-                playlist_url = data['src'] if data else self._playlist['src']
+                playlist_url = self._playlist['data']['srcUseCases'][0]['src']['playlist']
             f = self.__request(playlist_url, no_cookies=True, addition_header={'origin': 'https://ani.gamer.com.tw'})
             url_prefix = re.sub(r'playlist.+', '', playlist_url)  # m3u8 URL 前缀
             m3u8_list = re.findall(r'=\d+x\d+\n.+', f.content.decode())  # 将包含分辨率和 m3u8 文件提取

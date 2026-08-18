@@ -22,7 +22,7 @@ config_path = os.path.join(working_dir, 'config.json')
 sn_list_path = os.path.join(working_dir, 'sn_list.txt')
 cookie_path = os.path.join(working_dir, 'cookie.txt')
 logs_dir = os.path.join(working_dir, 'logs')
-aniGamerPlus_version = 'v25.0'
+aniGamerPlus_version = 'v25.1'
 latest_config_version = 18.0
 latest_database_version = 2.0
 cookie = None
@@ -105,6 +105,10 @@ def __init_settings():
                 'zerofill': 1,  # 剧集名补零, 此项填补足位数, 小于等于 1 即不补零
                 # cookie的自动刷新对 UA 有检查
                 'ua': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                "browser_fingerprint": {
+                    "ja3": "771,4865-4866-4867-49195-49199-49196-49200-52393-52392-49171-49172-156-157-47-53,43-35-65281-16-23-27-65037-10-18-45-17613-51-11-0-5-13-41,4588-29-23-24,0",
+                    "akamai": "1:65536;2:0;4:6291456;6:262144|15663105|0|m,a,s,p"
+                },
                 'use_proxy': False,
                 'proxy': 'http://user:passwd@example.com:1000',  # 代理功能, config_version v13.0 删除链式代理
                 "no_proxy_akamai": False,  # 不代理 akamai CDN
